@@ -8,6 +8,7 @@ from typing import Optional
 
 from copilots_app.core.theme import AppPalette
 from copilots_app.ui.components import AppHeader, StatusBar, CodeEditor, ActionButton, MetricCard
+from copilots_app.ui.prompt_dialog import open_prompt_dialog
 from copilots_app.services.powerpoint import (
     PPT_SAMPLES,
     PowerPointConnector,
@@ -30,6 +31,15 @@ class PowerPointView(ft.Container):
             badge_text="PowerPoint COM",
             badge_color=AppPalette.BRAND_PPT,
             actions=[
+                ft.TextButton(
+                    "System Prompt",
+                    icon=ft.Icons.PSYCHOLOGY_OUTLINED,
+                    on_click=lambda _: open_prompt_dialog(
+                        self.app_page,
+                        "powerpoint",
+                        on_status_change=lambda msg, lvl: self.status_bar.set_status(msg, level=lvl),
+                    ),
+                ),
                 ft.TextButton(
                     "DSL Cheatsheet",
                     icon=ft.Icons.HELP_OUTLINE,

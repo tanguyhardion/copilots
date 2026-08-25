@@ -10,6 +10,8 @@ from typing import Optional, Dict, Any, List
 
 from copilots_app.core.theme import AppPalette
 from copilots_app.ui.components import AppHeader, StatusBar, CodeEditor, ActionButton, MetricCard
+from copilots_app.ui.prompt_dialog import open_prompt_dialog
+from copilots_app.core.prompt_manager import PromptManager
 from copilots_app.services.excel.analyzer.workbook_analyzer import WorkbookAnalyzer
 from copilots_app.services.excel.executor.executor_main import ActionExecutor
 from copilots_app.services.excel.protocol.action_parser import ActionParser
@@ -56,6 +58,15 @@ class ExcelView(ft.Container):
             badge_text="openpyxl + semantic engine",
             badge_color=AppPalette.BRAND_EXCEL,
             actions=[
+                ft.TextButton(
+                    "System Prompt",
+                    icon=ft.Icons.PSYCHOLOGY_OUTLINED,
+                    on_click=lambda _: open_prompt_dialog(
+                        self.app_page,
+                        "excel",
+                        on_status_change=lambda msg, lvl: self.status_bar.set_status(msg, level=lvl),
+                    ),
+                ),
                 ft.TextButton(
                     "Open Demo Workbook",
                     icon=ft.Icons.DESCRIPTION_OUTLINED,
@@ -345,8 +356,10 @@ class ExcelView(ft.Container):
             self.status_bar.set_status(f"Failed to load workbook: {err}", level="error")
 
     def _copy_prompt_context(self, e):
-        self.page.set_clipboard(self.prompt_context_text.value)
-        self.status_bar.set_status("Copied LLM prompt context to clipboard", level="info")
+        system_prompt = PromptManager().get_prompt("excel")
+        full_text = f"{system_prompt}\n\n================================================================================\nCURRENT WORKBOOK CONTEXT\n================================================================================\n{self.prompt_context_text.value}"
+        self.app_page.set_clipboard(full_text)
+        self.status_bar.set_status("Copied System Prompt + Workbook Context to clipboard!", level="success")
 
     def _on_execute_protocol(self, e):
         if not self.current_file_path:

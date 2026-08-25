@@ -8,6 +8,7 @@ from typing import Optional
 
 from copilots_app.core.theme import AppPalette
 from copilots_app.ui.components import AppHeader, StatusBar, CodeEditor, ActionButton
+from copilots_app.ui.prompt_dialog import open_prompt_dialog
 from copilots_app.services.word.connector import WordConnector
 from copilots_app.services.word.editor import WordEditor
 from copilots_app.services.word.extractor import WordExtractor
@@ -72,6 +73,15 @@ class WordView(ft.Container):
             badge_text="Word COM + python-docx",
             badge_color=AppPalette.BRAND_WORD,
             actions=[
+                ft.TextButton(
+                    "System Prompt",
+                    icon=ft.Icons.PSYCHOLOGY_OUTLINED,
+                    on_click=lambda _: open_prompt_dialog(
+                        self.app_page,
+                        "word",
+                        on_status_change=lambda msg, lvl: self.status_bar.set_status(msg, level=lvl),
+                    ),
+                ),
                 ft.TextButton(
                     "Word DSL Syntax",
                     icon=ft.Icons.HELP_OUTLINE,

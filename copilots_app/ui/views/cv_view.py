@@ -10,6 +10,7 @@ from typing import Optional, Dict, Any, List
 
 from copilots_app.core.theme import AppPalette
 from copilots_app.ui.components import AppHeader, StatusBar, CodeEditor, ActionButton, MetricCard
+from copilots_app.ui.prompt_dialog import open_prompt_dialog
 from copilots_app.services.cv import load_sample_cv, run_dq_audit, generate_cv
 
 
@@ -27,6 +28,15 @@ class CVCopilotView(ft.Container):
             badge_text="DQ Engine + docx",
             badge_color=AppPalette.BRAND_CV,
             actions=[
+                ft.TextButton(
+                    "System Prompt",
+                    icon=ft.Icons.PSYCHOLOGY_OUTLINED,
+                    on_click=lambda _: open_prompt_dialog(
+                        self.app_page,
+                        "cv",
+                        on_status_change=lambda msg, lvl: self.status_bar.set_status(msg, level=lvl),
+                    ),
+                ),
                 ft.TextButton(
                     "Reset Sample CV",
                     icon=ft.Icons.REFRESH,

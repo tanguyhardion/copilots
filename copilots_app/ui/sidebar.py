@@ -169,16 +169,34 @@ class AppSidebar(ft.Container):
             expand=True,
         )
 
+        from copilots_app.core.prompt_manager import PromptManager
+
         footer = ft.Container(
-            content=ft.Row(
+            content=ft.Column(
                 controls=[
-                    ft.Icon(ft.Icons.SHIELD_OUTLINED, size=14, color=AppPalette.SUCCESS),
-                    ft.Text("Air-Gapped & Local", size=11, color=AppPalette.TEXT_MUTED),
+                    ft.TextButton(
+                        "Manage Prompts Folder",
+                        icon=ft.Icons.FOLDER_SPECIAL_OUTLINED,
+                        style=ft.ButtonStyle(
+                            color=AppPalette.TEXT_MUTED,
+                            icon_size=16,
+                            text_style=ft.TextStyle(size=11),
+                        ),
+                        on_click=lambda _: PromptManager().open_prompts_directory(),
+                    ),
+                    ft.Row(
+                        controls=[
+                            ft.Icon(ft.Icons.SHIELD_OUTLINED, size=13, color=AppPalette.SUCCESS),
+                            ft.Text("Air-Gapped & Local", size=11, color=AppPalette.TEXT_MUTED),
+                        ],
+                        spacing=6,
+                        alignment=ft.MainAxisAlignment.CENTER,
+                    ),
                 ],
-                spacing=6,
-                alignment=ft.MainAxisAlignment.CENTER,
+                spacing=4,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             ),
-            padding=ft.Padding.symmetric(vertical=12),
+            padding=ft.Padding.symmetric(vertical=10),
             border=ft.Border.only(top=ft.BorderSide(1, AppPalette.BORDER_COLOR)),
         )
 
