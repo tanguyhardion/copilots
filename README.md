@@ -15,7 +15,8 @@ A unified, maintainable, and modern desktop application built with **Flet** that
 copilots/
 ├── app.py                      # Main Flet application launcher
 ├── requirements.txt            # Unified dependencies
-├── icons/                      # App branding icons (word.png, excel.png, powerpoint.png, cv.png)
+├── assets/
+│   └── icons/                  # App branding icons (word.png, excel.png, powerpoint.png, cv.png)
 └── copilots_app/
     ├── core/                   # Design system tokens, config, events
     │   ├── theme.py
