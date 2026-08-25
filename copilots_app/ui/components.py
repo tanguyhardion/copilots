@@ -24,9 +24,9 @@ class AppHeader(ft.Container):
         if icon_path:
             lead_controls.append(
                 ft.Container(
-                    content=ft.Image(src=icon_path, width=32, height=32, fit=ft.BoxFit.CONTAIN),
+                    content=ft.Image(src=icon_path, width=32, height=32, fit=ft.BoxFit.COVER, border_radius=16),
                     padding=6,
-                    border_radius=8,
+                    border_radius=22,
                     bgcolor=AppPalette.BG_CARD,
                     border=ft.Border.all(1, AppPalette.BORDER_COLOR),
                 )
@@ -36,7 +36,7 @@ class AppHeader(ft.Container):
                 ft.Container(
                     content=ft.Icon(icon_name, size=24, color=AppPalette.TEXT_PRIMARY),
                     padding=6,
-                    border_radius=8,
+                    border_radius=22,
                     bgcolor=AppPalette.BG_CARD,
                     border=ft.Border.all(1, AppPalette.BORDER_COLOR),
                 )

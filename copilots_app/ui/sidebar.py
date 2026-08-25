@@ -26,9 +26,9 @@ class NavItem(ft.Container):
         self.badge_color = badge_color
 
         icon_widget = (
-            ft.Image(src=icon_path, width=22, height=22, fit=ft.BoxFit.CONTAIN)
+            ft.Image(src=icon_path, width=28, height=28, fit=ft.BoxFit.COVER, border_radius=14)
             if icon_path
-            else ft.Icon(icon_name or ft.Icons.APPS, size=20, color=AppPalette.TEXT_PRIMARY)
+            else ft.Icon(icon_name or ft.Icons.APPS, size=24, color=AppPalette.TEXT_PRIMARY)
         )
 
         self.label = ft.Text(
@@ -40,7 +40,7 @@ class NavItem(ft.Container):
 
         self.indicator = ft.Container(
             width=3,
-            height=20,
+            height=24,
             border_radius=2,
             bgcolor=badge_color if is_selected else "transparent",
         )
@@ -51,14 +51,14 @@ class NavItem(ft.Container):
                 icon_widget,
                 self.label,
             ],
-            spacing=10,
+            spacing=12,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
         )
 
         super().__init__(
             content=content,
-            padding=ft.Padding.symmetric(horizontal=8, vertical=10),
-            border_radius=6,
+            padding=ft.Padding.symmetric(horizontal=10, vertical=10),
+            border_radius=8,
             bgcolor=AppPalette.BG_CARD if is_selected else "transparent",
             on_click=self._handle_click,
             on_hover=self._handle_hover,
@@ -135,7 +135,7 @@ class AppSidebar(ft.Container):
                     ft.Container(
                         content=ft.Icon(ft.Icons.AUTO_AWESOME, size=20, color=AppPalette.PRIMARY),
                         padding=8,
-                        border_radius=8,
+                        border_radius=18,
                         bgcolor=AppPalette.BG_CARD,
                         border=ft.Border.all(1, AppPalette.BORDER_COLOR),
                     ),
@@ -158,14 +158,14 @@ class AppSidebar(ft.Container):
             controls=[
                 ft.Container(
                     content=ft.Text("COPILOTS", size=10, weight=ft.FontWeight.BOLD, color=AppPalette.TEXT_MUTED),
-                    padding=ft.Padding.only(left=12, top=12, bottom=6),
+                    padding=ft.Padding.only(left=12, top=12, bottom=8),
                 ),
                 self.nav_items["powerpoint"],
                 self.nav_items["word"],
                 self.nav_items["excel"],
                 self.nav_items["cv"],
             ],
-            spacing=4,
+            spacing=8,
             expand=True,
         )
 
