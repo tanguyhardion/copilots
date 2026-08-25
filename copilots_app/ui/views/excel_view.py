@@ -1,12 +1,26 @@
 """
-Excel Copilot View: Workbook Explorer, LLM Context Generator, JSON Action Protocol Executor, and Backup Manager.
+Excel Copilot View in PySide6: Workbook Explorer, LLM Context Generator, JSON Action Protocol Executor, and Backup Manager.
 """
 
 import os
-import json
 import threading
-import flet as ft
-from typing import Optional, Dict, Any, List
+from typing import Optional
+from PySide6.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QFrame,
+    QPushButton,
+    QDialog,
+    QLabel,
+    QScrollArea,
+    QFileDialog,
+    QStackedWidget,
+    QPlainTextEdit,
+    QSplitter,
+)
+from PySide6.QtCore import Qt, Signal, QObject
+from PySide6.QtGui import QFont
 
 from copilots_app.core.theme import AppPalette
 from copilots_app.ui.components import AppHeader, StatusBar, CodeEditor, ActionButton, MetricCard
@@ -41,15 +55,63 @@ SAMPLE_ACTION_JSON = """\
 """
 
 
-class ExcelView(ft.Container):
-    """Unified Excel Copilot interface in Flet."""
+class WorkerSignals(QObject):
+    status = Signal(str, str, bool)
+    log = Signal(str, str)
+    finished = Signal()
 
-    def __init__(self, page: ft.Page):
-        self.app_page = page
+
+class ExcelView(QWidget):
+    """Unified Excel Copilot interface in PySide6."""
+
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__(parent)
         self.executor = ActionExecutor()
         self.current_file_path: Optional[str] = None
         self.current_model = None
-        self.current_protocol: Optional[ActionProtocol] = None
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # Header Action Buttons
+        prompt_btn = QPushButton("System Prompt")
+        prompt_btn.setFont(QFont("Segoe UI", 9))
+        prompt_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {AppPalette.BG_CARD};
+                color: {AppPalette.TEXT_SECONDARY};
+                border: 1px solid {AppPalette.BORDER_COLOR};
+                border-radius: 6px;
+                padding: 6px 12px;
+            }}
+            QPushButton:hover {{
+                background-color: {AppPalette.BG_CARD_HOVER};
+                color: {AppPalette.TEXT_PRIMARY};
+            }}
+        """)
+        prompt_btn.clicked.connect(lambda: open_prompt_dialog(
+            "excel",
+            on_status_change=lambda msg, lvl: self.status_bar.set_status(msg, level=lvl),
+            parent=self,
+        ))
+
+        demo_btn = QPushButton("Open Demo Workbook")
+        demo_btn.setFont(QFont("Segoe UI", 9))
+        demo_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {AppPalette.BG_CARD};
+                color: {AppPalette.TEXT_SECONDARY};
+                border: 1px solid {AppPalette.BORDER_COLOR};
+                border-radius: 6px;
+                padding: 6px 12px;
+            }}
+            QPushButton:hover {{
+                background-color: {AppPalette.BG_CARD_HOVER};
+                color: {AppPalette.TEXT_PRIMARY};
+            }}
+        """)
+        demo_btn.clicked.connect(self._load_demo_workbook)
 
         self.header = AppHeader(
             title="Excel Copilot",
@@ -57,232 +119,261 @@ class ExcelView(ft.Container):
             icon_path="icons/excel.png",
             badge_text="openpyxl + semantic engine",
             badge_color=AppPalette.BRAND_EXCEL,
-            actions=[
-                ft.TextButton(
-                    "System Prompt",
-                    icon=ft.Icons.PSYCHOLOGY_OUTLINED,
-                    on_click=lambda _: open_prompt_dialog(
-                        self.app_page,
-                        "excel",
-                        on_status_change=lambda msg, lvl: self.status_bar.set_status(msg, level=lvl),
-                    ),
-                ),
-                ft.TextButton(
-                    "Open Demo Workbook",
-                    icon=ft.Icons.DESCRIPTION_OUTLINED,
-                    on_click=self._load_demo_workbook,
-                ),
-            ],
+            actions=[prompt_btn, demo_btn],
+            parent=self,
         )
+        layout.addWidget(self.header)
 
-        self.status_bar = StatusBar(default_text="Ready — open an Excel workbook to begin")
+        # Top Overview Metric Cards
+        metric_container = QWidget()
+        m_layout = QHBoxLayout(metric_container)
+        m_layout.setContentsMargins(16, 12, 16, 12)
+        m_layout.setSpacing(10)
 
-        # Workbook Overview Cards
-        self.metric_file = MetricCard(title="Active File", value="None", icon_name=ft.Icons.INSERT_DRIVE_FILE_OUTLINED, color=AppPalette.BRAND_EXCEL)
-        self.metric_sheets = MetricCard(title="Sheets", value="0", icon_name=ft.Icons.GRID_ON, color=AppPalette.PRIMARY)
-        self.metric_tables = MetricCard(title="Tables", value="0", icon_name=ft.Icons.TABLE_CHART_OUTLINED, color=AppPalette.INFO)
-        self.metric_formulas = MetricCard(title="Formulas", value="0", icon_name=ft.Icons.FUNCTIONS, color=AppPalette.WARNING)
+        self.metric_file = MetricCard(title="Active File", value="None", icon_text="📄", color=AppPalette.BRAND_EXCEL)
+        self.metric_sheets = MetricCard(title="Sheets", value="0", icon_text="⊞", color=AppPalette.PRIMARY)
+        self.metric_tables = MetricCard(title="Tables", value="0", icon_text="▦", color=AppPalette.INFO)
+        self.metric_formulas = MetricCard(title="Formulas", value="0", icon_text="fx", color=AppPalette.WARNING)
 
-        overview_row = ft.Container(
-            content=ft.Row(
-                controls=[
-                    self.metric_file,
-                    self.metric_sheets,
-                    self.metric_tables,
-                    self.metric_formulas,
-                ],
-                spacing=10,
-            ),
-            padding=ft.Padding.symmetric(horizontal=16, vertical=12),
-        )
+        m_layout.addWidget(self.metric_file)
+        m_layout.addWidget(self.metric_sheets)
+        m_layout.addWidget(self.metric_tables)
+        m_layout.addWidget(self.metric_formulas)
+        layout.addWidget(metric_container)
 
-        # Tabbed Workspace
-        # Left Panel: Explorer / Context
-        self.sheets_list = ft.ListView(spacing=6, expand=True, padding=8)
-        self.prompt_context_text = ft.TextField(
-            multiline=True,
-            read_only=True,
-            value="Open a workbook to generate LLM context and schema model...",
-            text_size=12,
-            text_style=ft.TextStyle(font_family="Consolas, monospace"),
-            border=ft.InputBorder.NONE,
-            filled=True,
-            fill_color=AppPalette.BG_INPUT,
-            expand=True,
-        )
+        # Main Split Body
+        split_widget = QWidget()
+        split_layout = QHBoxLayout(split_widget)
+        split_layout.setContentsMargins(16, 0, 16, 16)
+        split_layout.setSpacing(12)
 
-        self.explorer_container = ft.Container(
-            content=self.sheets_list,
-            bgcolor=AppPalette.BG_CARD,
-            border=ft.Border.all(1, AppPalette.BORDER_COLOR),
-            border_radius=8,
-            padding=4,
-            expand=True,
-            visible=True,
-        )
+        # Left Panel (Explorer / Prompt Context tabs)
+        left_panel = QFrame()
+        left_panel.setStyleSheet(f"""
+            background-color: {AppPalette.BG_CARD};
+            border: 1px solid {AppPalette.BORDER_COLOR};
+            border-radius: 8px;
+        """)
+        lp_layout = QVBoxLayout(left_panel)
+        lp_layout.setContentsMargins(8, 8, 8, 8)
+        lp_layout.setSpacing(8)
 
-        self.prompt_container = ft.Container(
-            content=ft.Column(
-                controls=[
-                    ft.Container(
-                        content=ft.Row(
-                            controls=[
-                                ft.Text("Semantic Model & System Prompt", size=11, weight=ft.FontWeight.W_600, color=AppPalette.TEXT_MUTED),
-                                ft.IconButton(
-                                    icon=ft.Icons.COPY_ALL,
-                                    tooltip="Copy LLM Context",
-                                    icon_size=16,
-                                    on_click=self._copy_prompt_context,
-                                ),
-                            ],
-                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                        ),
-                        padding=ft.Padding.symmetric(horizontal=8, vertical=4),
-                        bgcolor=AppPalette.BG_SURFACE,
-                        border=ft.Border.only(bottom=ft.BorderSide(1, AppPalette.BORDER_COLOR)),
-                    ),
-                    self.prompt_context_text,
-                ],
-                spacing=0,
-            ),
-            bgcolor=AppPalette.BG_CARD,
-            border=ft.Border.all(1, AppPalette.BORDER_COLOR),
-            border_radius=8,
-            expand=True,
-            visible=False,
-        )
+        # Tab toggle buttons
+        tab_row = QHBoxLayout()
+        tab_row.setSpacing(6)
 
-        def _on_left_view_change(e):
-            selected = list(e.control.selected)[0] if e.control.selected else "explorer"
-            self.explorer_container.visible = (selected == "explorer")
-            self.prompt_container.visible = (selected == "prompt")
-            self.explorer_container.update()
-            self.prompt_container.update()
+        self.btn_tab_explorer = QPushButton("Workbook Explorer")
+        self.btn_tab_explorer.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        self.btn_tab_prompt = QPushButton("LLM Prompt Context")
+        self.btn_tab_prompt.setFont(QFont("Segoe UI", 9))
 
-        left_segmented_nav = ft.SegmentedButton(
-            selected=["explorer"],
-            allow_multiple_selection=False,
-            segments=[
-                ft.Segment(value="explorer", label=ft.Text("Workbook Explorer", size=11), icon=ft.Icon(ft.Icons.ACCOUNT_TREE_OUTLINED, size=14)),
-                ft.Segment(value="prompt", label=ft.Text("LLM Prompt Context", size=11), icon=ft.Icon(ft.Icons.PSYCHOLOGY_OUTLINED, size=14)),
-            ],
-            on_change=_on_left_view_change,
-        )
+        tab_row.addWidget(self.btn_tab_explorer)
+        tab_row.addWidget(self.btn_tab_prompt)
+        lp_layout.addLayout(tab_row)
 
-        left_tab_view = ft.Column(
-            controls=[
-                left_segmented_nav,
-                self.explorer_container,
-                self.prompt_container,
-            ],
-            spacing=8,
-            expand=True,
-        )
+        self.left_stack = QStackedWidget()
 
-        # Right Panel: Protocol Input & Validation
+        # Page 1: Explorer Scroll
+        self.sheets_scroll = QScrollArea()
+        self.sheets_scroll.setWidgetResizable(True)
+        self.sheets_scroll.setStyleSheet("border: none; background: transparent;")
+        self.sheets_container = QWidget()
+        self.sheets_layout = QVBoxLayout(self.sheets_container)
+        self.sheets_layout.setContentsMargins(4, 4, 4, 4)
+        self.sheets_layout.setSpacing(6)
+        self.sheets_layout.addStretch()
+        self.sheets_scroll.setWidget(self.sheets_container)
+        self.left_stack.addWidget(self.sheets_scroll)
+
+        # Page 2: Prompt Context Area
+        prompt_page = QWidget()
+        pp_layout = QVBoxLayout(prompt_page)
+        pp_layout.setContentsMargins(0, 0, 0, 0)
+        pp_layout.setSpacing(6)
+
+        pp_toolbar = QHBoxLayout()
+        pp_title = QLabel("Semantic Model & System Prompt")
+        pp_title.setFont(QFont("Segoe UI", 8, QFont.Bold))
+        pp_title.setStyleSheet(f"color: {AppPalette.TEXT_MUTED};")
+        pp_toolbar.addWidget(pp_title)
+        pp_toolbar.addStretch()
+
+        copy_prompt_btn = QPushButton("Copy All Context")
+        copy_prompt_btn.setFont(QFont("Segoe UI", 8))
+        copy_prompt_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {AppPalette.BG_SURFACE};
+                color: {AppPalette.TEXT_PRIMARY};
+                border: 1px solid {AppPalette.BORDER_COLOR};
+                border-radius: 4px;
+                padding: 3px 8px;
+            }}
+            QPushButton:hover {{
+                background-color: {AppPalette.BG_CARD_HOVER};
+            }}
+        """)
+        copy_prompt_btn.clicked.connect(self._copy_prompt_context)
+        pp_toolbar.addWidget(copy_prompt_btn)
+        pp_layout.addLayout(pp_toolbar)
+
+        self.prompt_context_text = QPlainTextEdit()
+        self.prompt_context_text.setReadOnly(True)
+        self.prompt_context_text.setPlainText("Open a workbook to generate LLM context and schema model...")
+        self.prompt_context_text.setFont(QFont("Consolas", 9))
+        self.prompt_context_text.setStyleSheet(f"""
+            QPlainTextEdit {{
+                background-color: {AppPalette.BG_INPUT};
+                color: {AppPalette.TEXT_PRIMARY};
+                border: 1px solid {AppPalette.BORDER_COLOR};
+                border-radius: 6px;
+                padding: 8px;
+            }}
+        """)
+        pp_layout.addWidget(self.prompt_context_text)
+        self.left_stack.addWidget(prompt_page)
+
+        lp_layout.addWidget(self.left_stack)
+
+        self.btn_tab_explorer.clicked.connect(lambda: self._switch_left_tab(0))
+        self.btn_tab_prompt.clicked.connect(lambda: self._switch_left_tab(1))
+        self._update_tab_button_styles(0)
+
+        split_layout.addWidget(left_panel, 4)
+
+        # Right Panel (Protocol JSON Editor + Validation/Log Panel)
+        right_panel = QWidget()
+        rp_layout = QVBoxLayout(right_panel)
+        rp_layout.setContentsMargins(0, 0, 0, 0)
+        rp_layout.setSpacing(8)
+
         self.protocol_editor = CodeEditor(
             value=SAMPLE_ACTION_JSON,
             hint_text="Enter Action Protocol JSON here...",
-            expand=True,
+            parent=self,
         )
+        rp_layout.addWidget(self.protocol_editor, 1)
 
-        self.log_text = ft.Text("No execution logs yet.", size=12, color=AppPalette.TEXT_MUTED)
-        self.validation_container = ft.Container(
-            content=ft.Column(
-                controls=[
-                    ft.Text("Validation & Execution Log", size=12, weight=ft.FontWeight.BOLD, color=AppPalette.TEXT_PRIMARY),
-                    self.log_text,
-                ],
-                spacing=8,
-                scroll=ft.ScrollMode.AUTO,
-            ),
-            padding=12,
-            bgcolor=AppPalette.BG_CARD,
-            border=ft.Border.all(1, AppPalette.BORDER_COLOR),
-            border_radius=8,
-            height=130,
-        )
+        # Validation log panel
+        val_frame = QFrame()
+        val_frame.setFixedHeight(120)
+        val_frame.setStyleSheet(f"""
+            background-color: {AppPalette.BG_CARD};
+            border: 1px solid {AppPalette.BORDER_COLOR};
+            border-radius: 8px;
+        """)
+        vf_layout = QVBoxLayout(val_frame)
+        vf_layout.setContentsMargins(12, 8, 12, 8)
+        vf_layout.setSpacing(4)
 
-        right_panel = ft.Column(
-            controls=[
-                self.protocol_editor,
-                self.validation_container,
-            ],
-            spacing=8,
-            expand=True,
-        )
+        vf_title = QLabel("Validation & Execution Log")
+        vf_title.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        vf_title.setStyleSheet(f"color: {AppPalette.TEXT_PRIMARY};")
+        vf_layout.addWidget(vf_title)
 
-        # Split Body
-        split_body = ft.Container(
-            content=ft.Row(
-                controls=[
-                    ft.Container(content=left_tab_view, expand=4),
-                    ft.Container(content=right_panel, expand=6),
-                ],
-                spacing=12,
-                vertical_alignment=ft.CrossAxisAlignment.STRETCH,
-            ),
-            padding=ft.Padding.symmetric(horizontal=16),
-            expand=True,
-        )
+        val_scroll = QScrollArea()
+        val_scroll.setWidgetResizable(True)
+        val_scroll.setStyleSheet("border: none; background: transparent;")
+        self.log_text = QLabel("No execution logs yet.")
+        self.log_text.setFont(QFont("Consolas", 9))
+        self.log_text.setStyleSheet(f"color: {AppPalette.TEXT_MUTED};")
+        self.log_text.setWordWrap(True)
+        val_scroll.setWidget(self.log_text)
+        vf_layout.addWidget(val_scroll)
 
-        # Action Buttons
+        rp_layout.addWidget(val_frame)
+        split_layout.addWidget(right_panel, 6)
+
+        layout.addWidget(split_widget, 1)
+
+        # Bottom Action Bar
+        action_bar = QFrame()
+        action_bar.setStyleSheet(f"""
+            background-color: {AppPalette.BG_SURFACE};
+            border-top: 1px solid {AppPalette.BORDER_COLOR};
+        """)
+        act_layout = QHBoxLayout(action_bar)
+        act_layout.setContentsMargins(16, 12, 16, 12)
+        act_layout.setSpacing(10)
+
         self.open_file_btn = ActionButton(
             text="Open Workbook",
-            icon=ft.Icons.FOLDER_OPEN_OUTLINED,
             color=AppPalette.PRIMARY,
-            on_click=self._on_open_file_dialog,
         )
+        self.open_file_btn.clicked.connect(self._on_open_file_dialog)
+        act_layout.addWidget(self.open_file_btn)
 
         self.execute_btn = ActionButton(
             text="Execute Protocol",
-            icon=ft.Icons.PLAY_ARROW_ROUNDED,
             color=AppPalette.BRAND_EXCEL,
             tooltip="Validates and applies the JSON action protocol with automatic backup",
-            on_click=self._on_execute_protocol,
         )
+        self.execute_btn.clicked.connect(self._on_execute_protocol)
+        act_layout.addWidget(self.execute_btn)
 
         self.backup_btn = ActionButton(
             text="View Backups",
-            icon=ft.Icons.SHIELD_OUTLINED,
             color="#4A4F57",
             tooltip="View safe automated snapshot backups",
-            on_click=self._on_view_backups,
         )
+        self.backup_btn.clicked.connect(self._on_view_backups)
+        act_layout.addWidget(self.backup_btn)
 
-        action_row = ft.Container(
-            content=ft.Row(
-                controls=[
-                    self.open_file_btn,
-                    self.execute_btn,
-                    self.backup_btn,
-                ],
-                spacing=10,
-            ),
-            padding=ft.Padding.symmetric(horizontal=16, vertical=10),
-            bgcolor=AppPalette.BG_SURFACE,
-            border=ft.Border.only(top=ft.BorderSide(1, AppPalette.BORDER_COLOR)),
-        )
+        act_layout.addStretch()
+        layout.addWidget(action_bar)
 
-        main_layout = ft.Column(
-            controls=[
-                self.header,
-                overview_row,
-                split_body,
-                action_row,
-                self.status_bar,
-            ],
-            spacing=0,
-            expand=True,
-        )
+        # Status Bar
+        self.status_bar = StatusBar(default_text="Ready — open an Excel workbook to begin", parent=self)
+        layout.addWidget(self.status_bar)
 
-        super().__init__(
-            content=main_layout,
-            expand=True,
-            bgcolor=AppPalette.BG_DARK,
-        )
+    def _switch_left_tab(self, index: int):
+        self.left_stack.setCurrentIndex(index)
+        self._update_tab_button_styles(index)
 
-    def _load_demo_workbook(self, e):
+    def _update_tab_button_styles(self, active_index: int):
+        if active_index == 0:
+            self.btn_tab_explorer.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: {AppPalette.BG_CARD_HOVER};
+                    color: {AppPalette.TEXT_PRIMARY};
+                    border: 1px solid {AppPalette.BORDER_LIGHT};
+                    border-radius: 5px;
+                    padding: 5px 10px;
+                }}
+            """)
+            self.btn_tab_prompt.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: transparent;
+                    color: {AppPalette.TEXT_MUTED};
+                    border: none;
+                    padding: 5px 10px;
+                }}
+                QPushButton:hover {{
+                    color: {AppPalette.TEXT_PRIMARY};
+                }}
+            """)
+        else:
+            self.btn_tab_prompt.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: {AppPalette.BG_CARD_HOVER};
+                    color: {AppPalette.TEXT_PRIMARY};
+                    border: 1px solid {AppPalette.BORDER_LIGHT};
+                    border-radius: 5px;
+                    padding: 5px 10px;
+                }}
+            """)
+            self.btn_tab_explorer.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: transparent;
+                    color: {AppPalette.TEXT_MUTED};
+                    border: none;
+                    padding: 5px 10px;
+                }}
+                QPushButton:hover {{
+                    color: {AppPalette.TEXT_PRIMARY};
+                }}
+            """)
+
+    def _load_demo_workbook(self):
         demo_path = os.path.abspath("excel-copilot/Financial_Dashboard.xlsx")
         if not os.path.exists(demo_path):
             demo_path = os.path.abspath("Financial_Dashboard.xlsx")
@@ -291,8 +382,12 @@ class ExcelView(ft.Container):
         else:
             self.status_bar.set_status(f"Demo file not found at {demo_path}", level="warning")
 
-    def _on_open_file_dialog(self, e):
-        self._load_demo_workbook(e)
+    def _on_open_file_dialog(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Open Excel Workbook", "", "Excel Files (*.xlsx *.xlsm *.xltx *.xltm)"
+        )
+        if file_path:
+            self.load_workbook(file_path)
 
     def load_workbook(self, file_path: str):
         try:
@@ -300,45 +395,58 @@ class ExcelView(ft.Container):
             self.status_bar.set_status("Analyzing workbook structure…", level="info", loading=True)
             self.current_model = WorkbookAnalyzer.analyze(self.current_file_path)
 
-            # Update Metric cards
-            self.metric_file.content.controls[1].controls[1].value = os.path.basename(self.current_file_path)
-            self.metric_sheets.content.controls[1].controls[1].value = str(len(self.current_model.worksheets))
+            # Update Metrics
+            self.metric_file.set_value(os.path.basename(self.current_file_path))
+            self.metric_sheets.set_value(str(len(self.current_model.worksheets)))
 
             total_tables = sum(len(s.tables) for s in self.current_model.worksheets)
-            self.metric_tables.content.controls[1].controls[1].value = str(total_tables)
+            self.metric_tables.set_value(str(total_tables))
 
             total_formulas = sum(s.formulas_count for s in self.current_model.worksheets)
-            self.metric_formulas.content.controls[1].controls[1].value = str(total_formulas)
+            self.metric_formulas.set_value(str(total_formulas))
+
+            # Clear sheets container
+            while self.sheets_layout.count() > 1:
+                child = self.sheets_layout.takeAt(0)
+                if child.widget():
+                    child.widget().deleteLater()
 
             # Populate sheets list
-            self.sheets_list.controls.clear()
             for sheet in self.current_model.worksheets:
-                card = ft.Container(
-                    content=ft.Column(
-                        controls=[
-                            ft.Row(
-                                controls=[
-                                    ft.Icon(ft.Icons.GRID_ON, size=16, color=AppPalette.BRAND_EXCEL),
-                                    ft.Text(sheet.name, size=13, weight=ft.FontWeight.BOLD, color=AppPalette.TEXT_PRIMARY),
-                                    ft.Container(
-                                        content=ft.Text(f"{sheet.max_row}x{sheet.max_column}", size=10, color=AppPalette.TEXT_MUTED),
-                                        padding=ft.Padding.symmetric(horizontal=6, vertical=2),
-                                        border_radius=4,
-                                        bgcolor=AppPalette.BG_INPUT,
-                                    ),
-                                ],
-                                spacing=8,
-                            ),
-                            ft.Text(f"Tables: {len(sheet.tables)}  |  Charts: {len(sheet.charts)}  |  Formulas: {sheet.formulas_count}", size=11, color=AppPalette.TEXT_SECONDARY),
-                        ],
-                        spacing=4,
-                    ),
-                    padding=10,
-                    border_radius=6,
-                    bgcolor=AppPalette.BG_CARD_HOVER,
-                    border=ft.Border.all(1, AppPalette.BORDER_COLOR),
-                )
-                self.sheets_list.controls.append(card)
+                card = QFrame()
+                card.setStyleSheet(f"""
+                    background-color: {AppPalette.BG_CARD_HOVER};
+                    border: 1px solid {AppPalette.BORDER_COLOR};
+                    border-radius: 6px;
+                """)
+                c_layout = QVBoxLayout(card)
+                c_layout.setContentsMargins(10, 8, 10, 8)
+                c_layout.setSpacing(3)
+
+                header_row = QHBoxLayout()
+                h_name = QLabel(f"⊞ {sheet.name}")
+                h_name.setFont(QFont("Segoe UI", 9, QFont.Bold))
+                h_name.setStyleSheet(f"color: {AppPalette.TEXT_PRIMARY};")
+                header_row.addWidget(h_name)
+
+                dim_badge = QLabel(f"{sheet.max_row}x{sheet.max_column}")
+                dim_badge.setFont(QFont("Segoe UI", 8))
+                dim_badge.setStyleSheet(f"""
+                    background-color: {AppPalette.BG_INPUT};
+                    color: {AppPalette.TEXT_MUTED};
+                    border-radius: 4px;
+                    padding: 1px 6px;
+                """)
+                header_row.addWidget(dim_badge)
+                header_row.addStretch()
+                c_layout.addLayout(header_row)
+
+                info_label = QLabel(f"Tables: {len(sheet.tables)}  |  Charts: {len(sheet.charts)}  |  Formulas: {sheet.formulas_count}")
+                info_label.setFont(QFont("Segoe UI", 8))
+                info_label.setStyleSheet(f"color: {AppPalette.TEXT_SECONDARY};")
+                c_layout.addWidget(info_label)
+
+                self.sheets_layout.insertWidget(self.sheets_layout.count() - 1, card)
 
             # Generate LLM Context
             context_str = f"# EXCEL WORKBOOK SEMANTIC CONTEXT\nFile: {os.path.basename(self.current_file_path)}\n\n"
@@ -348,20 +456,20 @@ class ExcelView(ft.Container):
                     context_str += f"- Tables: {', '.join(t.name for t in s.tables)}\n"
                 if s.formulas_count:
                     context_str += f"- Formulas Count: {s.formulas_count}\n"
-            self.prompt_context_text.value = context_str
+            self.prompt_context_text.setPlainText(context_str)
 
             self.status_bar.set_status(f"✓ Loaded '{os.path.basename(self.current_file_path)}' successfully", level="success")
-            self.update()
         except Exception as err:
             self.status_bar.set_status(f"Failed to load workbook: {err}", level="error")
 
-    def _copy_prompt_context(self, e):
+    def _copy_prompt_context(self):
         system_prompt = PromptManager().get_prompt("excel")
-        full_text = f"{system_prompt}\n\n================================================================================\nCURRENT WORKBOOK CONTEXT\n================================================================================\n{self.prompt_context_text.value}"
-        self.app_page.set_clipboard(full_text)
+        full_text = f"{system_prompt}\n\n================================================================================\nCURRENT WORKBOOK CONTEXT\n================================================================================\n{self.prompt_context_text.toPlainText()}"
+        from PySide6.QtWidgets import QApplication
+        QApplication.clipboard().setText(full_text)
         self.status_bar.set_status("Copied System Prompt + Workbook Context to clipboard!", level="success")
 
-    def _on_execute_protocol(self, e):
+    def _on_execute_protocol(self):
         if not self.current_file_path:
             self.status_bar.set_status("Please open or load a workbook first", level="warning")
             return
@@ -372,6 +480,10 @@ class ExcelView(ft.Container):
             return
 
         self.status_bar.set_status("Validating and executing Action Protocol…", level="info", loading=True)
+
+        signals = WorkerSignals()
+        signals.status.connect(self.status_bar.set_status)
+        signals.log.connect(self._update_log)
 
         def worker():
             try:
@@ -387,54 +499,83 @@ class ExcelView(ft.Container):
                     log_lines.append(f"✓ SUCCESS: Executed {res.actions_executed} actions.")
                     if res.objects_modified:
                         log_lines.append(f"Modified: {', '.join(res.objects_modified)}")
-                    self.status_bar.set_status(f"✓ Protocol executed successfully! ({res.actions_executed} actions)", level="success")
+                    signals.status.emit(f"✓ Protocol executed successfully! ({res.actions_executed} actions)", "success", False)
                 else:
                     log_lines.append(f"❌ {res.status.value}")
                     for err in res.errors:
                         log_lines.append(f"• Error: {err}")
-                    self.status_bar.set_status(f"Execution finished with status: {res.status.value}", level="warning")
+                    signals.status.emit(f"Execution finished with status: {res.status.value}", "warning", False)
 
                 for w in res.warnings:
                     log_lines.append(f"⚠ Warning: {w}")
 
-                self.log_text.value = "\n".join(log_lines)
-                self.log_text.color = AppPalette.SUCCESS if res.status == ExecutionStatus.SUCCESS else AppPalette.WARNING
-                self.validation_container.update()
+                log_content = "\n".join(log_lines)
+                color = AppPalette.SUCCESS if res.status == ExecutionStatus.SUCCESS else AppPalette.WARNING
+                signals.log.emit(log_content, color)
             except Exception as err:
-                self.log_text.value = f"Parse/Execution Error:\n{str(err)}"
-                self.log_text.color = AppPalette.ERROR
-                self.validation_container.update()
-                self.status_bar.set_status(f"Execution error: {err}", level="error")
+                signals.log.emit(f"Parse/Execution Error:\n{str(err)}", AppPalette.ERROR)
+                signals.status.emit(f"Execution error: {err}", "error", False)
 
         threading.Thread(target=worker, daemon=True).start()
 
-    def _on_view_backups(self, e):
+    def _update_log(self, text: str, color: str):
+        self.log_text.setText(text)
+        self.log_text.setStyleSheet(f"color: {color};")
+
+    def _on_view_backups(self):
         backups = self.executor.backup_manager.list_backups()
-        content_items = [ft.Text("Available Automatic Backups:", weight=ft.FontWeight.BOLD)]
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Automated Backups")
+        dialog.resize(520, 320)
+        dialog.setStyleSheet(f"background-color: {AppPalette.BG_DARK};")
+
+        dlg_layout = QVBoxLayout(dialog)
+        dlg_layout.setContentsMargins(20, 20, 20, 20)
+        dlg_layout.setSpacing(12)
+
+        title = QLabel("Available Automatic Backups:")
+        title.setFont(QFont("Segoe UI", 11, QFont.Bold))
+        title.setStyleSheet(f"color: {AppPalette.TEXT_PRIMARY};")
+        dlg_layout.addWidget(title)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("border: none; background: transparent;")
+
+        c_widget = QWidget()
+        c_layout = QVBoxLayout(c_widget)
+        c_layout.setSpacing(6)
+
         if not backups:
-            content_items.append(ft.Text("No backup snapshots found yet.", color=AppPalette.TEXT_MUTED))
+            no_b = QLabel("No backup snapshots found yet.")
+            no_b.setStyleSheet(f"color: {AppPalette.TEXT_MUTED};")
+            c_layout.addWidget(no_b)
         else:
             for b in backups:
-                content_items.append(
-                    ft.Text(f"• {b['timestamp']} — {os.path.basename(b.get('source_path', ''))} ({b['size_bytes']} bytes)")
-                )
+                b_label = QLabel(f"• {b['timestamp']} — {os.path.basename(b.get('source_path', ''))} ({b['size_bytes']} bytes)")
+                b_label.setFont(QFont("Consolas", 9))
+                b_label.setStyleSheet(f"color: {AppPalette.TEXT_SECONDARY};")
+                c_layout.addWidget(b_label)
 
-        dialog = ft.AlertDialog(
-            title=ft.Text("Automated Backups", size=16, weight=ft.FontWeight.BOLD),
-            content=ft.Container(
-                content=ft.Column(controls=content_items, spacing=6, scroll=ft.ScrollMode.AUTO),
-                width=500,
-                height=300,
-            ),
-            actions=[
-                ft.TextButton("Close", on_click=lambda ev: self._close_dialog(dialog))
-            ],
-        )
-        self.app_page.overlay.append(dialog)
-        dialog.open = True
-        self.app_page.update()
+        c_layout.addStretch()
+        scroll.setWidget(c_widget)
+        dlg_layout.addWidget(scroll)
 
-    def _close_dialog(self, dialog):
-        dialog.open = False
-        self.app_page.update()
+        close_btn = QPushButton("Close")
+        close_btn.setFont(QFont("Segoe UI", 9))
+        close_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {AppPalette.BG_CARD};
+                color: {AppPalette.TEXT_PRIMARY};
+                border: 1px solid {AppPalette.BORDER_COLOR};
+                border-radius: 6px;
+                padding: 8px 16px;
+            }}
+            QPushButton:hover {{
+                background-color: {AppPalette.BG_CARD_HOVER};
+            }}
+        """)
+        close_btn.clicked.connect(dialog.accept)
+        dlg_layout.addWidget(close_btn, 0, Qt.AlignRight)
 
+        dialog.exec()

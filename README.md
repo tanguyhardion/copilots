@@ -1,6 +1,6 @@
 # Office & Document Copilots — Unified Desktop Suite
 
-A unified, maintainable, and modern desktop application built with **Flet** that brings together four essential Office & Document AI Copilots:
+A unified, maintainable, and modern desktop application built with **PySide6** (Qt for Python) that brings together four essential Office & Document AI Copilots:
 
 1. **PowerPoint Copilot** — Design Consultant & Shape Architect (DSL to PowerPoint shapes, slides, tables, gradients, and icons via COM).
 2. **Word Copilot** — Document generator, live cursor injector, and active document editor with DSL extraction.
@@ -13,7 +13,7 @@ A unified, maintainable, and modern desktop application built with **Flet** that
 
 ```
 copilots/
-├── app.py                      # Main Flet application launcher
+├── app.py                      # Main PySide6 application launcher
 ├── requirements.txt            # Unified dependencies
 ├── assets/
 │   └── icons/                  # App branding icons (word.png, excel.png, powerpoint.png, cv.png)

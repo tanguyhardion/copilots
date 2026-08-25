@@ -1,302 +1,419 @@
 """
-Reusable UI Components: App Header, Status Bar, Code/DSL Editor, Metric Cards, Action Bars, and Dialogs.
+Reusable UI Components in PySide6: AppHeader, StatusBar, CodeEditor, MetricCard, and ActionButton.
 """
 
-import flet as ft
-from typing import Optional, Callable, List, Dict, Any
-from copilots_app.core.theme import AppPalette
+import os
+from typing import Optional, Dict, Any, List, Callable
+from PySide6.QtWidgets import (
+    QWidget,
+    QHBoxLayout,
+    QVBoxLayout,
+    QLabel,
+    QPushButton,
+    QPlainTextEdit,
+    QComboBox,
+    QFrame,
+    QProgressBar,
+    QApplication,
+    QGraphicsDropShadowEffect,
+)
+from PySide6.QtCore import Qt, Signal, QSize
+from PySide6.QtGui import QIcon, QPixmap, QFont, QColor, QPainter, QBrush, QPen
+
+from copilots_app.core.theme import AppPalette, get_asset_path
 
 
-class AppHeader(ft.Container):
-    """Modern header banner for Copilot views with title, subtitle, and badge."""
+class AppHeader(QFrame):
+    """Modern header banner for Copilot views with title, subtitle, icon, badge, and action buttons."""
 
     def __init__(
         self,
         title: str,
         subtitle: str,
         icon_path: Optional[str] = None,
-        icon_name: Optional[str] = None,
         badge_text: Optional[str] = None,
         badge_color: str = AppPalette.PRIMARY,
-        actions: Optional[List[ft.Control]] = None,
+        actions: Optional[List[QPushButton]] = None,
+        parent: Optional[QWidget] = None,
     ):
-        lead_controls = []
+        super().__init__(parent)
+        self.setObjectName("AppHeader")
+        self.setStyleSheet(f"""
+            QFrame#AppHeader {{
+                background-color: {AppPalette.BG_SURFACE};
+                border-bottom: 1px solid {AppPalette.BORDER_COLOR};
+            }}
+        """)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(20, 14, 20, 14)
+        layout.setSpacing(14)
+
+        # Left: Icon + Title/Subtitle + Badge
+        left_layout = QHBoxLayout()
+        left_layout.setSpacing(12)
+
         if icon_path:
-            lead_controls.append(
-                ft.Container(
-                    content=ft.Image(src=icon_path, width=32, height=32, fit=ft.BoxFit.COVER, border_radius=16),
-                    padding=6,
-                    border_radius=22,
-                    bgcolor=AppPalette.BG_CARD,
-                    border=ft.Border.all(1, AppPalette.BORDER_COLOR),
+            resolved_icon = get_asset_path(icon_path)
+            icon_label = QLabel()
+            if os.path.exists(resolved_icon):
+                pixmap = QPixmap(resolved_icon).scaled(
+                    32, 32, Qt.KeepAspectRatio, Qt.SmoothTransformation
                 )
-            )
-        elif icon_name:
-            lead_controls.append(
-                ft.Container(
-                    content=ft.Icon(icon_name, size=24, color=AppPalette.TEXT_PRIMARY),
-                    padding=6,
-                    border_radius=22,
-                    bgcolor=AppPalette.BG_CARD,
-                    border=ft.Border.all(1, AppPalette.BORDER_COLOR),
-                )
-            )
+                icon_label.setPixmap(pixmap)
+            icon_label.setStyleSheet(f"""
+                background-color: {AppPalette.BG_CARD};
+                border: 1px solid {AppPalette.BORDER_COLOR};
+                border-radius: 18px;
+                padding: 4px;
+            """)
+            left_layout.addWidget(icon_label)
 
-        title_row = [
-            ft.Text(title, size=18, weight=ft.FontWeight.BOLD, color=AppPalette.TEXT_PRIMARY),
-        ]
+        text_layout = QVBoxLayout()
+        text_layout.setSpacing(3)
+        text_layout.setContentsMargins(0, 0, 0, 0)
+
+        title_row = QHBoxLayout()
+        title_row.setSpacing(10)
+
+        title_label = QLabel(title)
+        title_label.setFont(QFont("Segoe UI", 13, QFont.Bold))
+        title_label.setStyleSheet(f"color: {AppPalette.TEXT_PRIMARY};")
+        title_row.addWidget(title_label)
+
         if badge_text:
-            title_row.append(
-                ft.Container(
-                    content=ft.Text(badge_text, size=10, weight=ft.FontWeight.W_600, color="#FFFFFF"),
-                    padding=ft.Padding.symmetric(horizontal=8, vertical=2),
-                    border_radius=12,
-                    bgcolor=badge_color,
-                )
-            )
+            badge_label = QLabel(badge_text)
+            badge_label.setFont(QFont("Segoe UI", 8, QFont.Bold))
+            badge_label.setStyleSheet(f"""
+                background-color: {badge_color};
+                color: #FFFFFF;
+                border-radius: 10px;
+                padding: 2px 8px;
+            """)
+            title_row.addWidget(badge_label)
 
-        text_col = ft.Column(
-            controls=[
-                ft.Row(controls=title_row, spacing=8, vertical_alignment=ft.CrossAxisAlignment.CENTER),
-                ft.Text(subtitle, size=12, color=AppPalette.TEXT_SECONDARY),
-            ],
-            spacing=2,
-            alignment=ft.MainAxisAlignment.CENTER,
-        )
-        lead_controls.append(text_col)
+        title_row.addStretch()
+        text_layout.addLayout(title_row)
 
-        row_controls = [
-            ft.Row(controls=lead_controls, spacing=12, vertical_alignment=ft.CrossAxisAlignment.CENTER)
-        ]
+        subtitle_label = QLabel(subtitle)
+        subtitle_label.setFont(QFont("Segoe UI", 9))
+        subtitle_label.setStyleSheet(f"color: {AppPalette.TEXT_SECONDARY};")
+        text_layout.addWidget(subtitle_label)
 
+        left_layout.addLayout(text_layout)
+        layout.addLayout(left_layout)
+        layout.addStretch()
+
+        # Right: Action buttons
         if actions:
-            row_controls.append(ft.Row(controls=actions, spacing=8))
-
-        super().__init__(
-            content=ft.Row(
-                controls=row_controls,
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            ),
-            padding=ft.Padding.symmetric(horizontal=16, vertical=12),
-            bgcolor=AppPalette.BG_SURFACE,
-            border=ft.Border.only(bottom=ft.BorderSide(1, AppPalette.BORDER_COLOR)),
-        )
+            actions_layout = QHBoxLayout()
+            actions_layout.setSpacing(8)
+            for btn in actions:
+                actions_layout.addWidget(btn)
+            layout.addLayout(actions_layout)
 
 
-class StatusBar(ft.Container):
-    """Async status indicator bar with spinner, levels and icons."""
+class StatusBar(QFrame):
+    """Async status indicator bar with levels (info, success, warning, error) and indicator."""
 
-    def __init__(self, default_text: str = "Ready"):
-        self.icon = ft.Icon(ft.Icons.INFO_OUTLINE, size=16, color=AppPalette.TEXT_SECONDARY)
-        self.text = ft.Text(default_text, size=12, color=AppPalette.TEXT_SECONDARY, expand=True)
-        self.spinner = ft.ProgressRing(width=14, height=14, stroke_width=2, color=AppPalette.PRIMARY, visible=False)
+    def __init__(self, default_text: str = "Ready", parent: Optional[QWidget] = None):
+        super().__init__(parent)
+        self.setObjectName("StatusBar")
+        self.setStyleSheet(f"""
+            QFrame#StatusBar {{
+                background-color: {AppPalette.BG_SURFACE};
+                border-top: 1px solid {AppPalette.BORDER_COLOR};
+            }}
+        """)
 
-        super().__init__(
-            content=ft.Row(
-                controls=[self.icon, self.spinner, self.text],
-                spacing=8,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            ),
-            padding=ft.Padding.symmetric(horizontal=16, vertical=8),
-            bgcolor=AppPalette.BG_SURFACE,
-            border=ft.Border.only(top=ft.BorderSide(1, AppPalette.BORDER_COLOR)),
-        )
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(16, 7, 16, 7)
+        layout.setSpacing(8)
+
+        self.indicator = QLabel("●")
+        self.indicator.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        self.indicator.setStyleSheet(f"color: {AppPalette.TEXT_MUTED};")
+        layout.addWidget(self.indicator)
+
+        self.spinner = QProgressBar()
+        self.spinner.setRange(0, 0)  # Indeterminate mode
+        self.spinner.setFixedSize(60, 10)
+        self.spinner.setTextVisible(False)
+        self.spinner.setStyleSheet(f"""
+            QProgressBar {{
+                background-color: {AppPalette.BG_INPUT};
+                border: 1px solid {AppPalette.BORDER_COLOR};
+                border-radius: 4px;
+            }}
+            QProgressBar::chunk {{
+                background-color: {AppPalette.PRIMARY};
+                border-radius: 3px;
+            }}
+        """)
+        self.spinner.setVisible(False)
+        layout.addWidget(self.spinner)
+
+        self.text_label = QLabel(default_text)
+        self.text_label.setFont(QFont("Segoe UI", 9))
+        self.text_label.setStyleSheet(f"color: {AppPalette.TEXT_SECONDARY};")
+        layout.addWidget(self.text_label)
+        layout.addStretch()
 
     def set_status(self, message: str, level: str = "info", loading: bool = False):
-        level_map = {
-            "info": (ft.Icons.INFO_OUTLINE, AppPalette.TEXT_SECONDARY),
-            "success": (ft.Icons.CHECK_CIRCLE_OUTLINE, AppPalette.SUCCESS),
-            "warning": (ft.Icons.WARNING_AMBER_ROUNDED, AppPalette.WARNING),
-            "error": (ft.Icons.ERROR_OUTLINE, AppPalette.ERROR),
+        color_map = {
+            "info": AppPalette.TEXT_SECONDARY,
+            "success": AppPalette.SUCCESS,
+            "warning": AppPalette.WARNING,
+            "error": AppPalette.ERROR,
         }
-        icon_name, color = level_map.get(level, (ft.Icons.INFO_OUTLINE, AppPalette.TEXT_SECONDARY))
+        color = color_map.get(level, AppPalette.TEXT_SECONDARY)
 
-        self.spinner.visible = loading
-        self.icon.visible = not loading
-        self.icon.name = icon_name
-        self.icon.color = color
-        self.text.value = message
-        self.text.color = color if level != "info" else AppPalette.TEXT_SECONDARY
-        try:
-            self.update()
-        except Exception:
-            pass
+        self.spinner.setVisible(loading)
+        self.indicator.setVisible(not loading)
+        self.indicator.setStyleSheet(f"color: {color};")
+        self.text_label.setText(message)
+        self.text_label.setStyleSheet(f"color: {color};")
+        QApplication.processEvents()
 
 
-class CodeEditor(ft.Container):
-    """Multi-line monospace code and DSL editor with toolbar."""
+class CodeEditor(QFrame):
+    """Monospace DSL & JSON code editor with toolbar (samples dropdown, Copy, Clear)."""
 
     def __init__(
         self,
         value: str = "",
-        hint_text: str = "Paste or enter DSL code here...",
-        on_change: Optional[Callable[[Any], None]] = None,
+        hint_text: str = "Paste or enter DSL / Code here...",
         samples: Optional[Dict[str, str]] = None,
         on_sample_selected: Optional[Callable[[str], None]] = None,
-        expand: bool = True,
+        parent: Optional[QWidget] = None,
     ):
-        self.text_field = ft.TextField(
-            value=value,
-            multiline=True,
-            min_lines=15,
-            max_lines=1000,
-            text_size=13,
-            text_style=ft.TextStyle(font_family="Consolas, Fira Code, monospace"),
-            border=ft.InputBorder.NONE,
-            filled=True,
-            fill_color=AppPalette.BG_INPUT,
-            cursor_color=AppPalette.PRIMARY,
-            hint_text=hint_text,
-            hint_style=ft.TextStyle(color=AppPalette.TEXT_MUTED, size=12),
-            on_change=on_change,
-            expand=True,
-        )
+        super().__init__(parent)
+        self.samples = samples or {}
+        self.on_sample_selected = on_sample_selected
 
-        toolbar_items: List[ft.Control] = [
-            ft.Text("DSL / Code Editor", size=11, weight=ft.FontWeight.W_600, color=AppPalette.TEXT_MUTED),
-        ]
+        self.setObjectName("CodeEditor")
+        self.setStyleSheet(f"""
+            QFrame#CodeEditor {{
+                background-color: {AppPalette.BG_INPUT};
+                border: 1px solid {AppPalette.BORDER_COLOR};
+                border-radius: 8px;
+            }}
+        """)
 
-        if samples:
-            self.sample_dropdown = ft.Dropdown(
-                options=[ft.DropdownOption(k) for k in samples.keys()],
-                hint_text="Load sample template...",
-                text_size=11,
-                content_padding=ft.Padding.symmetric(horizontal=8, vertical=4),
-                border_color=AppPalette.BORDER_COLOR,
-                bgcolor=AppPalette.BG_CARD,
-                width=200,
-                dense=True,
-                on_select=lambda e: self._handle_sample_select(e, samples, on_sample_selected),
-            )
-            toolbar_items.append(self.sample_dropdown)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
 
-        toolbar_items.append(
-            ft.IconButton(
-                icon=ft.Icons.COPY_ALL,
-                tooltip="Copy All to Clipboard",
-                icon_size=16,
-                icon_color=AppPalette.TEXT_MUTED,
-                on_click=self._copy_all,
-            )
-        )
-        toolbar_items.append(
-            ft.IconButton(
-                icon=ft.Icons.DELETE_SWEEP_OUTLINED,
-                tooltip="Clear Editor",
-                icon_size=16,
-                icon_color=AppPalette.TEXT_MUTED,
-                on_click=self._clear_all,
-            )
-        )
+        # Toolbar
+        toolbar = QFrame()
+        toolbar.setStyleSheet(f"""
+            background-color: {AppPalette.BG_SURFACE};
+            border-bottom: 1px solid {AppPalette.BORDER_COLOR};
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            padding: 2px;
+        """)
+        tb_layout = QHBoxLayout(toolbar)
+        tb_layout.setContentsMargins(12, 6, 12, 6)
+        tb_layout.setSpacing(10)
 
-        editor_content = ft.Column(
-            controls=[
-                ft.Container(
-                    content=ft.Row(
-                        controls=[
-                            toolbar_items[0],
-                            ft.Row(controls=toolbar_items[1:], spacing=4, vertical_alignment=ft.CrossAxisAlignment.CENTER),
-                        ],
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    ),
-                    padding=ft.Padding.symmetric(horizontal=12, vertical=4),
-                    bgcolor=AppPalette.BG_SURFACE,
-                    border=ft.Border.only(bottom=ft.BorderSide(1, AppPalette.BORDER_COLOR)),
-                ),
-                self.text_field,
-            ],
-            spacing=0,
-            expand=True,
-        )
+        tb_title = QLabel("DSL / Code Editor")
+        tb_title.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        tb_title.setStyleSheet(f"color: {AppPalette.TEXT_MUTED};")
+        tb_layout.addWidget(tb_title)
 
-        super().__init__(
-            content=editor_content,
-            bgcolor=AppPalette.BG_INPUT,
-            border=ft.Border.all(1, AppPalette.BORDER_COLOR),
-            border_radius=8,
-            clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
-            expand=expand,
-        )
+        tb_layout.addStretch()
 
-    def _handle_sample_select(self, e, samples: Dict[str, str], callback: Optional[Callable[[str], None]]):
-        selected_key = e.control.value
-        if selected_key in samples:
-            self.set_value(samples[selected_key])
-            if callback:
-                callback(selected_key)
+        if self.samples:
+            self.sample_combo = QComboBox()
+            self.sample_combo.addItem("Load sample template...")
+            for key in self.samples.keys():
+                self.sample_combo.addItem(key)
+            self.sample_combo.currentIndexChanged.connect(self._handle_sample_change)
+            tb_layout.addWidget(self.sample_combo)
 
-    def _copy_all(self, e):
-        e.page.set_clipboard(self.text_field.value)
-        e.page.show_snack_bar(ft.SnackBar(content=ft.Text("Copied editor text to clipboard"), bgcolor=AppPalette.SUCCESS))
+        copy_btn = QPushButton("Copy All")
+        copy_btn.setFont(QFont("Segoe UI", 9))
+        copy_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {AppPalette.BG_CARD};
+                color: {AppPalette.TEXT_SECONDARY};
+                border: 1px solid {AppPalette.BORDER_COLOR};
+                border-radius: 5px;
+                padding: 4px 10px;
+            }}
+            QPushButton:hover {{
+                background-color: {AppPalette.BG_CARD_HOVER};
+                color: {AppPalette.TEXT_PRIMARY};
+                border-color: {AppPalette.BORDER_LIGHT};
+            }}
+        """)
+        copy_btn.clicked.connect(self._copy_all)
+        tb_layout.addWidget(copy_btn)
 
-    def _clear_all(self, e):
-        self.set_value("")
+        clear_btn = QPushButton("Clear")
+        clear_btn.setFont(QFont("Segoe UI", 9))
+        clear_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {AppPalette.BG_CARD};
+                color: {AppPalette.TEXT_SECONDARY};
+                border: 1px solid {AppPalette.BORDER_COLOR};
+                border-radius: 5px;
+                padding: 4px 10px;
+            }}
+            QPushButton:hover {{
+                background-color: {AppPalette.BG_CARD_HOVER};
+                color: {AppPalette.ERROR};
+                border-color: {AppPalette.ERROR};
+            }}
+        """)
+        clear_btn.clicked.connect(self.clear)
+        tb_layout.addWidget(clear_btn)
+
+        layout.addWidget(toolbar)
+
+        # Plain text edit
+        self.text_edit = QPlainTextEdit()
+        self.text_edit.setPlainText(value)
+        self.text_edit.setPlaceholderText(hint_text)
+        self.text_edit.setFont(QFont("Consolas", 10))
+        self.text_edit.setStyleSheet(f"""
+            QPlainTextEdit {{
+                background-color: {AppPalette.BG_INPUT};
+                color: {AppPalette.TEXT_PRIMARY};
+                border: none;
+                border-bottom-left-radius: 8px;
+                border-bottom-right-radius: 8px;
+                padding: 12px;
+                selection-background-color: {AppPalette.PRIMARY};
+                selection-color: #FFFFFF;
+            }}
+        """)
+        layout.addWidget(self.text_edit)
+
+    def _handle_sample_change(self, index: int):
+        if index <= 0:
+            return
+        key = self.sample_combo.currentText()
+        if key in self.samples:
+            self.set_value(self.samples[key])
+            if self.on_sample_selected:
+                self.on_sample_selected(key)
+
+    def _copy_all(self):
+        text = self.get_value()
+        QApplication.clipboard().setText(text)
+
+    def clear(self):
+        self.text_edit.clear()
 
     def get_value(self) -> str:
-        return self.text_field.value or ""
+        return self.text_edit.toPlainText()
 
     def set_value(self, val: str):
-        self.text_field.value = val
-        try:
-            self.text_field.update()
-        except Exception:
-            pass
+        self.text_edit.setPlainText(val)
 
 
-class MetricCard(ft.Container):
+class MetricCard(QFrame):
     """Sleek KPI / Summary Metric Card with accent icon."""
 
-    def __init__(self, title: str, value: str, icon_name: str, color: str = AppPalette.PRIMARY, subtitle: str = ""):
-        super().__init__(
-            content=ft.Row(
-                controls=[
-                    ft.Container(
-                        content=ft.Icon(icon_name, size=24, color=color),
-                        padding=10,
-                        border_radius=8,
-                        bgcolor=AppPalette.BG_INPUT,
-                        border=ft.Border.all(1, AppPalette.BORDER_COLOR),
-                    ),
-                    ft.Column(
-                        controls=[
-                            ft.Text(title, size=11, color=AppPalette.TEXT_SECONDARY),
-                            ft.Text(value, size=18, weight=ft.FontWeight.BOLD, color=AppPalette.TEXT_PRIMARY),
-                            ft.Text(subtitle, size=10, color=AppPalette.TEXT_MUTED) if subtitle else ft.Container(),
-                        ],
-                        spacing=1,
-                    ),
-                ],
-                spacing=12,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            ),
-            padding=12,
-            bgcolor=AppPalette.BG_CARD,
-            border=ft.Border.all(1, AppPalette.BORDER_COLOR),
-            border_radius=8,
-            expand=True,
-        )
+    def __init__(
+        self,
+        title: str,
+        value: str,
+        icon_text: str = "◆",
+        color: str = AppPalette.PRIMARY,
+        subtitle: str = "",
+        parent: Optional[QWidget] = None,
+    ):
+        super().__init__(parent)
+        self.setObjectName("MetricCard")
+        self.setStyleSheet(f"""
+            QFrame#MetricCard {{
+                background-color: {AppPalette.BG_CARD};
+                border: 1px solid {AppPalette.BORDER_COLOR};
+                border-radius: 8px;
+            }}
+        """)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(14, 12, 14, 12)
+        layout.setSpacing(12)
+
+        icon_box = QLabel(icon_text)
+        icon_box.setFixedSize(38, 38)
+        icon_box.setAlignment(Qt.AlignCenter)
+        icon_box.setFont(QFont("Segoe UI", 14, QFont.Bold))
+        icon_box.setStyleSheet(f"""
+            background-color: {AppPalette.BG_INPUT};
+            color: {color};
+            border: 1px solid {AppPalette.BORDER_COLOR};
+            border-radius: 8px;
+        """)
+        layout.addWidget(icon_box)
+
+        text_layout = QVBoxLayout()
+        text_layout.setSpacing(2)
+        text_layout.setContentsMargins(0, 0, 0, 0)
+
+        title_label = QLabel(title)
+        title_label.setFont(QFont("Segoe UI", 8, QFont.Bold))
+        title_label.setStyleSheet(f"color: {AppPalette.TEXT_SECONDARY}; text-transform: uppercase;")
+        text_layout.addWidget(title_label)
+
+        self.value_label = QLabel(value)
+        self.value_label.setFont(QFont("Segoe UI", 13, QFont.Bold))
+        self.value_label.setStyleSheet(f"color: {AppPalette.TEXT_PRIMARY};")
+        text_layout.addWidget(self.value_label)
+
+        if subtitle:
+            sub_label = QLabel(subtitle)
+            sub_label.setFont(QFont("Segoe UI", 8))
+            sub_label.setStyleSheet(f"color: {AppPalette.TEXT_MUTED};")
+            text_layout.addWidget(sub_label)
+
+        layout.addLayout(text_layout)
+        layout.addStretch()
+
+    def set_value(self, val: str, color: Optional[str] = None):
+        self.value_label.setText(val)
+        if color:
+            self.value_label.setStyleSheet(f"color: {color};")
 
 
-class ActionButton(ft.Button):
-    """Styled action button with loading support."""
+class ActionButton(QPushButton):
+    """Styled action button with custom accent color."""
 
     def __init__(
         self,
         text: str,
-        icon: Optional[str] = None,
         color: str = AppPalette.PRIMARY,
-        on_click: Optional[Callable[[Any], None]] = None,
         tooltip: Optional[str] = None,
-        disabled: bool = False,
+        parent: Optional[QWidget] = None,
     ):
-        super().__init__(
-            content=text,
-            icon=icon,
-            color="#FFFFFF",
-            bgcolor=color,
-            on_click=on_click,
-            tooltip=tooltip,
-            disabled=disabled,
-        )
-
+        super().__init__(text, parent)
+        if tooltip:
+            self.setToolTip(tooltip)
+        self.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        self.setCursor(Qt.PointingHandCursor)
+        self.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {color};
+                color: #FFFFFF;
+                border: none;
+                border-radius: 6px;
+                padding: 8px 16px;
+                min-height: 20px;
+            }}
+            QPushButton:hover {{
+                background-color: {color}EE;
+                border: 1px solid #FFFFFF44;
+            }}
+            QPushButton:pressed {{
+                background-color: {color}CC;
+            }}
+            QPushButton:disabled {{
+                background-color: {AppPalette.BORDER_COLOR};
+                color: {AppPalette.TEXT_MUTED};
+            }}
+        """)

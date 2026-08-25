@@ -1,198 +1,240 @@
 """
-Prompt Management Dialog: View, Edit, Copy, Save Custom, and Reset System Prompts.
+Prompt Management Dialog in PySide6: View, Edit, Copy, Save Custom, and Reset System Prompts.
 """
 
-import flet as ft
-from typing import Callable, Optional
+from typing import Optional, Callable
+from PySide6.QtWidgets import (
+    QDialog,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QPlainTextEdit,
+    QFrame,
+    QApplication,
+)
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+
 from copilots_app.core.theme import AppPalette
 from copilots_app.core.prompt_manager import PromptManager
 
 
-class PromptDialog(ft.AlertDialog):
+class PromptDialog(QDialog):
     """Modern modal dialog for editing, copying, and resetting LLM System Prompts."""
 
     def __init__(
         self,
-        page: ft.Page,
         copilot_key: str,
         on_status_change: Optional[Callable[[str, str], None]] = None,
+        parent: Optional[QWidget] = None,
     ):
-        self.app_page = page
+        super().__init__(parent)
         self.copilot_key = copilot_key
         self.on_status_change = on_status_change
         self.pm = PromptManager()
 
-        title_text = self.pm.PROMPT_TITLES.get(copilot_key, f"{copilot_key.capitalize()} System Prompt")
+        self.setWindowTitle(self.pm.PROMPT_TITLES.get(copilot_key, f"{copilot_key.capitalize()} System Prompt"))
+        self.resize(880, 580)
+        self.setStyleSheet(f"""
+            QDialog {{
+                background-color: {AppPalette.BG_DARK};
+            }}
+        """)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(14)
+
+        # Header Info Row
+        header_row = QHBoxLayout()
+        header_row.setSpacing(10)
+
+        title_label = QLabel(self.pm.PROMPT_TITLES.get(copilot_key, f"{copilot_key.capitalize()} System Prompt"))
+        title_label.setFont(QFont("Segoe UI", 12, QFont.Bold))
+        title_label.setStyleSheet(f"color: {AppPalette.TEXT_PRIMARY};")
+        header_row.addWidget(title_label)
+
         self.is_custom = self.pm.is_customized(copilot_key)
+        self.badge_label = QLabel("User Custom Override" if self.is_custom else "Default Bundled")
+        self.badge_label.setFont(QFont("Segoe UI", 8, QFont.Bold))
+        self._update_badge_style()
+        header_row.addWidget(self.badge_label)
 
-        # Status badge for customized vs default
-        self.badge_text = ft.Text(
-            "User Custom Override" if self.is_custom else "Default Bundled",
-            size=11,
-            weight=ft.FontWeight.W_600,
-            color="#FFFFFF" if self.is_custom else AppPalette.TEXT_SECONDARY,
-        )
-        self.badge_container = ft.Container(
-            content=self.badge_text,
-            padding=ft.Padding.symmetric(horizontal=8, vertical=3),
-            border_radius=12,
-            bgcolor=AppPalette.WARNING if self.is_custom else AppPalette.BG_SURFACE,
-            border=ft.Border.all(1, AppPalette.BORDER_COLOR),
-        )
+        header_row.addStretch()
 
-        current_prompt = self.pm.get_prompt(copilot_key)
+        open_folder_btn = QPushButton("Open Prompts Folder")
+        open_folder_btn.setFont(QFont("Segoe UI", 9))
+        open_folder_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {AppPalette.BG_CARD};
+                color: {AppPalette.TEXT_SECONDARY};
+                border: 1px solid {AppPalette.BORDER_COLOR};
+                border-radius: 5px;
+                padding: 5px 12px;
+            }}
+            QPushButton:hover {{
+                background-color: {AppPalette.BG_CARD_HOVER};
+                color: {AppPalette.TEXT_PRIMARY};
+            }}
+        """)
+        open_folder_btn.clicked.connect(lambda: self.pm.open_prompts_directory())
+        header_row.addWidget(open_folder_btn)
 
-        # Text editor
-        self.editor = ft.TextField(
-            value=current_prompt,
-            multiline=True,
-            min_lines=18,
-            max_lines=24,
-            text_size=12,
-            text_style=ft.TextStyle(font_family="Consolas, 'Cascadia Code', monospace"),
-            border=ft.InputBorder.OUTLINE,
-            border_color=AppPalette.BORDER_COLOR,
-            filled=True,
-            fill_color=AppPalette.BG_INPUT,
-            cursor_color=AppPalette.PRIMARY,
-            expand=True,
-        )
+        layout.addLayout(header_row)
 
-        # Info row
-        info_row = ft.Row(
-            controls=[
-                ft.Row(
-                    controls=[
-                        ft.Icon(ft.Icons.PSYCHOLOGY, size=18, color=AppPalette.PRIMARY),
-                        ft.Text(title_text, size=15, weight=ft.FontWeight.BOLD, color=AppPalette.TEXT_PRIMARY),
-                        self.badge_container,
-                    ],
-                    spacing=8,
-                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                ),
-                ft.TextButton(
-                    "Open Prompts Folder",
-                    icon=ft.Icons.FOLDER_OPEN_OUTLINED,
-                    on_click=lambda _: self.pm.open_prompts_directory(),
-                ),
-            ],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-        )
+        desc_label = QLabel("This system prompt instructs the LLM how to format responses and DSL code for this copilot.")
+        desc_label.setFont(QFont("Segoe UI", 9))
+        desc_label.setStyleSheet(f"color: {AppPalette.TEXT_MUTED};")
+        layout.addWidget(desc_label)
 
-        # Actions row with clear horizontal spacing
-        actions_bar = ft.Container(
-            content=ft.Row(
-                controls=[
-                    ft.TextButton(
-                        "Reset to Default",
-                        icon=ft.Icons.RESTART_ALT,
-                        tooltip="Revert custom prompt back to factory bundled default",
-                        on_click=self._on_reset,
-                    ),
-                    ft.Row(
-                        controls=[
-                            ft.OutlinedButton(
-                                "Copy to Clipboard",
-                                icon=ft.Icons.COPY_ALL,
-                                on_click=self._on_copy,
-                            ),
-                            ft.ElevatedButton(
-                                "Save Changes",
-                                icon=ft.Icons.SAVE,
-                                bgcolor=AppPalette.PRIMARY,
-                                color="#FFFFFF",
-                                on_click=self._on_save,
-                            ),
-                            ft.TextButton(
-                                "Close",
-                                on_click=self._on_close,
-                            ),
-                        ],
-                        spacing=10,
-                    ),
-                ],
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            ),
-            padding=ft.Padding.only(top=10),
-            expand=True,
-        )
+        # Prompt Text Editor
+        self.editor = QPlainTextEdit()
+        self.editor.setPlainText(self.pm.get_prompt(copilot_key))
+        self.editor.setFont(QFont("Consolas", 10))
+        self.editor.setStyleSheet(f"""
+            QPlainTextEdit {{
+                background-color: {AppPalette.BG_INPUT};
+                color: {AppPalette.TEXT_PRIMARY};
+                border: 1px solid {AppPalette.BORDER_COLOR};
+                border-radius: 8px;
+                padding: 12px;
+                selection-background-color: {AppPalette.PRIMARY};
+                selection-color: #FFFFFF;
+            }}
+        """)
+        layout.addWidget(self.editor)
 
-        super().__init__(
-            title=info_row,
-            content=ft.Container(
-                content=ft.Column(
-                    controls=[
-                        ft.Text(
-                            "This system prompt instructs the LLM how to format responses and DSL code for this copilot.",
-                            size=12,
-                            color=AppPalette.TEXT_MUTED,
-                        ),
-                        self.editor,
-                    ],
-                    spacing=10,
-                ),
-                width=850,
-                height=530,
-            ),
-            actions=[actions_bar],
-            modal=True,
-        )
+        # Footer Actions
+        footer_row = QHBoxLayout()
+        footer_row.setSpacing(10)
 
-    def _on_copy(self, e):
-        text = self.editor.value or ""
-        self.app_page.set_clipboard(text)
+        reset_btn = QPushButton("Reset to Default")
+        reset_btn.setFont(QFont("Segoe UI", 9))
+        reset_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: transparent;
+                color: {AppPalette.TEXT_SECONDARY};
+                border: 1px solid {AppPalette.BORDER_COLOR};
+                border-radius: 6px;
+                padding: 8px 14px;
+            }}
+            QPushButton:hover {{
+                background-color: {AppPalette.BG_CARD_HOVER};
+                color: {AppPalette.ERROR};
+                border-color: {AppPalette.ERROR};
+            }}
+        """)
+        reset_btn.clicked.connect(self._on_reset)
+        footer_row.addWidget(reset_btn)
+
+        footer_row.addStretch()
+
+        copy_btn = QPushButton("Copy to Clipboard")
+        copy_btn.setFont(QFont("Segoe UI", 9))
+        copy_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {AppPalette.BG_CARD};
+                color: {AppPalette.TEXT_PRIMARY};
+                border: 1px solid {AppPalette.BORDER_COLOR};
+                border-radius: 6px;
+                padding: 8px 14px;
+            }}
+            QPushButton:hover {{
+                background-color: {AppPalette.BG_CARD_HOVER};
+                border-color: {AppPalette.BORDER_LIGHT};
+            }}
+        """)
+        copy_btn.clicked.connect(self._on_copy)
+        footer_row.addWidget(copy_btn)
+
+        save_btn = QPushButton("Save Changes")
+        save_btn.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        save_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {AppPalette.PRIMARY};
+                color: #FFFFFF;
+                border: none;
+                border-radius: 6px;
+                padding: 8px 18px;
+            }}
+            QPushButton:hover {{
+                background-color: {AppPalette.PRIMARY_HOVER};
+            }}
+        """)
+        save_btn.clicked.connect(self._on_save)
+        footer_row.addWidget(save_btn)
+
+        close_btn = QPushButton("Close")
+        close_btn.setFont(QFont("Segoe UI", 9))
+        close_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {AppPalette.BG_CARD};
+                color: {AppPalette.TEXT_SECONDARY};
+                border: 1px solid {AppPalette.BORDER_COLOR};
+                border-radius: 6px;
+                padding: 8px 14px;
+            }}
+            QPushButton:hover {{
+                background-color: {AppPalette.BG_CARD_HOVER};
+                color: {AppPalette.TEXT_PRIMARY};
+            }}
+        """)
+        close_btn.clicked.connect(self.accept)
+        footer_row.addWidget(close_btn)
+
+        layout.addLayout(footer_row)
+
+    def _update_badge_style(self):
+        if self.is_custom:
+            self.badge_label.setText("User Custom Override")
+            self.badge_label.setStyleSheet(f"""
+                background-color: {AppPalette.WARNING};
+                color: #FFFFFF;
+                border-radius: 10px;
+                padding: 2px 8px;
+            """)
+        else:
+            self.badge_label.setText("Default Bundled")
+            self.badge_label.setStyleSheet(f"""
+                background-color: {AppPalette.BG_SURFACE};
+                color: {AppPalette.TEXT_SECONDARY};
+                border: 1px solid {AppPalette.BORDER_COLOR};
+                border-radius: 10px;
+                padding: 2px 8px;
+            """)
+
+    def _on_copy(self):
+        text = self.editor.toPlainText()
+        QApplication.clipboard().setText(text)
         if self.on_status_change:
             self.on_status_change("System prompt copied to clipboard!", "info")
-        
-        # Show a snackbar or quick notice
-        snack = ft.SnackBar(ft.Text("✓ System prompt copied to clipboard!"), open=True)
-        self.app_page.overlay.append(snack)
-        self.app_page.update()
 
-    def _on_save(self, e):
-        content = self.editor.value or ""
+    def _on_save(self):
+        content = self.editor.toPlainText()
         ok = self.pm.save_user_prompt(self.copilot_key, content)
         if ok:
-            self.badge_text.value = "User Custom Override"
-            self.badge_text.color = "#FFFFFF"
-            self.badge_container.bgcolor = AppPalette.WARNING
-            self.badge_container.update()
+            self.is_custom = True
+            self._update_badge_style()
             if self.on_status_change:
                 self.on_status_change("Saved custom system prompt override in AppData", "success")
-            snack = ft.SnackBar(ft.Text("✓ Custom prompt saved to AppData!"), open=True)
-            self.app_page.overlay.append(snack)
-            self.app_page.update()
 
-    def _on_reset(self, e):
+    def _on_reset(self):
         self.pm.reset_to_default(self.copilot_key)
         default_text = self.pm.get_default_prompt(self.copilot_key)
-        self.editor.value = default_text
-        self.editor.update()
-
-        self.badge_text.value = "Default Bundled"
-        self.badge_text.color = AppPalette.TEXT_SECONDARY
-        self.badge_container.bgcolor = AppPalette.BG_SURFACE
-        self.badge_container.update()
-
+        self.editor.setPlainText(default_text)
+        self.is_custom = False
+        self._update_badge_style()
         if self.on_status_change:
             self.on_status_change("Restored factory default prompt", "info")
-        snack = ft.SnackBar(ft.Text("✓ Reset to factory default prompt!"), open=True)
-        self.app_page.overlay.append(snack)
-        self.app_page.update()
-
-    def _on_close(self, e):
-        self.open = False
-        self.app_page.update()
 
 
 def open_prompt_dialog(
-    page: ft.Page,
     copilot_key: str,
     on_status_change: Optional[Callable[[str, str], None]] = None,
+    parent: Optional[QWidget] = None,
 ):
-    """Helper to instantiate and show PromptDialog on a page."""
-    dialog = PromptDialog(page, copilot_key, on_status_change)
-    page.overlay.append(dialog)
-    dialog.open = True
-    page.update()
+    """Helper to instantiate and show PromptDialog."""
+    dialog = PromptDialog(copilot_key, on_status_change, parent)
+    dialog.exec()
