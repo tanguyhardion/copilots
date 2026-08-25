@@ -1,0 +1,187 @@
+{
+  "dq_flags": [],
+  "personal_info": {
+    "first_name": "Alex",
+    "last_name": "Morgan",
+    "address": "12 Willow Road, Bristol, BS1 3AX, United Kingdom",
+    "phone": "+44 7700 900123",
+    "email": "alex.morgan@example.com",
+    "sex": "M",
+    "nationality": "British"
+  },
+  "tender_info": {
+    "proposed_role": "Senior Business Analyst",
+    "years_experience_bucket": "10_to_14",
+    "requirements_matrix": [
+      {
+        "requirement_text": "Minimum 8 years of experience in business analysis and process improvement."
+      },
+      {
+        "requirement_text": "Strong experience with requirements gathering, stakeholder engagement, and workshops."
+      },
+      {
+        "requirement_text": "Ability to support digital transformation programmes in public sector environments."
+      },
+      {
+        "requirement_text": "Good communication skills in English and the ability to produce clear documentation."
+      }
+    ]
+  },
+  "profile": "Alex Morgan is a Senior Business Analyst with 11 years of experience delivering business and digital transformation initiatives across public and private sector organisations. He brings strong expertise in requirements elicitation, process mapping, stakeholder facilitation, and benefits realisation across complex, multi-stakeholder environments. Alex has led discovery workshops, translated operational challenges into actionable requirements, and supported technology-enabled change from concept through implementation. He is recognised for clear communication, structured documentation, and collaborative leadership, with a strong focus on delivering measurable outcomes and improving service quality.",
+  "work_experience": [
+    {
+      "date_from": "2021-01",
+      "date_to": "Present",
+      "job_title": "Senior Business Analyst",
+      "organisation": "Northbridge Digital Services",
+      "organisation_country": "United Kingdom"
+    },
+    {
+      "date_from": "2017-06",
+      "date_to": "2020-12",
+      "job_title": "Business Analyst",
+      "organisation": "City Infrastructure Group",
+      "organisation_country": "United Kingdom"
+    },
+    {
+      "date_from": "2014-03",
+      "date_to": "2017-05",
+      "job_title": "Junior Business Analyst",
+      "organisation": "Bristol Advisory Partners",
+      "organisation_country": "United Kingdom"
+    }
+  ],
+  "experience_overview": [
+    {
+      "date_from": "2021-01",
+      "date_to": "Present",
+      "role": "Senior Business Analyst",
+      "responsibilities": "Alex leads requirements discovery and process improvement activities for a portfolio of service transformation initiatives. He works closely with senior stakeholders to align business needs with delivery priorities and to ensure clear, measurable outcomes.",
+      "duration_months": 60,
+      "relevant_months": 48
+    },
+    {
+      "date_from": "2017-06",
+      "date_to": "2020-12",
+      "role": "Business Analyst",
+      "responsibilities": "Alex supported business change programmes by gathering requirements, preparing process documentation, and analysing operational pain points. He contributed to service redesign and improvement planning across multiple teams and departments.",
+      "duration_months": 43,
+      "relevant_months": 36
+    },
+    {
+      "date_from": "2014-03",
+      "date_to": "2017-05",
+      "role": "Junior Business Analyst",
+      "responsibilities": "Alex assisted with data collection, business process analysis, and workshop support for client improvement projects. He developed foundational experience in documentation, stakeholder engagement, and requirements analysis.",
+      "duration_months": 39,
+      "relevant_months": 30
+    }
+  ],
+  "project_experience": [
+    {
+      "date_from": "2021-01",
+      "date_to": "Present",
+      "project_title": "Customer Service Transformation Programme",
+      "sector": "Public Services",
+      "country": "United Kingdom",
+      "role": "Senior Business Analyst",
+      "allocation_percent": "80%",
+      "bullets": [
+        "Facilitated discovery workshops with service leads, operational teams, and senior stakeholders to define business needs and improvement priorities.",
+        "Mapped current-state processes and identified service bottlenecks, producing a target operating model for digital service delivery improvements.",
+        "Created user stories, acceptance criteria, and business process documentation to support solution design and implementation planning.",
+        "Tracked benefits and KPI performance to ensure transformation activities aligned with service outcomes and governance requirements."
+      ]
+    },
+    {
+      "date_from": "2017-06",
+      "date_to": "2020-12",
+      "project_title": "Digital Records Modernisation",
+      "sector": "Local Government",
+      "country": "United Kingdom",
+      "role": "Business Analyst",
+      "allocation_percent": "70%",
+      "bullets": [
+        "Gathered requirements from multiple departments to support the migration of paper-based records to a digital case management system.",
+        "Conducted process analysis and produced as-is and to-be process maps for operational teams and senior managers.",
+        "Coordinated testing activities, validated new workflows, and supported the resolution of functional issues during rollout.",
+        "Prepared service documentation and training materials to support adoption and minimise disruption to end users."
+      ]
+    },
+    {
+      "date_from": "2014-03",
+      "date_to": "2017-05",
+      "project_title": "Operational Review and Improvement",
+      "sector": "Professional Services",
+      "country": "United Kingdom",
+      "role": "Junior Business Analyst",
+      "allocation_percent": "60%",
+      "bullets": [
+        "Collected operational data and stakeholder feedback to support improvement opportunities across client service processes.",
+        "Assisted with workshop facilitation and requirement documentation for process redesign initiatives.",
+        "Produced reports and dashboards to communicate findings and support decision-making by management teams.",
+        "Supported the development of business cases and implementation planning for selected improvement actions."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "date_from": "2011-09",
+      "date_to": "2014-06",
+      "qualification_title": "BSc (Hons) Business and Management",
+      "institution": "University of the West of England",
+      "institution_country": "United Kingdom"
+    },
+    {
+      "date_from": "2009-09",
+      "date_to": "2011-06",
+      "qualification_title": "A-levels in Business Studies, Mathematics, and English",
+      "institution": "South Bristol College",
+      "institution_country": "United Kingdom"
+    }
+  ],
+  "languages": {
+    "mother_tongue": ["English"],
+    "other": [
+      {
+        "language": "French",
+        "listening": "B1",
+        "reading": "B1",
+        "spoken_interaction": "B1",
+        "spoken_production": "B1",
+        "writing": "B1"
+      }
+    ]
+  },
+  "personal_skills": {
+    "communication": [
+      "Facilitation of workshops and stakeholder engagement",
+      "Clear written business documentation",
+      "Presentation of findings to technical and non-technical audiences"
+    ],
+    "organisational_managerial": [
+      "Requirements prioritisation and backlog management",
+      "Cross-functional team coordination",
+      "Benefits tracking and governance support"
+    ],
+    "computer_skills": [
+      "Business Analysis: MS Visio, Power BI, Excel, Word",
+      "Project Tools: Jira, Confluence, Miro",
+      "Documentation: SharePoint, Microsoft 365"
+    ],
+    "certifications": [
+      {
+        "year": 2022,
+        "title": "BCS Foundation Certificate in Business Analysis",
+        "expiry_year": null,
+        "note": null
+      },
+      {
+        "year": 2020,
+        "title": "PRINCE2 Foundation",
+        "expiry_year": null,
+        "note": null
+      }
+    ]
+  }
+}
