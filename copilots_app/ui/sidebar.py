@@ -62,7 +62,7 @@ class NavItem(ft.Container):
             bgcolor=AppPalette.BG_CARD if is_selected else "transparent",
             on_click=self._handle_click,
             on_hover=self._handle_hover,
-            animate=ft.animation.Animation(150, ft.AnimationCurve.EASE_OUT),
+            animate=ft.Animation(150, ft.AnimationCurve.EASE_OUT),
         )
 
     def _handle_click(self, e):

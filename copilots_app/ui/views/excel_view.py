@@ -100,54 +100,71 @@ class ExcelView(ft.Container):
             expand=True,
         )
 
-        left_tab_view = ft.Tabs(
-            selected_index=0,
-            animation_duration=200,
-            tabs=[
-                ft.Tab(
-                    text="Workbook Explorer",
-                    icon=ft.Icons.ACCOUNT_TREE_OUTLINED,
-                    content=ft.Container(
-                        content=self.sheets_list,
-                        bgcolor=AppPalette.BG_CARD,
-                        border=ft.Border.all(1, AppPalette.BORDER_COLOR),
-                        border_radius=8,
-                        padding=4,
-                    ),
-                ),
-                ft.Tab(
-                    text="LLM Prompt Context",
-                    icon=ft.Icons.PSYCHOLOGY_OUTLINED,
-                    content=ft.Container(
-                        content=ft.Column(
+        self.explorer_container = ft.Container(
+            content=self.sheets_list,
+            bgcolor=AppPalette.BG_CARD,
+            border=ft.Border.all(1, AppPalette.BORDER_COLOR),
+            border_radius=8,
+            padding=4,
+            expand=True,
+            visible=True,
+        )
+
+        self.prompt_container = ft.Container(
+            content=ft.Column(
+                controls=[
+                    ft.Container(
+                        content=ft.Row(
                             controls=[
-                                ft.Container(
-                                    content=ft.Row(
-                                        controls=[
-                                            ft.Text("Semantic Model & System Prompt", size=11, weight=ft.FontWeight.W_600, color=AppPalette.TEXT_MUTED),
-                                            ft.IconButton(
-                                                icon=ft.Icons.COPY_ALL,
-                                                tooltip="Copy LLM Context",
-                                                icon_size=16,
-                                                on_click=self._copy_prompt_context,
-                                            ),
-                                        ],
-                                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                                    ),
-                                    padding=ft.Padding.symmetric(horizontal=8, vertical=4),
-                                    bgcolor=AppPalette.BG_SURFACE,
-                                    border=ft.Border.only(bottom=ft.BorderSide(1, AppPalette.BORDER_COLOR)),
+                                ft.Text("Semantic Model & System Prompt", size=11, weight=ft.FontWeight.W_600, color=AppPalette.TEXT_MUTED),
+                                ft.IconButton(
+                                    icon=ft.Icons.COPY_ALL,
+                                    tooltip="Copy LLM Context",
+                                    icon_size=16,
+                                    on_click=self._copy_prompt_context,
                                 ),
-                                self.prompt_context_text,
                             ],
-                            spacing=0,
+                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                         ),
-                        bgcolor=AppPalette.BG_CARD,
-                        border=ft.Border.all(1, AppPalette.BORDER_COLOR),
-                        border_radius=8,
+                        padding=ft.Padding.symmetric(horizontal=8, vertical=4),
+                        bgcolor=AppPalette.BG_SURFACE,
+                        border=ft.Border.only(bottom=ft.BorderSide(1, AppPalette.BORDER_COLOR)),
                     ),
-                ),
+                    self.prompt_context_text,
+                ],
+                spacing=0,
+            ),
+            bgcolor=AppPalette.BG_CARD,
+            border=ft.Border.all(1, AppPalette.BORDER_COLOR),
+            border_radius=8,
+            expand=True,
+            visible=False,
+        )
+
+        def _on_left_view_change(e):
+            selected = list(e.control.selected)[0] if e.control.selected else "explorer"
+            self.explorer_container.visible = (selected == "explorer")
+            self.prompt_container.visible = (selected == "prompt")
+            self.explorer_container.update()
+            self.prompt_container.update()
+
+        left_segmented_nav = ft.SegmentedButton(
+            selected=["explorer"],
+            allow_multiple_selection=False,
+            segments=[
+                ft.Segment(value="explorer", label=ft.Text("Workbook Explorer", size=11), icon=ft.Icon(ft.Icons.ACCOUNT_TREE_OUTLINED, size=14)),
+                ft.Segment(value="prompt", label=ft.Text("LLM Prompt Context", size=11), icon=ft.Icon(ft.Icons.PSYCHOLOGY_OUTLINED, size=14)),
             ],
+            on_change=_on_left_view_change,
+        )
+
+        left_tab_view = ft.Column(
+            controls=[
+                left_segmented_nav,
+                self.explorer_container,
+                self.prompt_container,
+            ],
+            spacing=8,
             expand=True,
         )
 
