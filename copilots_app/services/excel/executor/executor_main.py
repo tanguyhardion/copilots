@@ -1,8 +1,8 @@
-"""Action Executor: Central dispatcher for executing action protocols on Excel workbooks."""
+"""Action Executor: Central dispatcher for executing action protocols on active Excel workbooks via pywin32."""
 
 import os
-import openpyxl
 from typing import Tuple, List, Dict, Any, Optional
+from copilots_app.services.excel.com_utils import get_active_excel_and_wb
 from copilots_app.services.excel.models.semantic import WorkbookModel
 from copilots_app.services.excel.models.protocol import (
     ActionProtocol,
@@ -11,7 +11,6 @@ from copilots_app.services.excel.models.protocol import (
     ExecutionStatus,
 )
 from copilots_app.services.excel.validator.action_validator import ActionValidator
-from copilots_app.services.excel.utils.backup_manager import BackupManager
 from copilots_app.services.excel.analyzer.workbook_analyzer import WorkbookAnalyzer
 
 from .sheet_ops import SheetOps
@@ -23,24 +22,68 @@ from .search_ops import SearchOps
 
 
 class ActionExecutor:
-    """Executes validated ActionProtocol instances against an Excel file."""
+    """Executes validated ActionProtocol instances against an active Microsoft Excel workbook via pywin32 COM."""
 
     def __init__(self, backup_dir: str = ".backups"):
-        self.backup_manager = BackupManager(backup_dir=backup_dir)
+        self.backup_dir = backup_dir
 
     def execute(
         self,
         protocol: ActionProtocol,
-        file_path: str,
+        file_path_or_wb: Optional[Any] = None,
         model: Optional[WorkbookModel] = None,
-        save_file: bool = True,
+        create_backup: bool = True,
     ) -> Tuple[ExecutionResult, Optional[WorkbookModel]]:
-        """Execute action protocol on Excel workbook.
+        """Execute action protocol on active Excel workbook.
+
+        Args:
+            protocol: Parsed ActionProtocol instance
+            file_path_or_wb: Optional COM Workbook or path string. If None, uses active workbook.
+            model: Optional existing semantic WorkbookModel
+            create_backup: If True, saves a copy as backup before mutating
 
         Returns:
             Tuple of (ExecutionResult, updated_WorkbookModel)
         """
-        # 1. Validate actions first
+        # 1. Acquire active workbook COM object
+        try:
+            if hasattr(file_path_or_wb, "Worksheets"):
+                wb = file_path_or_wb
+                excel_app = wb.Application
+            elif isinstance(file_path_or_wb, str) and file_path_or_wb.strip():
+                from copilots_app.services.excel.com_utils import get_active_excel_app
+                excel_app = get_active_excel_app()
+                wb = None
+                norm_target = os.path.normpath(file_path_or_wb).lower()
+                for open_wb in excel_app.Workbooks:
+                    if os.path.normpath(open_wb.FullName).lower() == norm_target or open_wb.Name.lower() == os.path.basename(file_path_or_wb).lower():
+                        wb = open_wb
+                        break
+                if not wb:
+                    wb = excel_app.Workbooks.Open(os.path.abspath(file_path_or_wb))
+            else:
+                excel_app, wb = get_active_excel_and_wb()
+        except Exception as err:
+            return (
+                ExecutionResult(
+                    status=ExecutionStatus.EXECUTION_FAILED,
+                    actions_executed=0,
+                    objects_modified=[],
+                    warnings=[],
+                    errors=[f"Failed to connect to active Excel workbook: {str(err)}"],
+                    details=[],
+                ),
+                model,
+            )
+
+        # 2. Build model if not provided
+        if not model:
+            try:
+                model = WorkbookAnalyzer.analyze(wb)
+            except Exception:
+                pass
+
+        # 3. Validate actions
         val_res = ActionValidator.validate(protocol, model)
         if not val_res.is_valid:
             return (
@@ -70,26 +113,19 @@ class ActionExecutor:
 
         # Handle read-only Query Intent
         if protocol.intent == ActionIntent.QUERY_WORKBOOK:
-            return self._execute_queries(protocol, file_path, model)
+            return self._execute_queries(protocol, wb, model)
 
-        # 2. Create Safety Backup before modification
-        backup_path = self.backup_manager.create_backup(file_path)
-
-        # 3. Load openpyxl Workbook
-        try:
-            wb = openpyxl.load_workbook(file_path, data_only=False)
-        except Exception as err:
-            return (
-                ExecutionResult(
-                    status=ExecutionStatus.EXECUTION_FAILED,
-                    actions_executed=0,
-                    objects_modified=[],
-                    warnings=[],
-                    errors=[f"Failed to open workbook for editing: {str(err)}"],
-                    details=[],
-                ),
-                model,
-            )
+        # 4. Optional Backup via COM SaveCopyAs
+        if create_backup and hasattr(wb, "Path") and wb.Path:
+            try:
+                os.makedirs(self.backup_dir, exist_ok=True)
+                import datetime
+                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                backup_name = f"backup_{timestamp}_{wb.Name}"
+                backup_full_path = os.path.abspath(os.path.join(self.backup_dir, backup_name))
+                wb.SaveCopyAs(backup_full_path)
+            except Exception:
+                pass
 
         actions_executed = 0
         objects_modified = set()
@@ -97,10 +133,10 @@ class ActionExecutor:
         errors = []
         details = []
 
-        # 4. Dispatch each action
+        # 5. Dispatch each action directly to active COM workbook
         for idx, item in enumerate(protocol.actions, start=1):
             act_name = item.action.lower().strip()
-            sheet = item.sheet or (model.active_sheet if model else wb.active.title)
+            sheet = item.sheet or (model.active_sheet if model else wb.ActiveSheet.Name)
 
             try:
                 msg = ""
@@ -155,21 +191,30 @@ class ActionExecutor:
                     )
                     objects_modified.add(f"Formula in {item.column or item.table or sheet}")
 
-                # Formatting operations
-                elif act_name == "autofit_columns":
-                    msg = StyleOps.execute_autofit_columns(wb, sheet_name=sheet)
-                    objects_modified.add(f"Sheet '{sheet}' column layout")
+                elif act_name == "set_cell_value":
+                    c_ref = item.params.get("cell") or item.params.get("range") or "A1"
+                    c_val = item.params.get("value") or (item.values[0] if item.values else "")
+                    msg = DataOps.execute_set_cell_value(wb, sheet_name=sheet, cell_ref=c_ref, value=c_val)
+                    objects_modified.add(f"Cell '{c_ref}' in '{sheet}'")
 
-                elif act_name == "apply_style":
+                # Formatting operations
+                elif act_name in ("format_cell", "apply_style"):
+                    rng_param = item.params.get("range") or item.params.get("cell") or item.data_range
                     msg = StyleOps.execute_apply_style(
                         wb,
                         sheet_name=sheet,
-                        target=item.params.get("target", "headers"),
-                        bg_color=item.params.get("bg_color", "1F4E78"),
-                        text_color=item.params.get("text_color", "FFFFFF"),
+                        target=item.params.get("target", "headers" if not rng_param else None),
+                        range_ref=rng_param,
+                        bg_color=item.params.get("bg_color") or item.params.get("fill_color", "1F4E78"),
+                        text_color=item.params.get("text_color") or item.params.get("font_color", "FFFFFF"),
                         number_format=item.params.get("number_format"),
+                        bold=item.params.get("bold", True),
                     )
                     objects_modified.add(f"Styles in '{sheet}'")
+
+                elif act_name == "autofit_columns":
+                    msg = StyleOps.execute_autofit_columns(wb, sheet_name=sheet)
+                    objects_modified.add(f"Sheet '{sheet}' column layout")
 
                 elif act_name == "freeze_panes":
                     cell_ref = item.params.get("cell", "A2")
@@ -200,20 +245,11 @@ class ActionExecutor:
                 errors.append(err_msg)
                 details.append({"action_id": idx, "action": act_name, "status": "failed", "message": err_msg})
 
-        # 5. Save workbook
-        if save_file and actions_executed > 0:
-            try:
-                wb.save(file_path)
-            except Exception as save_err:
-                errors.append(f"Failed to save workbook file: {str(save_err)}")
-
-        wb.close()
-
-        # 6. Re-analyze updated workbook
+        # 6. Re-analyze updated active workbook
         updated_model = model
-        if actions_executed > 0 and save_file:
+        if actions_executed > 0:
             try:
-                updated_model = WorkbookAnalyzer.analyze(file_path)
+                updated_model = WorkbookAnalyzer.analyze(wb)
             except Exception:
                 pass
 
@@ -236,12 +272,11 @@ class ActionExecutor:
         )
 
     def _execute_queries(
-        self, protocol: ActionProtocol, file_path: str, model: Optional[WorkbookModel]
+        self, protocol: ActionProtocol, wb: Any, model: Optional[WorkbookModel]
     ) -> Tuple[ExecutionResult, Optional[WorkbookModel]]:
-        """Execute read-only search queries."""
+        """Execute read-only search queries on active workbook."""
         query_results = []
         try:
-            wb = openpyxl.load_workbook(file_path, data_only=True)
             for item in protocol.actions:
                 act = item.action.lower().strip()
                 q = item.search_query or item.column or item.sheet or ""
@@ -254,7 +289,6 @@ class ActionExecutor:
                     query_results.extend(SearchOps.find_column(model, q))
                 else:
                     query_results.extend(SearchOps.search_text(wb, q))
-            wb.close()
 
             return (
                 ExecutionResult(

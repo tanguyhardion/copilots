@@ -1,12 +1,13 @@
-"""Workbook Analyzer: Analyzes openpyxl workbooks to extract semantic models and generate LLM prompts."""
+"""Workbook Analyzer: Analyzes active Excel workbooks via pywin32 COM to extract semantic models and generate LLM prompts."""
 
 import os
 import json
 from typing import Optional, List, Dict, Any
-import openpyxl
-from openpyxl.worksheet.table import Table as OpenpyxlTable
-from openpyxl.utils import range_boundaries
 
+from copilots_app.services.excel.com_utils import (
+    get_active_excel_and_wb,
+    col_index_to_letter,
+)
 from copilots_app.services.excel.models.semantic import (
     WorkbookModel,
     WorksheetModel,
@@ -18,100 +19,160 @@ from copilots_app.services.excel.models.semantic import (
 
 
 class WorkbookAnalyzer:
-    """Extracts semantic structure from an Excel workbook file."""
+    """Extracts semantic structure from an active Excel workbook via pywin32 COM."""
 
     @classmethod
-    def analyze(cls, file_path: str) -> WorkbookModel:
-        """Parse an Excel file and return its complete WorkbookModel."""
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"Excel file not found: {file_path}")
+    def analyze(cls, file_path_or_wb: Optional[Any] = None) -> WorkbookModel:
+        """Parse an active Excel workbook via COM and return its complete WorkbookModel.
 
-        wb = openpyxl.load_workbook(file_path, data_only=False)
-        filename = os.path.basename(file_path)
+        Args:
+            file_path_or_wb: Optional COM Workbook object or file path string. If None,
+                             attaches to the currently active Excel workbook.
+        """
+        app = None
+        wb = None
+
+        if hasattr(file_path_or_wb, "Worksheets"):
+            wb = file_path_or_wb
+            app = wb.Application
+        elif isinstance(file_path_or_wb, str) and file_path_or_wb.strip():
+            # If path provided, find matching open workbook or attach
+            try:
+                from copilots_app.services.excel.com_utils import get_active_excel_app
+                app = get_active_excel_app()
+                norm_target = os.path.normpath(file_path_or_wb).lower()
+                for open_wb in app.Workbooks:
+                    if os.path.normpath(open_wb.FullName).lower() == norm_target or open_wb.Name.lower() == os.path.basename(file_path_or_wb).lower():
+                        wb = open_wb
+                        break
+                if not wb:
+                    wb = app.Workbooks.Open(os.path.abspath(file_path_or_wb))
+            except Exception:
+                app, wb = get_active_excel_and_wb()
+        else:
+            app, wb = get_active_excel_and_wb()
+
+        filename = wb.Name
+        file_path = wb.FullName if hasattr(wb, "FullName") else filename
 
         worksheets: List[WorksheetModel] = []
-        for index, ws_name in enumerate(wb.sheetnames):
-            ws = wb[ws_name]
-            sheet_model = cls._analyze_worksheet(ws, index)
+        for index in range(1, wb.Worksheets.Count + 1):
+            ws = wb.Worksheets(index)
+            sheet_model = cls._analyze_worksheet(ws, index - 1)
             worksheets.append(sheet_model)
 
         named_ranges: List[NamedRangeModel] = []
         try:
-            for dn in wb.defined_names.definedName:
+            for i in range(1, wb.Names.Count + 1):
+                nm = wb.Names(i)
                 named_ranges.append(
                     NamedRangeModel(
-                        name=dn.name,
-                        worksheet=dn.attr_text if hasattr(dn, "attr_text") else None,
-                        value=str(dn.value),
+                        name=nm.Name,
+                        worksheet=None,
+                        value=str(nm.RefersTo),
                     )
                 )
         except Exception:
             pass
 
-        active_sheet_name = wb.active.title if wb.active else (wb.sheetnames[0] if wb.sheetnames else "")
-
-        wb.close()
+        try:
+            active_sheet_name = wb.ActiveSheet.Name if wb.ActiveSheet else (worksheets[0].name if worksheets else "")
+        except Exception:
+            active_sheet_name = worksheets[0].name if worksheets else ""
 
         return WorkbookModel(
             filename=filename,
-            file_path=os.path.abspath(file_path),
+            file_path=file_path,
             worksheets=worksheets,
             named_ranges=named_ranges,
             active_sheet=active_sheet_name,
         )
 
     @classmethod
-    def _analyze_worksheet(cls, ws: openpyxl.worksheet.worksheet.Worksheet, index: int) -> WorksheetModel:
-        """Analyze a single worksheet tab."""
-        max_row = ws.max_row or 0
-        max_col = ws.max_column or 0
+    def _analyze_worksheet(cls, ws: Any, index: int) -> WorksheetModel:
+        """Analyze a single worksheet COM object."""
+        try:
+            used_range = ws.UsedRange
+            max_row = used_range.Row + used_range.Rows.Count - 1
+            max_col = used_range.Column + used_range.Columns.Count - 1
+            
+            # Check if used range is genuinely empty (e.g. single blank cell A1)
+            if used_range.Rows.Count == 1 and used_range.Columns.Count == 1 and used_range.Value is None:
+                max_row = 0
+                max_col = 0
+        except Exception:
+            max_row = 0
+            max_col = 0
 
-        # Count formulas
+        # Count formulas via SpecialCells (xlCellTypeFormulas = -4123)
         formulas_count = 0
-        for row in ws.iter_rows(values_only=False):
-            for cell in row:
-                if cell.value and isinstance(cell.value, str) and cell.value.startswith("="):
-                    formulas_count += 1
+        if max_row > 0 and max_col > 0:
+            try:
+                f_cells = ws.Cells.SpecialCells(-4123)  # xlCellTypeFormulas
+                formulas_count = f_cells.Count
+            except Exception:
+                formulas_count = 0
 
         tables: List[TableModel] = []
         processed_table_cells = set()
 
-        # 1. Native Excel Tables
-        if hasattr(ws, "tables"):
-            for tbl_name, tbl in ws.tables.items():
-                table_model = cls._analyze_native_table(ws, tbl_name, tbl)
+        # 1. Native Excel Tables (ListObjects)
+        try:
+            for i in range(1, ws.ListObjects.Count + 1):
+                lo = ws.ListObjects(i)
+                table_model = cls._analyze_native_table(ws, lo)
                 tables.append(table_model)
+
                 # Track cells in this table
-                min_col, min_row, max_c, max_r = range_boundaries(table_model.range)
-                for r in range(min_row, max_r + 1):
-                    for c in range(min_col, max_c + 1):
+                rng = lo.Range
+                start_r = rng.Row
+                start_c = rng.Column
+                rows_c = rng.Rows.Count
+                cols_c = rng.Columns.Count
+                for r in range(start_r, start_r + rows_c):
+                    for c in range(start_c, start_c + cols_c):
                         processed_table_cells.add((r, c))
+        except Exception:
+            pass
 
         # 2. Inferred Tabular Regions (if no native tables or additional non-empty regions exist)
         if not tables and max_row > 0 and max_col > 0:
-            inferred_table = cls._infer_table_region(ws, processed_table_cells)
+            inferred_table = cls._infer_table_region(ws, max_row, max_col, processed_table_cells)
             if inferred_table:
                 tables.append(inferred_table)
 
-        # 3. Extract Charts
+        # 3. Extract Charts (ChartObjects)
         charts: List[ChartModel] = []
-        if hasattr(ws, "_charts"):
-            for i, c in enumerate(ws._charts):
-                title = str(c.title) if c.title else f"Chart {i+1}"
+        try:
+            for i in range(1, ws.ChartObjects().Count + 1):
+                co = ws.ChartObjects(i)
+                try:
+                    c_title = co.Chart.ChartTitle.Text if co.Chart.HasTitle else co.Name
+                except Exception:
+                    c_title = co.Name
+
+                anchor_cell = "E2"
+                try:
+                    anchor_cell = co.TopLeftCell.Address.replace("$", "")
+                except Exception:
+                    pass
+
                 charts.append(
                     ChartModel(
-                        name=title,
-                        chart_type=c.__class__.__name__.replace("Chart", "").lower(),
-                        title=title,
-                        worksheet=ws.title,
-                        cell_anchor=str(c.anchor) if hasattr(c, "anchor") else "E2",
+                        name=co.Name,
+                        chart_type=str(co.Chart.ChartType) if hasattr(co.Chart, "ChartType") else "bar",
+                        title=c_title,
+                        worksheet=ws.Name,
+                        cell_anchor=anchor_cell,
                     )
                 )
+        except Exception:
+            pass
 
         return WorksheetModel(
-            name=ws.title,
+            name=ws.Name,
             index=index,
-            is_hidden=(ws.sheet_state != "visible"),
+            is_hidden=(ws.Visible != -1),  # xlSheetVisible = -1
             max_row=max_row,
             max_column=max_col,
             tables=tables,
@@ -120,119 +181,128 @@ class WorkbookAnalyzer:
         )
 
     @classmethod
-    def _analyze_native_table(cls, ws: Any, name: str, tbl: Any) -> TableModel:
-        """Extract columns and info from native openpyxl Table."""
-        if isinstance(tbl, str):
-            ref = tbl
-        elif hasattr(tbl, "ref"):
-            ref = tbl.ref
-        else:
-            ref = str(tbl)
-
-        min_col, min_row, max_col, max_row = range_boundaries(ref)
+    def _analyze_native_table(cls, ws: Any, lo: Any) -> TableModel:
+        """Extract columns and info from native Excel ListObject."""
+        name = lo.Name
+        range_addr = lo.Range.Address.replace("$", "")
+        row_count = lo.ListRows.Count if hasattr(lo, "ListRows") else 0
 
         columns: List[ColumnModel] = []
+        try:
+            for c_idx in range(1, lo.ListColumns.Count + 1):
+                col = lo.ListColumns(c_idx)
+                col_name = col.Name
 
-        headers = []
-        for c in range(min_col, max_col + 1):
-            cell_val = ws.cell(row=min_row, column=c).value
-            headers.append(str(cell_val) if cell_val is not None else f"Column{c - min_col + 1}")
+                # Check formulas and samples
+                has_formula = False
+                sample_vals = []
+                try:
+                    body_rng = col.DataBodyRange
+                    if body_rng is not None:
+                        val_tuple = body_rng.Value
+                        form_tuple = body_rng.Formula
+                        if isinstance(form_tuple, tuple):
+                            for r_row in form_tuple[:5]:
+                                v = r_row[0] if isinstance(r_row, tuple) else r_row
+                                if isinstance(v, str) and v.startswith("="):
+                                    has_formula = True
+                                    break
+                        elif isinstance(form_tuple, str) and form_tuple.startswith("="):
+                            has_formula = True
 
-        data_row_count = max(0, max_row - min_row)
+                        if isinstance(val_tuple, tuple):
+                            for r_row in val_tuple[:5]:
+                                v = r_row[0] if isinstance(r_row, tuple) else r_row
+                                if v is not None:
+                                    sample_vals.append(v)
+                        elif val_tuple is not None:
+                            sample_vals.append(val_tuple)
+                except Exception:
+                    pass
 
-        for col_idx, col_name in enumerate(headers, start=min_col):
-            sample_vals = []
-            has_formula = False
-            data_type = "string"
-
-            for r in range(min_row + 1, min(min_row + 6, max_row + 1)):
-                val = ws.cell(row=r, column=col_idx).value
-                if val is not None:
-                    if isinstance(val, str) and val.startswith("="):
-                        has_formula = True
-                    sample_vals.append(val)
-
-            if sample_vals:
-                first_val = sample_vals[0]
-                if isinstance(first_val, (int, float)):
-                    data_type = "numeric"
-                elif isinstance(first_val, str) and first_val.startswith("="):
-                    data_type = "formula"
-
-            columns.append(
-                ColumnModel(
-                    name=col_name,
-                    index=col_idx,
-                    data_type=data_type,
-                    has_formula=has_formula,
-                    sample_values=sample_vals,
+                columns.append(
+                    ColumnModel(
+                        name=col_name,
+                        index=lo.Range.Column + c_idx - 1,
+                        data_type="numeric" if sample_vals and isinstance(sample_vals[0], (int, float)) else "string",
+                        has_formula=has_formula,
+                        sample_values=sample_vals,
+                    )
                 )
-            )
+        except Exception:
+            pass
 
         return TableModel(
             name=name,
-            worksheet=ws.title,
-            range=ref,
+            worksheet=ws.Name,
+            range=range_addr,
             is_native_table=True,
             columns=columns,
-            row_count=data_row_count,
+            row_count=row_count,
         )
 
     @classmethod
-    def _infer_table_region(cls, ws: Any, processed_cells: set) -> Optional[TableModel]:
-        """Infer tabular region from worksheet content when explicit tables are absent."""
-        min_row, max_row = ws.min_row or 1, ws.max_row or 1
-        min_col, max_col = ws.min_column or 1, ws.max_column or 1
+    def _infer_table_region(
+        cls,
+        ws: Any,
+        max_row: int,
+        max_col: int,
+        processed_cells: set,
+    ) -> Optional[TableModel]:
+        """Infer table structure from raw cell grid when no native ListObject exists."""
+        # Find first header row containing strings
+        header_row = 1
+        min_col = 1
+        max_c = min(max_col, 50)
+        max_r = min(max_row, 1000)
 
-        if max_row < 1 or max_col < 1:
+        # Read top slice
+        try:
+            slice_rng = ws.Range(ws.Cells(1, 1), ws.Cells(min(max_r, 10), max_c))
+            vals = slice_rng.Value
+        except Exception:
             return None
 
-        # Find header row (first non-empty row)
-        header_row = min_row
-        while header_row <= max_row:
-            row_vals = [ws.cell(row=header_row, column=c).value for c in range(min_col, max_col + 1)]
-            if any(v is not None for v in row_vals):
-                break
-            header_row += 1
-
-        if header_row > max_row:
+        if not vals:
             return None
 
+        # Detect likely header row
         headers = []
         columns = []
-        for c in range(min_col, max_col + 1):
-            val = ws.cell(row=header_row, column=c).value
-            col_name = str(val).strip() if val is not None else f"Column_{c}"
-            headers.append(col_name)
 
-            sample_vals = []
-            has_formula = False
-            for r in range(header_row + 1, min(header_row + 6, max_row + 1)):
-                v = ws.cell(row=r, column=c).value
-                if v is not None:
-                    if isinstance(v, str) and v.startswith("="):
-                        has_formula = True
-                    sample_vals.append(v)
+        if isinstance(vals, tuple) and len(vals) > 0:
+            first_row = vals[0]
+            for c_idx in range(1, len(first_row) + 1):
+                val = first_row[c_idx - 1]
+                col_name = str(val).strip() if val is not None else f"Column_{c_idx}"
+                headers.append(col_name)
 
-            columns.append(
-                ColumnModel(
-                    name=col_name,
-                    index=c,
-                    data_type="numeric" if sample_vals and isinstance(sample_vals[0], (int, float)) else "string",
-                    has_formula=has_formula,
-                    sample_values=sample_vals,
+                sample_vals = []
+                has_formula = False
+                for r_idx in range(1, min(len(vals), 6)):
+                    cell_v = vals[r_idx][c_idx - 1]
+                    if cell_v is not None:
+                        sample_vals.append(cell_v)
+
+                columns.append(
+                    ColumnModel(
+                        name=col_name,
+                        index=c_idx,
+                        data_type="numeric" if sample_vals and isinstance(sample_vals[0], (int, float)) else "string",
+                        has_formula=has_formula,
+                        sample_values=sample_vals,
+                    )
                 )
-            )
 
-        range_str = f"{openpyxl.utils.get_column_letter(min_col)}{header_row}:{openpyxl.utils.get_column_letter(max_col)}{max_row}"
+        range_str = f"{col_index_to_letter(min_col)}{header_row}:{col_index_to_letter(max_c)}{max_r}"
 
         return TableModel(
-            name=f"{ws.title}Table",
-            worksheet=ws.title,
+            name=f"{ws.Name}Table",
+            worksheet=ws.Name,
             range=range_str,
             is_native_table=False,
             columns=columns,
-            row_count=max(0, max_row - header_row),
+            row_count=max(0, max_r - header_row),
         )
 
     @classmethod
@@ -242,7 +312,7 @@ class WorkbookAnalyzer:
 
         prompt = f"""SYSTEM INSTRUCTIONS: EXCEL AI COPILOT
 
-You are an Excel AI Copilot. You analyze spreadsheet structures and propose precise workbook modifications.
+You are an Excel AI Copilot. You analyze spreadsheet structures and propose precise workbook modifications directly on the user's active workbook.
 
 CRITICAL RULES:
 1. You NEVER edit Excel directly.

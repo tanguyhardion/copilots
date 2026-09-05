@@ -23,10 +23,17 @@ class ActionParser:
         if match:
             raw_json_str = match.group(1)
         else:
-            # Fallback search for bare JSON block starting with {"intent":
-            bare_match = re.search(r"(\{\s*\"intent\"\s*:.*?\})", text, re.DOTALL | re.IGNORECASE)
-            if bare_match:
-                raw_json_str = bare_match.group(1)
+            # Fallback search for bare JSON block starting with {
+            stripped = text.strip()
+            if stripped.startswith("{") and stripped.endswith("}"):
+                raw_json_str = stripped
+            else:
+                first_brace = text.find("{")
+                last_brace = text.rfind("}")
+                if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+                    candidate = text[first_brace:last_brace + 1]
+                    if '"intent"' in candidate or '"actions"' in candidate:
+                        raw_json_str = candidate
 
         if not raw_json_str:
             return ActionProtocol(

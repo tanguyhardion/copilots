@@ -28,12 +28,13 @@ const ROUTES = {
   },
   excel: {
     title: "Excel Copilot",
-    subtitle: "Air-gapped semantic analysis, LLM context generation, and deterministic JSON action execution",
+    subtitle: "Active workbook COM automation, real-time spreadsheet analysis, and deterministic JSON action execution",
     icon: "../../assets/icons/excel.png",
-    badge: "openpyxl + semantic engine",
+    badge: "Excel COM (pywin32)",
     badgeColor: "var(--brand-excel)",
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
+      { id: "action-excel-active", text: "Connect Active", icon: "link" },
       { id: "action-excel-open", text: "Open Workbook", icon: "folder-open" },
       { id: "action-excel-demo", text: "Open Demo", icon: "flask-conical" },
     ]
@@ -151,6 +152,8 @@ function handleHeaderAction(actionId, routeId) {
     openPromptModal(routeId);
   } else if (actionId === "action-cheatsheet") {
     openCheatsheetModal(routeId);
+  } else if (actionId === "action-excel-active") {
+    excelConnectActive();
   } else if (actionId === "action-excel-open") {
     excelOpenFile();
   } else if (actionId === "action-excel-demo") {
@@ -476,6 +479,16 @@ async function setupExcelView() {
       setButtonsDisabled("view-excel", false);
     }
   });
+}
+
+async function excelConnectActive() {
+  setStatus("excel", "Connecting to active Excel workbook…", "info", true);
+  try {
+    const res = await window.pywebview.api.excel_connect_active();
+    handleExcelLoaded(res);
+  } catch (err) {
+    setStatus("excel", `Connection failed: ${err}`, "error");
+  }
 }
 
 async function excelOpenFile() {

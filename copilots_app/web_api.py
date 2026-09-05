@@ -283,7 +283,12 @@ class CopilotBridge:
     def get_excel_sample_json(self) -> str:
         return SAMPLE_EXCEL_ACTION_JSON
 
+    def excel_connect_active(self) -> Dict[str, Any]:
+        """Connect directly to the currently active workbook in Microsoft Excel."""
+        return self._analyze_excel_path(None)
+
     def excel_open_file(self) -> Dict[str, Any]:
+        """Prompt file picker, open workbook in Microsoft Excel via COM, and analyze."""
         if not self._window:
             return {"success": False, "error": "Window not initialized."}
         file_types = ("Excel Workbooks (*.xlsx;*.xlsm)", "All files (*.*)")
@@ -294,6 +299,7 @@ class CopilotBridge:
         return self._analyze_excel_path(file_path)
 
     def excel_open_demo(self) -> Dict[str, Any]:
+        """Ensure sample portfolio workbook exists, open in Excel, and analyze."""
         base_dir = os.path.dirname(os.path.abspath(__file__))
         demo_path = os.path.join(base_dir, "services", "excel", "sample_portfolio.xlsx")
         if not os.path.exists(demo_path):
@@ -304,11 +310,10 @@ class CopilotBridge:
                 return {"success": False, "error": f"Could not create demo workbook: {e}"}
         return self._analyze_excel_path(demo_path)
 
-    def _analyze_excel_path(self, file_path: str) -> Dict[str, Any]:
+    def _analyze_excel_path(self, file_path: Optional[str] = None) -> Dict[str, Any]:
         try:
-            analyzer = WorkbookAnalyzer(file_path)
-            model = analyzer.analyze()
-            self.excel_current_path = file_path
+            model = WorkbookAnalyzer.analyze(file_path)
+            self.excel_current_path = model.file_path or model.filename
             self.excel_current_model = model
 
             # Extract metrics & sheets
@@ -316,54 +321,62 @@ class CopilotBridge:
             formula_count = 0
             table_count = 0
 
-            for sheet in model.sheets:
-                formula_count += len(sheet.formulas)
+            for sheet in model.worksheets:
+                formula_count += sheet.formulas_count
                 table_count += len(sheet.tables)
                 sheets_data.append({
                     "name": sheet.name,
-                    "row_count": sheet.row_count,
-                    "col_count": sheet.col_count,
-                    "has_headers": sheet.has_headers,
-                    "headers": sheet.headers[:12],
-                    "formulas_count": len(sheet.formulas),
+                    "row_count": sheet.max_row,
+                    "col_count": sheet.max_column,
+                    "has_headers": True if sheet.tables else False,
+                    "headers": [c.name for t in sheet.tables for c in t.columns][:12],
+                    "formulas_count": sheet.formulas_count,
                     "tables_count": len(sheet.tables),
                 })
 
             # LLM Prompt Context
-            from copilots_app.services.excel.analyzer.llm_context_generator import LLMContextGenerator
-            ctx_gen = LLMContextGenerator(model)
-            context_text = ctx_gen.generate_full_context()
+            context_text = WorkbookAnalyzer.generate_system_prompt(model)
 
             return {
                 "success": True,
-                "file_path": file_path,
-                "file_name": os.path.basename(file_path),
-                "sheet_count": len(model.sheets),
+                "file_path": self.excel_current_path,
+                "file_name": model.filename,
+                "sheet_count": len(model.worksheets),
                 "table_count": table_count,
                 "formula_count": formula_count,
                 "sheets": sheets_data,
                 "context_text": context_text,
-                "message": f"✓ Loaded and analyzed {os.path.basename(file_path)}",
+                "message": f"✓ Connected to active workbook: {model.filename}",
             }
         except Exception as err:
             traceback.print_exc()
-            return {"success": False, "error": f"Failed to analyze workbook: {err}"}
+            return {"success": False, "error": f"Failed to analyze active Excel workbook: {err}"}
 
     def excel_execute_protocol(self, protocol_json_str: str, create_backup: bool = True) -> Dict[str, Any]:
-        if not self.excel_current_path:
-            return {"success": False, "error": "No workbook currently open. Please open a workbook first."}
         try:
-            data = json.loads(protocol_json_str)
-            protocol = ActionParser.parse_dict(data)
-            status = self.excel_executor.execute(self.excel_current_path, protocol, create_backup=create_backup)
-            
-            log_messages = [log.message for log in status.logs]
+            protocol = ActionParser.parse_response(protocol_json_str)
+            result, updated_model = self.excel_executor.execute(
+                protocol=protocol,
+                file_path_or_wb=self.excel_current_path,
+                model=self.excel_current_model,
+                create_backup=create_backup,
+            )
+            if updated_model:
+                self.excel_current_model = updated_model
+
+            log_messages = [f"[{d.get('status', 'info').upper()}] {d.get('message')}" for d in result.details]
+            if result.errors:
+                log_messages.extend([f"[ERROR] {e}" for e in result.errors])
+            if result.warnings:
+                log_messages.extend([f"[WARNING] {w}" for w in result.warnings])
+
+            is_ok = result.status.value in ("success", "partial_success")
             return {
-                "success": status.success,
-                "executed_actions": status.actions_completed,
-                "total_actions": status.total_actions,
+                "success": is_ok,
+                "executed_actions": result.actions_executed,
+                "total_actions": len(protocol.actions),
                 "logs": log_messages,
-                "message": f"{'✓' if status.success else '⚠'} Execution finished: {status.actions_completed}/{status.total_actions} actions succeeded.",
+                "message": f"{'✓' if is_ok else '⚠'} Execution finished: {result.actions_executed}/{len(protocol.actions)} action(s) succeeded.",
             }
         except Exception as err:
             return {"success": False, "error": f"Execution error: {err}"}

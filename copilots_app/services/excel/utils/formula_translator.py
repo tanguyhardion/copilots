@@ -2,7 +2,15 @@
 
 import re
 from typing import Dict, Optional
-import openpyxl.utils
+
+
+def col_index_to_letter(col_idx: int) -> str:
+    """Convert 1-based column index to Excel column letter."""
+    result = []
+    while col_idx > 0:
+        col_idx, remainder = divmod(col_idx - 1, 26)
+        result.append(chr(65 + remainder))
+    return "".join(reversed(result))
 
 
 class FormulaTranslator:

@@ -15,11 +15,11 @@ class ActionValidator:
         # Search
         "find_sheet", "find_table", "find_column", "find_formula", "search_text",
         # Data
-        "add_column", "remove_column", "rename_column", "insert_rows", "delete_rows", "replace_values", "write_dataframe",
+        "add_column", "remove_column", "rename_column", "insert_rows", "delete_rows", "replace_values", "write_dataframe", "set_cell_value",
         # Formula
         "insert_formula", "replace_formula", "fill_formula", "add_formula_column",
         # Formatting
-        "autofit_columns", "apply_style", "freeze_panes", "conditional_format",
+        "autofit_columns", "apply_style", "format_cell", "freeze_panes", "conditional_format",
         # Charts
         "create_chart", "update_chart", "delete_chart",
     }

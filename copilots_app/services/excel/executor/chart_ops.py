@@ -1,70 +1,81 @@
-"""Chart operations: create, update, delete openpyxl charts."""
+"""Chart operations: create, update, delete Excel charts using pywin32 COM."""
 
-from typing import Optional
-import openpyxl
-from openpyxl.chart import BarChart, LineChart, PieChart, Reference
-from openpyxl.utils import range_boundaries, get_column_letter
+from typing import Optional, Any
 
 
 class ChartOps:
-    """Executes chart modifications on openpyxl Workbook."""
+    """Executes chart modifications on active Excel Workbook COM object."""
+
+    @classmethod
+    def _get_sheet(cls, wb: Any, sheet_name: Optional[str]) -> Any:
+        if not sheet_name:
+            return wb.ActiveSheet
+        for i in range(1, wb.Worksheets.Count + 1):
+            if wb.Worksheets(i).Name.lower() == sheet_name.lower():
+                return wb.Worksheets(i)
+        return wb.ActiveSheet
 
     @classmethod
     def execute_create_chart(
         cls,
-        wb: openpyxl.Workbook,
+        wb: Any,
         sheet_name: str,
         chart_title: str = "Chart",
         chart_type: str = "bar",
         data_range: Optional[str] = None,
         anchor: str = "E2",
     ) -> str:
-        """Create and embed a new openpyxl chart."""
-        ws = wb[sheet_name] if sheet_name in wb.sheetnames else wb.active
+        """Create and embed a new Excel chart."""
+        ws = cls._get_sheet(wb, sheet_name)
 
-        c_type = str(chart_type).lower().strip()
-        if "line" in c_type:
-            chart = LineChart()
-        elif "pie" in c_type:
-            chart = PieChart()
+        c_type_str = str(chart_type).lower().strip()
+        # Excel ChartType Enums:
+        # xlColumnClustered = 51, xlBarClustered = 57, xlLine = 4, xlPie = 5
+        if "line" in c_type_str:
+            xl_chart_type = 4
+        elif "pie" in c_type_str:
+            xl_chart_type = 5
+        elif "bar" in c_type_str and "col" not in c_type_str:
+            xl_chart_type = 57
         else:
-            chart = BarChart()
-            chart.type = "col" if "col" in c_type else "bar"
+            xl_chart_type = 51  # xlColumnClustered
 
-        chart.title = chart_title
-        chart.style = 10
+        anchor_cell = ws.Range(anchor)
+        left = anchor_cell.Left
+        top = anchor_cell.Top
+        width = 380
+        height = 240
 
-        # Define data source reference
+        chart_obj = ws.ChartObjects().Add(left, top, width, height)
+        chart = chart_obj.Chart
+        chart.ChartType = xl_chart_type
+
+        # Source data
         if data_range and ":" in data_range:
-            min_c, min_r, max_c, max_r = range_boundaries(data_range)
-            data = Reference(ws, min_col=min_c, min_row=min_r, max_col=max_c, max_row=max_r)
-            chart.add_data(data, titles_from_data=True)
+            src_rng = ws.Range(data_range)
         else:
-            # Default reference top populated area
-            max_c = ws.max_column or 2
-            max_r = ws.max_row or 5
-            data = Reference(ws, min_col=1, min_row=1, max_col=max_c, max_row=max_r)
-            chart.add_data(data, titles_from_data=True)
+            src_rng = ws.UsedRange
 
-        ws.add_chart(chart, anchor)
-        return f"Created {c_type.capitalize()} chart '{chart_title}' anchored at {anchor} in '{ws.title}'."
+        chart.SetSourceData(src_rng)
+        chart.HasTitle = True
+        chart.ChartTitle.Text = chart_title
+
+        return f"Created {c_type_str.capitalize()} chart '{chart_title}' anchored at {anchor} in '{ws.Name}'."
 
     @classmethod
-    def execute_delete_chart(cls, wb: openpyxl.Workbook, sheet_name: str, chart_name: str) -> str:
-        """Remove a chart by title/name."""
-        ws = wb[sheet_name] if sheet_name in wb.sheetnames else wb.active
+    def execute_delete_chart(cls, wb: Any, sheet_name: str, chart_name: str) -> str:
+        """Remove a chart by title or name."""
+        ws = cls._get_sheet(wb, sheet_name)
 
-        if not hasattr(ws, "_charts") or not ws._charts:
-            return f"No charts found in sheet '{ws.title}'."
+        deleted = 0
+        try:
+            for i in range(ws.ChartObjects().Count, 0, -1):
+                co = ws.ChartObjects(i)
+                title = co.Chart.ChartTitle.Text if co.Chart.HasTitle else co.Name
+                if chart_name.lower() in title.lower() or chart_name.lower() in co.Name.lower():
+                    co.Delete()
+                    deleted += 1
+        except Exception:
+            pass
 
-        removed_count = 0
-        charts_to_keep = []
-        for c in ws._charts:
-            title_str = str(c.title) if c.title else ""
-            if chart_name.lower() in title_str.lower():
-                removed_count += 1
-            else:
-                charts_to_keep.append(c)
-
-        ws._charts = charts_to_keep
-        return f"Deleted {removed_count} chart(s) matching '{chart_name}' from '{ws.title}'."
+        return f"Deleted {deleted} chart(s) matching '{chart_name}' from '{ws.Name}'."

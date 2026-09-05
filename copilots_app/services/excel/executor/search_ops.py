@@ -1,12 +1,11 @@
-"""Search operations: Query sheets, tables, columns, formulas, and cell text."""
+"""Search operations: Query sheets, tables, columns, formulas, and cell text using pywin32 COM."""
 
 from typing import List, Dict, Any
-import openpyxl
 from copilots_app.services.excel.models.semantic import WorkbookModel
 
 
 class SearchOps:
-    """Executes read-only query operations across openpyxl workbook."""
+    """Executes read-only query operations across active Excel workbook."""
 
     @classmethod
     def find_sheet(cls, model: WorkbookModel, query: str) -> List[Dict[str, Any]]:
@@ -59,20 +58,33 @@ class SearchOps:
         return results
 
     @classmethod
-    def search_text(cls, wb: openpyxl.Workbook, query: str) -> List[Dict[str, Any]]:
-        """Search text across all cells in workbook."""
+    def search_text(cls, wb: Any, query: str) -> List[Dict[str, Any]]:
+        """Search text across all cells in active workbook using Excel COM Range.Find."""
         results = []
-        q = str(query).lower().strip()
-        for sheet_name in wb.sheetnames:
-            ws = wb[sheet_name]
-            for row in ws.iter_rows(values_only=False):
-                for cell in row:
-                    if cell.value is not None and q in str(cell.value).lower():
+        q = str(query).strip()
+        if not q:
+            return results
+
+        # xlValues = -4163, xlPart = 2
+        for i in range(1, wb.Worksheets.Count + 1):
+            ws = wb.Worksheets(i)
+            try:
+                first_found = ws.UsedRange.Find(What=q, LookIn=-4163, LookAt=2)
+                if first_found:
+                    first_addr = first_found.Address
+                    curr = first_found
+                    while True:
                         results.append({
-                            "sheet": sheet_name,
-                            "coordinate": cell.coordinate,
-                            "value": str(cell.value),
+                            "sheet": ws.Name,
+                            "coordinate": curr.Address.replace("$", ""),
+                            "value": str(curr.Value),
                         })
-                        if len(results) >= 50:  # Limit results cap
+                        if len(results) >= 50:
                             return results
+                        curr = ws.UsedRange.FindNext(curr)
+                        if not curr or curr.Address == first_addr:
+                            break
+            except Exception:
+                pass
+
         return results
