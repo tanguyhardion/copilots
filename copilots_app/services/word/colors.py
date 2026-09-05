@@ -90,14 +90,12 @@ def get_active_word_theme_colors():
     """Read theme colors from the active Word document via COM."""
     colors = dict(THEME_COLORS)
     try:
-        import pythoncom, win32com.client
+        import pythoncom
+        from copilots_app.services.word.com_utils import get_active_word_and_doc
 
         pythoncom.CoInitialize()
         try:
-            word = win32com.client.GetActiveObject("Word.Application")
-            if word.Documents.Count == 0:
-                return colors
-            doc = word.ActiveDocument
+            word, doc = get_active_word_and_doc()
             scheme = doc.DocumentTheme.ThemeColorScheme
             for token, idx in WORD_THEME_MAP.items():
                 try:

@@ -1,3 +1,5 @@
+"""Default Word DSL sample template."""
+
 SAMPLE_DSL = """\
 // Document setup
 page size=letter orientation=portrait margin=72,72,72,72

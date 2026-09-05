@@ -33,14 +33,9 @@ class WordConnector:
         self.word_app = None
 
     def _connect_com(self):
-        import win32com.client, pythoncom
+        from copilots_app.services.word.com_utils import get_active_word_app
 
-        pythoncom.CoInitialize()
-        try:
-            self.word_app = win32com.client.GetActiveObject("Word.Application")
-        except Exception:
-            self.word_app = win32com.client.Dispatch("Word.Application")
-            self.word_app.Visible = True
+        self.word_app = get_active_word_app()
         return self.word_app
 
     def _prefetch_icons(self, elements, status_cb=None):
@@ -77,6 +72,7 @@ class WordConnector:
 
     def insert_at_cursor(self, pages_data, status_cb=None):
         import pythoncom
+        from copilots_app.services.word.com_utils import get_active_word_and_doc
 
         pythoncom.CoInitialize()
         try:
@@ -84,11 +80,8 @@ class WordConnector:
             icon_cache = self._prefetch_icons(all_elems, status_cb)
             if status_cb:
                 status_cb("Connecting to Word…")
-            self._connect_com()
-            word = self.word_app
-            if word.Documents.Count == 0:
-                raise Exception("No document open. Please open one in Word first.")
-            doc_com = word.ActiveDocument
+            word, doc_com = get_active_word_and_doc()
+            self.word_app = word
             sel = word.Selection
             total_pages = len(pages_data)
             for pi, page_elems in enumerate(pages_data):

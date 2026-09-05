@@ -1,5 +1,5 @@
 """
-Theme configuration, styling tokens, and Qt Stylesheet generator for the Unified Copilot Suite.
+Theme configuration and styling tokens for the Unified Copilot Suite.
 """
 
 from dataclasses import dataclass
@@ -43,91 +43,3 @@ def get_asset_path(relative_path: str) -> str:
     base_dir = Path(__file__).resolve().parent.parent.parent / "assets"
     full_path = base_dir / relative_path
     return str(full_path).replace("\\", "/")
-
-
-def get_app_stylesheet() -> str:
-    """Generate global application QSS styling."""
-    return f"""
-    * {{
-        font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-        color: {AppPalette.TEXT_PRIMARY};
-    }}
-
-    QMainWindow, QDialog {{
-        background-color: {AppPalette.BG_DARK};
-    }}
-
-    QWidget {{
-        background-color: transparent;
-        font-size: 13px;
-    }}
-
-    QScrollBar:vertical {{
-        background: {AppPalette.BG_DARK};
-        width: 8px;
-        margin: 0px;
-    }}
-    QScrollBar::handle:vertical {{
-        background: {AppPalette.BORDER_COLOR};
-        min-height: 20px;
-        border-radius: 4px;
-    }}
-    QScrollBar::handle:vertical:hover {{
-        background: {AppPalette.BORDER_LIGHT};
-    }}
-    QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
-        height: 0px;
-    }}
-
-    QScrollBar:horizontal {{
-        background: {AppPalette.BG_DARK};
-        height: 8px;
-        margin: 0px;
-    }}
-    QScrollBar::handle:horizontal {{
-        background: {AppPalette.BORDER_COLOR};
-        min-width: 20px;
-        border-radius: 4px;
-    }}
-    QScrollBar::handle:horizontal:hover {{
-        background: {AppPalette.BORDER_LIGHT};
-    }}
-    QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
-        width: 0px;
-    }}
-
-    QComboBox {{
-        background-color: {AppPalette.BG_CARD};
-        color: {AppPalette.TEXT_PRIMARY};
-        border: 1px solid {AppPalette.BORDER_COLOR};
-        border-radius: 6px;
-        padding: 5px 10px;
-        font-size: 12px;
-    }}
-    QComboBox:hover {{
-        border-color: {AppPalette.BORDER_LIGHT};
-    }}
-    QComboBox::drop-down {{
-        border: none;
-        width: 20px;
-    }}
-    QComboBox QAbstractItemView {{
-        background-color: {AppPalette.BG_CARD};
-        color: {AppPalette.TEXT_PRIMARY};
-        selection-background-color: {AppPalette.PRIMARY};
-        selection-color: #FFFFFF;
-        border: 1px solid {AppPalette.BORDER_COLOR};
-        border-radius: 6px;
-        padding: 4px;
-        outline: none;
-    }}
-
-    QToolTip {{
-        background-color: {AppPalette.BG_CARD};
-        color: {AppPalette.TEXT_PRIMARY};
-        border: 1px solid {AppPalette.BORDER_COLOR};
-        border-radius: 4px;
-        padding: 4px 8px;
-        font-size: 11px;
-    }}
-    """

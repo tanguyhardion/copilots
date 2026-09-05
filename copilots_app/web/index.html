@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Copilots — Unified Desktop Suite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <img src="../../assets/icons/copilots.png" alt="Copilots" onerror="this.src='../../assets/icons/powerpoint.png'">
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">Copilots</span>
+          <span class="brand-version">Suite v1.2</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-route="powerpoint">
+          <span class="indicator" style="background-color: var(--brand-ppt)"></span>
+          <img class="nav-icon" src="../../assets/icons/powerpoint.png" alt="PPT">
+          <span class="nav-label">PowerPoint Copilot</span>
+        </button>
+        <button class="nav-item" data-route="word">
+          <span class="indicator" style="background-color: var(--brand-word)"></span>
+          <img class="nav-icon" src="../../assets/icons/word.png" alt="Word">
+          <span class="nav-label">Word Copilot</span>
+        </button>
+        <button class="nav-item" data-route="excel">
+          <span class="indicator" style="background-color: var(--brand-excel)"></span>
+          <img class="nav-icon" src="../../assets/icons/excel.png" alt="Excel">
+          <span class="nav-label">Excel Copilot</span>
+        </button>
+        <button class="nav-item" data-route="cv">
+          <span class="indicator" style="background-color: var(--brand-cv)"></span>
+          <img class="nav-icon" src="../../assets/icons/cv.png" alt="CV">
+          <span class="nav-label">CV Copilot</span>
+        </button>
+      </nav>
+
+    </aside>
+
+    <!-- Main Content Container -->
+    <main class="main-container">
+      <!-- Top Dynamic Header -->
+      <header class="app-header">
+        <div class="header-left">
+          <img id="header-icon" src="../../assets/icons/powerpoint.png" alt="Header Icon" class="header-icon">
+          <div class="header-titles">
+            <div class="title-row">
+              <h1 id="header-title">PowerPoint Copilot</h1>
+              <span id="header-badge" class="badge">PowerPoint COM</span>
+            </div>
+            <p id="header-subtitle">Generate slides, shapes, rich text, tables, and icons from clean DSL</p>
+          </div>
+        </div>
+        <div class="header-actions" id="header-actions">
+          <!-- Populated per view -->
+        </div>
+      </header>
+
+      <!-- VIEW 1: PowerPoint Copilot -->
+      <section class="view-panel active" id="view-powerpoint">
+        <div class="editor-section">
+          <div class="editor-toolbar">
+            <span class="toolbar-title">DSL Code Editor</span>
+            <div class="sample-picker">
+              <label for="ppt-samples-select">Template:</label>
+              <select id="ppt-samples-select"></select>
+            </div>
+          </div>
+          <div class="code-area-wrapper">
+            <textarea id="ppt-editor" class="code-textarea" spellcheck="false" placeholder="Enter PowerPoint DSL here..."></textarea>
+          </div>
+        </div>
+        <div class="action-bar">
+          <button class="btn btn-ppt-subtle" id="ppt-btn-copy">
+            <i data-lucide="clipboard" class="btn-icon"></i> Copy to Clipboard
+          </button>
+          <button class="btn btn-ppt-outline" id="ppt-btn-insert">
+            <i data-lucide="plus-circle" class="btn-icon"></i> Insert on Current Slide
+          </button>
+          <button class="btn btn-ppt-primary" id="ppt-btn-create">
+            <i data-lucide="presentation" class="btn-icon"></i> Create Full Slide(s)
+          </button>
+        </div>
+        <footer class="status-bar" id="ppt-status">
+          <span class="status-indicator"></span>
+          <span class="status-text">Ready — write or paste DSL and choose an action</span>
+        </footer>
+      </section>
+
+      <!-- VIEW 2: Word Copilot -->
+      <section class="view-panel" id="view-word">
+        <div class="editor-section">
+          <div class="editor-toolbar">
+            <span class="toolbar-title">Word DSL &amp; Edit Engine</span>
+            <div class="sample-picker">
+              <label for="word-samples-select">Template:</label>
+              <select id="word-samples-select"></select>
+            </div>
+          </div>
+          <div class="code-area-wrapper">
+            <textarea id="word-editor" class="code-textarea" spellcheck="false" placeholder="Enter Word DSL or edit mode instructions..."></textarea>
+          </div>
+        </div>
+        <div class="action-bar">
+          <button class="btn btn-word-subtle" id="word-btn-extract">
+            <i data-lucide="download" class="btn-icon"></i> Extract DSL from Word
+          </button>
+          <button class="btn btn-word-outline" id="word-btn-insert">
+            <i data-lucide="pen-tool" class="btn-icon"></i> Insert at Cursor
+          </button>
+          <button class="btn btn-word-secondary" id="word-btn-apply">
+            <i data-lucide="sparkles" class="btn-icon"></i> Apply Edits to Doc
+          </button>
+          <button class="btn btn-word-primary" id="word-btn-build">
+            <i data-lucide="file-text" class="btn-icon"></i> Build &amp; Open Document
+          </button>
+        </div>
+        <footer class="status-bar" id="word-status">
+          <span class="status-indicator"></span>
+          <span class="status-text">Ready — build clean documents or interact with active Microsoft Word</span>
+        </footer>
+      </section>
+
+      <!-- VIEW 3: Excel Copilot -->
+      <section class="view-panel" id="view-excel">
+        <!-- Metric Cards -->
+        <div class="metrics-row">
+          <div class="metric-card" style="border-left-color: var(--brand-excel)">
+            <i data-lucide="file" class="metric-icon"></i>
+            <div class="metric-details">
+              <span class="metric-title">Active File</span>
+              <span class="metric-value" id="excel-metric-file">None</span>
+            </div>
+          </div>
+          <div class="metric-card" style="border-left-color: var(--primary)">
+            <i data-lucide="layers" class="metric-icon"></i>
+            <div class="metric-details">
+              <span class="metric-title">Sheets</span>
+              <span class="metric-value" id="excel-metric-sheets">0</span>
+            </div>
+          </div>
+          <div class="metric-card" style="border-left-color: var(--info)">
+            <i data-lucide="table-2" class="metric-icon"></i>
+            <div class="metric-details">
+              <span class="metric-title">Tables</span>
+              <span class="metric-value" id="excel-metric-tables">0</span>
+            </div>
+          </div>
+          <div class="metric-card" style="border-left-color: var(--warning)">
+            <i data-lucide="sigma" class="metric-icon"></i>
+            <div class="metric-details">
+              <span class="metric-title">Formulas</span>
+              <span class="metric-value" id="excel-metric-formulas">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="excel-split-body">
+          <!-- Left Panel: Explorer / LLM Context -->
+          <div class="panel-box left-panel">
+            <div class="panel-tabs">
+              <button class="tab-btn active" id="tab-btn-explorer">Workbook Explorer</button>
+              <button class="tab-btn" id="tab-btn-context">LLM Prompt Context</button>
+            </div>
+            <div class="tab-page active" id="tab-page-explorer">
+              <div class="explorer-list" id="excel-sheets-list">
+                <div class="empty-state">No workbook open. Click "Open Workbook" or "Demo" above to analyze.</div>
+              </div>
+            </div>
+            <div class="tab-page" id="tab-page-context">
+              <div class="tab-page-header">
+                <span>Semantic Context for LLM Prompts</span>
+                <button class="btn-tiny" id="excel-btn-copy-context"><i data-lucide="clipboard" style="width:11px;height:11px;vertical-align:middle;"></i> Copy Context</button>
+              </div>
+              <textarea id="excel-context-text" class="code-textarea" readonly placeholder="Open a workbook to generate LLM schema context..."></textarea>
+            </div>
+          </div>
+
+          <!-- Right Panel: Action Protocol JSON & Logs -->
+          <div class="panel-box right-panel">
+            <div class="panel-header-simple">
+              <span>Action Protocol JSON</span>
+            </div>
+            <div class="code-area-wrapper flex-grow">
+              <textarea id="excel-protocol-editor" class="code-textarea" spellcheck="false"></textarea>
+            </div>
+
+            <!-- Execution Logs -->
+            <div class="log-console-wrapper">
+              <div class="log-header">Execution Console</div>
+              <div class="log-console" id="excel-log-console">
+                Ready. Validate protocol or execute against the active workbook.
+              </div>
+            </div>
+
+            <div class="excel-actions-row">
+              <label class="checkbox-label">
+                <input type="checkbox" id="excel-backup-checkbox" checked>
+                <span>Create backup before executing</span>
+              </label>
+              <div class="right-buttons">
+                <button class="btn btn-excel-outline" id="excel-btn-validate">
+                  <i data-lucide="check-circle" class="btn-icon"></i> Validate Protocol
+                </button>
+                <button class="btn btn-excel-primary" id="excel-btn-execute">
+                  <i data-lucide="play" class="btn-icon"></i> Execute Protocol
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="status-bar" id="excel-status">
+          <span class="status-indicator"></span>
+          <span class="status-text">Ready — open a workbook or explore sample portfolio</span>
+        </footer>
+      </section>
+
+      <!-- VIEW 4: CV Copilot -->
+      <section class="view-panel" id="view-cv">
+        <!-- Metric Cards -->
+        <div class="metrics-row">
+          <div class="metric-card" style="border-left-color: var(--brand-cv)">
+            <i data-lucide="user" class="metric-icon"></i>
+            <div class="metric-details">
+              <span class="metric-title">Candidate</span>
+              <span class="metric-value" id="cv-metric-name">—</span>
+            </div>
+          </div>
+          <div class="metric-card" style="border-left-color: var(--primary)">
+            <i data-lucide="briefcase" class="metric-icon"></i>
+            <div class="metric-details">
+              <span class="metric-title">Work Experience</span>
+              <span class="metric-value" id="cv-metric-exp">0</span>
+            </div>
+          </div>
+          <div class="metric-card" style="border-left-color: var(--info)">
+            <i data-lucide="wrench" class="metric-icon"></i>
+            <div class="metric-details">
+              <span class="metric-title">Skills</span>
+              <span class="metric-value" id="cv-metric-skills">0</span>
+            </div>
+          </div>
+          <div class="metric-card" style="border-left-color: var(--success)">
+            <i data-lucide="bar-chart-2" class="metric-icon"></i>
+            <div class="metric-details">
+              <span class="metric-title">DQ Audit Score</span>
+              <span class="metric-value" id="cv-metric-score">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="cv-split-body">
+          <!-- Left: CV JSON Editor -->
+          <div class="panel-box left-panel">
+            <div class="panel-header-simple">
+              <span>Europass Profile JSON</span>
+              <button class="btn-tiny" id="cv-btn-format">Format JSON</button>
+            </div>
+            <div class="code-area-wrapper flex-grow">
+              <textarea id="cv-editor" class="code-textarea" spellcheck="false" placeholder="Loading sample CV profile JSON..."></textarea>
+            </div>
+          </div>
+
+          <!-- Right: Audit Results Report -->
+          <div class="panel-box right-panel">
+            <div class="panel-header-simple">
+              <span>Deterministic DQ Audit Results</span>
+            </div>
+            <div class="audit-results-wrapper" id="cv-audit-results">
+              <div class="empty-state">Click "Audit Data Quality" to validate profile schema and European compliance.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <button class="btn btn-cv-outline" id="cv-btn-audit">
+            <i data-lucide="shield-check" class="btn-icon"></i> Audit Data Quality
+          </button>
+          <button class="btn btn-cv-primary" id="cv-btn-generate">
+            <i data-lucide="file-check" class="btn-icon"></i> Generate Europass Word (.docx)
+          </button>
+        </div>
+
+        <footer class="status-bar" id="cv-status">
+          <span class="status-indicator"></span>
+          <span class="status-text">Ready — load profile, audit quality, or compile Word .docx</span>
+        </footer>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL: System Prompt Editor -->
+  <div class="modal-overlay" id="prompt-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <h2 id="modal-prompt-title">System Prompt</h2>
+          <span class="modal-badge" id="modal-prompt-badge">Bundled Default</span>
+        </div>
+        <button class="modal-close-btn" id="modal-prompt-close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <textarea id="modal-prompt-editor" class="code-textarea" spellcheck="false"></textarea>
+      </div>
+      <div class="modal-footer">
+        <div class="modal-left-actions">
+          <button class="btn btn-secondary" id="modal-prompt-btn-reset">Reset to Default</button>
+          <button class="btn btn-secondary" id="modal-prompt-btn-copy"><i data-lucide="clipboard" class="btn-icon"></i> Copy All</button>
+        </div>
+        <div class="modal-right-actions">
+          <button class="btn btn-secondary" id="modal-prompt-btn-cancel">Cancel</button>
+          <button class="btn btn-primary" id="modal-prompt-btn-save">Save Override</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DSL Cheatsheet -->
+  <div class="modal-overlay" id="cheatsheet-modal">
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <h2 id="cheatsheet-title">DSL Reference Cheatsheet</h2>
+        <button class="modal-close-btn" id="cheatsheet-close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body modal-scrollable" id="cheatsheet-content">
+        <!-- Loaded dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="cheatsheet-btn-ok">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

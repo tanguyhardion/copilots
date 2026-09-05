@@ -49,22 +49,28 @@ class WordExtractor:
             pythoncom.CoUninitialize()
 
     def _get_active_doc_path(self, status_cb=None):
-        import win32com.client, time
+        import time
+        import shutil
+        from copilots_app.services.word.com_utils import get_active_word_and_doc
 
-        try:
-            word = win32com.client.GetActiveObject("Word.Application")
-        except Exception:
-            raise Exception(
-                "Word is not running. Please open a document in Word first."
-            )
-        if word.Documents.Count == 0:
-            raise Exception("No document is open in Word. Please open one first.")
-        doc = word.ActiveDocument
+        if status_cb:
+            status_cb("Connecting to Word…")
+        word, doc = get_active_word_and_doc()
+
         if status_cb:
             status_cb("Snapshotting document…")
         tmp = os.path.join(
             tempfile.gettempdir(), f"word_dsl_extract_{int(time.time()*1000)}.docx"
         )
+        # If the document is saved to disk, directly copy it
+        try:
+            if doc.Path and os.path.exists(doc.FullName):
+                shutil.copy2(doc.FullName, tmp)
+                return tmp
+        except Exception:
+            pass
+
+        # Otherwise snapshot via Range Copy/Paste
         try:
             doc.Range().Copy()
             new_doc = word.Documents.Add()
@@ -76,17 +82,11 @@ class WordExtractor:
         return tmp
 
     def _get_active_doc_path_for_inplace_edit(self, status_cb=None):
-        import win32com.client
+        from copilots_app.services.word.com_utils import get_active_word_and_doc
 
-        try:
-            word = win32com.client.GetActiveObject("Word.Application")
-        except Exception:
-            raise Exception(
-                "Word is not running. Please open a document in Word first."
-            )
-        if word.Documents.Count == 0:
-            raise Exception("No document is open in Word. Please open one first.")
-        doc = word.ActiveDocument
+        if status_cb:
+            status_cb("Connecting to Word…")
+        word, doc = get_active_word_and_doc()
 
         if not doc.Path:
             raise Exception(

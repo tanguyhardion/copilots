@@ -179,14 +179,10 @@ class WordEditor:
 
     # ── reopen edited doc in Word ─────────────────────────────────────────────
     def _reopen_in_word(self, edited_path, scroll_target_id=None, status_cb=None):
-        import win32com.client, time
+        import time
+        from copilots_app.services.word.com_utils import get_active_word_app
 
-        try:
-            word = win32com.client.GetActiveObject("Word.Application")
-        except Exception:
-            word = win32com.client.Dispatch("Word.Application")
-            word.Visible = True
-
+        word = get_active_word_app()
         doc = word.Documents.Open(os.path.abspath(edited_path))
         word.Visible = True
         word.Activate()
