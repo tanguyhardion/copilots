@@ -45,6 +45,11 @@
           <img class="nav-icon" src="../../assets/icons/cv.png" alt="CV">
           <span class="nav-label">CV Copilot</span>
         </button>
+        <button class="nav-item" data-route="python">
+          <span class="indicator" style="background-color: var(--brand-python)"></span>
+          <img class="nav-icon" src="../../assets/icons/python.png" alt="Python">
+          <span class="nav-label">Python Copilot</span>
+        </button>
       </nav>
 
     </aside>
@@ -297,6 +302,149 @@
         <footer class="status-bar" id="cv-status">
           <span class="status-indicator"></span>
           <span class="status-text">Ready — load profile, audit quality, or compile Word .docx</span>
+        </footer>
+      </section>
+
+      <!-- VIEW 5: Python Copilot -->
+      <section class="view-panel" id="view-python">
+        <!-- Metric Cards -->
+        <div class="metrics-row">
+          <div class="metric-card" style="border-left-color: var(--brand-python)">
+            <i data-lucide="terminal" class="metric-icon"></i>
+            <div class="metric-details">
+              <span class="metric-title">Last Execution</span>
+              <span class="metric-value" id="python-metric-status">Ready</span>
+            </div>
+          </div>
+          <div class="metric-card" style="border-left-color: var(--primary)">
+            <i data-lucide="clock" class="metric-icon"></i>
+            <div class="metric-details">
+              <span class="metric-title">Execution Time</span>
+              <span class="metric-value" id="python-metric-duration">0 ms</span>
+            </div>
+          </div>
+          <div class="metric-card" style="border-left-color: var(--info)">
+            <i data-lucide="files" class="metric-icon"></i>
+            <div class="metric-details">
+              <span class="metric-title">Folder Files</span>
+              <span class="metric-value" id="python-metric-files">0 Files</span>
+            </div>
+          </div>
+          <div class="metric-card" style="border-left-color: var(--warning)">
+            <i data-lucide="hard-drive" class="metric-icon"></i>
+            <div class="metric-details">
+              <span class="metric-title">Persistence Mode</span>
+              <span class="metric-value" id="python-metric-persist">Temp (Auto-Clean)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="python-split-body">
+          <!-- Left Panel: Python Script Editor -->
+          <div class="panel-box left-panel">
+            <div class="editor-toolbar" style="padding: 10px 14px; margin-bottom: 0; border-bottom: 1px solid var(--border-subtle); background: rgba(0,0,0,0.15);">
+              <span class="toolbar-title">Python Code Runner</span>
+              <div class="sample-picker">
+                <label for="python-samples-select">Snippets:</label>
+                <select id="python-samples-select">
+                  <option value="empty">Blank Script</option>
+                  <option value="csv_excel">Generate Excel &amp; CSV</option>
+                  <option value="batch_rename">Document Batch Processor</option>
+                  <option value="file_summary">Directory Files Inspector</option>
+                </select>
+              </div>
+            </div>
+            <div class="code-area-wrapper flex-grow">
+              <textarea id="python-editor" class="code-textarea" spellcheck="false" placeholder="# Paste your Python code here (e.g. from ChatGPT or Claude)...
+# All files created in the active directory will be tracked on the right panel.
+
+import os
+import sys
+
+print('Python Copilot Runner ready!')
+"></textarea>
+            </div>
+
+            <div class="excel-actions-row" style="background: rgba(0, 0, 0, 0.25);">
+              <label class="checkbox-label" title="When unchecked, scripts run in a temporary sandbox session. When checked, files persist in your AppData Copilots folder.">
+                <input type="checkbox" id="python-persist-checkbox">
+                <span>Persist generated files &amp; scripts</span>
+              </label>
+              <div class="right-buttons">
+                <button class="btn btn-secondary" id="python-btn-clear-code" title="Clear code editor">
+                  <i data-lucide="rotate-ccw" class="btn-icon"></i> Clear Editor
+                </button>
+                <button class="btn btn-python-primary" id="python-btn-run">
+                  <i data-lucide="play" class="btn-icon"></i> Run Python Code
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Panel: Output Console & Generated Files Inspector -->
+          <div class="panel-box right-panel">
+            <div class="panel-tabs">
+              <button class="tab-btn active" id="tab-btn-py-console">Console &amp; Errors</button>
+              <button class="tab-btn" id="tab-btn-py-files">Generated Files (<span id="tab-files-count">0</span>)</button>
+              <button class="tab-btn" id="tab-btn-py-context">LLM Prompt Context</button>
+            </div>
+
+            <!-- Tab 1: Terminal Console -->
+            <div class="tab-page active" id="tab-page-py-console" style="padding: 0;">
+              <div class="python-log-console" id="python-log-console">
+<span class="info-line"># Python Copilot Terminal Ready.</span>
+<span class="info-line"># Paste script and click 'Run Python Code'.</span>
+              </div>
+            </div>
+
+            <!-- Tab 2: Generated Files -->
+            <div class="tab-page" id="tab-page-py-files">
+              <div class="tab-page-header">
+                <span>Sandbox Directory Artifacts</span>
+                <div style="display:flex; gap:6px;">
+                  <button class="btn-tiny" id="python-btn-copy-context-mini" title="Copy structured file list for ChatGPT/LLMs">
+                    <i data-lucide="clipboard" style="width:11px;height:11px;vertical-align:middle;"></i> Copy Context for LLM
+                  </button>
+                  <button class="btn-tiny" id="python-btn-open-explorer-mini" title="Open working folder in Windows Explorer">
+                    <i data-lucide="folder-open" style="width:11px;height:11px;vertical-align:middle;"></i> Explorer
+                  </button>
+                </div>
+              </div>
+              <div class="python-file-list" id="python-file-list">
+                <div class="empty-state">No generated files yet. Scripts that create or save documents will display here.</div>
+              </div>
+            </div>
+
+            <!-- Tab 3: LLM Context -->
+            <div class="tab-page" id="tab-page-py-context">
+              <div class="tab-page-header">
+                <span>Folder Context for Prompting LLMs</span>
+                <button class="btn-tiny" id="python-btn-copy-context-full">
+                  <i data-lucide="clipboard" style="width:11px;height:11px;vertical-align:middle;"></i> Copy All Context
+                </button>
+              </div>
+              <textarea id="python-context-text" class="code-textarea" readonly placeholder="Run a script or create files to generate context..."></textarea>
+            </div>
+
+            <div class="excel-actions-row">
+              <span style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:50%;" id="python-folder-label">
+                Sandbox: Temp
+              </span>
+              <div class="right-buttons">
+                <button class="btn btn-secondary" id="python-btn-open-explorer">
+                  <i data-lucide="external-link" class="btn-icon"></i> Open in Explorer
+                </button>
+                <button class="btn btn-python-outline" id="python-btn-copy-context">
+                  <i data-lucide="copy" class="btn-icon"></i> Copy Folder Context
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="status-bar" id="python-status">
+          <span class="status-indicator"></span>
+          <span class="status-text">Ready — paste code, execute scripts, and inspect generated documents</span>
         </footer>
       </section>
     </main>

@@ -49,6 +49,18 @@ const ROUTES = {
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
       { id: "action-cv-reset", text: "Reset Sample CV", icon: "rotate-ccw" },
     ]
+  },
+  python: {
+    title: "Python Copilot",
+    subtitle: "Interactive execution sandbox, script runner, live stdout/stderr console, and directory context inspector",
+    icon: "../../assets/icons/python.png",
+    badge: "Python Runner Sandbox",
+    badgeColor: "var(--brand-python)",
+    actions: [
+      { id: "action-prompt", text: "System Prompt", icon: "settings" },
+      { id: "action-python-open-folder", text: "Open Folder", icon: "folder-open" },
+      { id: "action-python-clear", text: "Clear Sandbox", icon: "trash-2" },
+    ]
   }
 };
 
@@ -75,6 +87,7 @@ function initApp() {
   setupWordView();
   setupExcelView();
   setupCVView();
+  setupPythonView();
   setupModals();
 
   navigateTo("powerpoint");
@@ -160,6 +173,12 @@ function handleHeaderAction(actionId, routeId) {
     excelOpenDemo();
   } else if (actionId === "action-cv-reset") {
     cvResetSample();
+  } else if (actionId === "action-python-open-folder") {
+    pythonOpenExplorer();
+  } else if (actionId === "action-python-copy-context") {
+    pythonCopyFolderContext();
+  } else if (actionId === "action-python-clear") {
+    pythonClearWorkspace();
   }
 }
 
@@ -684,6 +703,391 @@ function renderCVAuditResults(audit) {
     `;
     container.appendChild(card);
   });
+}
+
+/* =========================================================================
+   Python Copilot View
+   ========================================================================= */
+const PYTHON_SNIPPETS = {
+  empty: `# Paste your Python code here (e.g. from ChatGPT or Claude)...
+# All files created in this active directory will be tracked automatically.
+
+import os
+import sys
+
+print("Python Copilot runner ready!")
+`,
+  csv_excel: `import csv
+from pathlib import Path
+
+# Create a sample sales report CSV
+csv_file = Path("monthly_sales_summary.csv")
+with open(csv_file, "w", newline="", encoding="utf-8") as f:
+    writer = csv.writer(f)
+    writer.writerow(["Region", "Units Sold", "Revenue USD", "Status"])
+    writer.writerow(["EMEA", 1420, 184600, "Closed"])
+    writer.writerow(["NA", 2180, 327000, "Closed"])
+    writer.writerow(["APAC", 950, 114000, "In Review"])
+
+print(f"✓ Generated CSV report: {csv_file.name}")
+print(f"Total entries written: 3 regions")
+`,
+  batch_rename: `from pathlib import Path
+
+# Example: generate mock project documents
+for i in range(1, 6):
+    doc_name = f"Project_Milestone_Phase_{i}.txt"
+    with open(doc_name, "w", encoding="utf-8") as f:
+        f.write(f"Milestone {i} specification and verification checks.\\nStatus: Pending Approval\\n")
+    print(f"✓ Created document: {doc_name}")
+
+print("\\nAll batch files prepared in working sandbox.")
+`,
+  file_summary: `import os
+from pathlib import Path
+
+cwd = Path(".")
+files = [f for f in cwd.iterdir() if f.is_file()]
+
+print(f"Current Directory: {cwd.resolve()}")
+print(f"Total Files Found: {len(files)}")
+print("-" * 50)
+for f in files:
+    print(f"• {f.name:<35} | {f.stat().st_size:>8} bytes")
+`
+};
+
+let pythonLastFiles = [];
+
+async function setupPythonView() {
+  const editor = document.getElementById("python-editor");
+  const snippetSelect = document.getElementById("python-samples-select");
+  const persistCheck = document.getElementById("python-persist-checkbox");
+  const runBtn = document.getElementById("python-btn-run");
+  const clearCodeBtn = document.getElementById("python-btn-clear-code");
+
+  // Tabs
+  const tabBtnConsole = document.getElementById("tab-btn-py-console");
+  const tabBtnFiles = document.getElementById("tab-btn-py-files");
+  const tabBtnContext = document.getElementById("tab-btn-py-context");
+  const tabPageConsole = document.getElementById("tab-page-py-console");
+  const tabPageFiles = document.getElementById("tab-page-py-files");
+  const tabPageContext = document.getElementById("tab-page-py-context");
+
+  function switchPyTab(activeBtn, activePage) {
+    [tabBtnConsole, tabBtnFiles, tabBtnContext].forEach(b => b.classList.remove("active"));
+    [tabPageConsole, tabPageFiles, tabPageContext].forEach(p => p.classList.remove("active"));
+    activeBtn.classList.add("active");
+    activePage.classList.add("active");
+  }
+
+  tabBtnConsole.addEventListener("click", () => switchPyTab(tabBtnConsole, tabPageConsole));
+  tabBtnFiles.addEventListener("click", () => switchPyTab(tabBtnFiles, tabPageFiles));
+  tabBtnContext.addEventListener("click", () => switchPyTab(tabBtnContext, tabPageContext));
+
+  // Snippet selector
+  snippetSelect.addEventListener("change", (e) => {
+    const val = e.target.value;
+    if (PYTHON_SNIPPETS[val]) {
+      editor.value = PYTHON_SNIPPETS[val];
+    }
+  });
+
+  // Clear code button
+  clearCodeBtn.addEventListener("click", () => {
+    editor.value = "";
+    editor.focus();
+  });
+
+  // Persistence toggle listener
+  persistCheck.addEventListener("change", async (e) => {
+    const persist = e.target.checked;
+    try {
+      if (window.pywebview?.api) {
+        const res = await window.pywebview.api.python_set_persistence(persist);
+        if (res.success) {
+          updatePythonPersistUI(persist, res.folder_path);
+          renderPythonFiles(res.files || []);
+          setStatus("python", persist ? "Persistence ENABLED (files stored in AppData sandbox)" : "Persistence DISABLED (temporary sandbox auto-cleaned)", "info");
+        }
+      }
+    } catch (err) {
+      console.error("Failed to toggle persistence:", err);
+    }
+  });
+
+  // Run button
+  runBtn.addEventListener("click", pythonRunCode);
+
+  // Explorer buttons
+  document.getElementById("python-btn-open-explorer").addEventListener("click", pythonOpenExplorer);
+  document.getElementById("python-btn-open-explorer-mini").addEventListener("click", pythonOpenExplorer);
+
+  // Copy Context buttons
+  document.getElementById("python-btn-copy-context").addEventListener("click", pythonCopyFolderContext);
+  document.getElementById("python-btn-copy-context-mini").addEventListener("click", pythonCopyFolderContext);
+  document.getElementById("python-btn-copy-context-full").addEventListener("click", pythonCopyFolderContext);
+
+  // Initial status query
+  if (window.pywebview?.api) {
+    try {
+      const status = await window.pywebview.api.python_get_status();
+      if (status.success) {
+        persistCheck.checked = status.persist;
+        updatePythonPersistUI(status.persist, status.folder_path);
+        renderPythonFiles(status.files || []);
+      }
+    } catch (e) {}
+  }
+}
+
+function updatePythonPersistUI(persist, folderPath) {
+  const persistMetric = document.getElementById("python-metric-persist");
+  const folderLabel = document.getElementById("python-folder-label");
+
+  if (persist) {
+    persistMetric.innerText = "Persistent (Saved)";
+    persistMetric.style.color = "var(--brand-excel)";
+    folderLabel.innerText = `Persistent: ${folderPath}`;
+    folderLabel.title = folderPath;
+  } else {
+    persistMetric.innerText = "Temp (Auto-Clean)";
+    persistMetric.style.color = "var(--text-secondary)";
+    folderLabel.innerText = `Sandbox: ${folderPath}`;
+    folderLabel.title = folderPath;
+  }
+}
+
+async function pythonRunCode() {
+  const editor = document.getElementById("python-editor");
+  const code = editor.value;
+  const consoleElem = document.getElementById("python-log-console");
+  const persist = document.getElementById("python-persist-checkbox").checked;
+
+  if (!code.trim()) {
+    setStatus("python", "Code editor is empty. Paste or write a Python script to run.", "warning");
+    return;
+  }
+
+  setStatus("python", "Executing Python script in sandbox…", "info", true);
+  setButtonsDisabled("view-python", true);
+
+  consoleElem.innerHTML = `<span class="info-line"># Running script (sys.executable)...</span>\n`;
+
+  try {
+    const res = await window.pywebview.api.python_run_code(code, persist);
+
+    // Render console lines
+    let outHtml = "";
+    if (res.stdout) {
+      outHtml += `<span class="stdout-line">${escapeHtml(res.stdout)}</span>\n`;
+    }
+    if (res.stderr) {
+      outHtml += `<span class="stderr-line">${escapeHtml(res.stderr)}</span>\n`;
+    }
+    if (!res.stdout && !res.stderr) {
+      outHtml += `<span class="info-line"># Script executed with no terminal output.</span>\n`;
+    }
+
+    outHtml += `\n<span class="info-line"># Process finished with exit code ${res.exit_code} (${res.duration_ms} ms)</span>`;
+    consoleElem.innerHTML = outHtml;
+    consoleElem.scrollTop = consoleElem.scrollHeight;
+
+    // Update metrics
+    const statusMetric = document.getElementById("python-metric-status");
+    if (res.exit_code === 0) {
+      statusMetric.innerText = "✓ Success (0)";
+      statusMetric.style.color = "var(--brand-excel)";
+      setStatus("python", `Execution finished successfully in ${res.duration_ms} ms.`, "success");
+    } else {
+      statusMetric.innerText = `✗ Exit (${res.exit_code})`;
+      statusMetric.style.color = "var(--error)";
+      setStatus("python", `Execution exited with error code ${res.exit_code}.`, "error");
+    }
+
+    document.getElementById("python-metric-duration").innerText = `${res.duration_ms} ms`;
+
+    // Render files
+    renderPythonFiles(res.all_files || []);
+
+    // Refresh context
+    refreshPythonContext();
+
+    // If new files were produced, switch briefly or notify
+    if (res.produced_files && res.produced_files.length > 0) {
+      setStatus("python", `✓ Success! Produced ${res.produced_files.length} file(s) in sandbox folder.`, "success");
+    }
+  } catch (err) {
+    consoleElem.innerHTML += `\n<span class="stderr-line">Bridge execution error: ${escapeHtml(String(err))}</span>`;
+    setStatus("python", `Bridge error: ${err}`, "error");
+  } finally {
+    setButtonsDisabled("view-python", false);
+    if (window.lucide) lucide.createIcons();
+  }
+}
+
+function renderPythonFiles(files) {
+  pythonLastFiles = files;
+  const list = document.getElementById("python-file-list");
+  const countSpan = document.getElementById("tab-files-count");
+  const metricFiles = document.getElementById("python-metric-files");
+
+  countSpan.innerText = files.length;
+  metricFiles.innerText = `${files.length} File${files.length === 1 ? '' : 's'}`;
+
+  list.innerHTML = "";
+
+  if (!files || files.length === 0) {
+    list.innerHTML = `<div class="empty-state">No generated files in the workspace. Any documents created by your script will appear here.</div>`;
+    return;
+  }
+
+  files.forEach(f => {
+    const item = document.createElement("div");
+    item.className = "python-file-item";
+
+    // Choose icon and color
+    let iconName = "file";
+    let iconClass = "";
+    const ext = (f.ext || "").toLowerCase();
+
+    if (f.is_dir) {
+      iconName = "folder";
+      iconClass = "folder";
+    } else if (["py", "json", "js", "html", "css", "sql"].includes(ext)) {
+      iconName = "file-code";
+      iconClass = "code";
+    } else if (["doc", "docx", "txt", "md", "pdf"].includes(ext)) {
+      iconName = "file-text";
+      iconClass = "doc";
+    } else if (["xls", "xlsx", "csv"].includes(ext)) {
+      iconName = "table";
+      iconClass = "sheet";
+    }
+
+    item.innerHTML = `
+      <div class="python-file-info">
+        <div class="python-file-icon ${iconClass}">
+          <i data-lucide="${iconName}" style="width:15px;height:15px;"></i>
+        </div>
+        <div style="overflow:hidden;">
+          <div class="python-file-name" title="${f.name}">${f.name}</div>
+          <div class="python-file-meta">${f.size_formatted}</div>
+        </div>
+      </div>
+      <div class="python-file-actions">
+        <button class="btn-tiny" title="Open file in default app" data-action="open" data-name="${f.name}">
+          <i data-lucide="external-link" style="width:11px;height:11px;"></i> Open
+        </button>
+        <button class="btn-tiny" title="Copy filename" data-action="copy-name" data-name="${f.name}">
+          <i data-lucide="copy" style="width:11px;height:11px;"></i>
+        </button>
+      </div>
+    `;
+
+    // Action handlers
+    item.querySelector('[data-action="open"]').addEventListener("click", () => {
+      pythonOpenFile(f.name);
+    });
+
+    item.querySelector('[data-action="copy-name"]').addEventListener("click", () => {
+      navigator.clipboard.writeText(f.name).then(() => {
+        setStatus("python", `Copied '${f.name}' to clipboard`, "info");
+      });
+    });
+
+    list.appendChild(item);
+  });
+
+  if (window.lucide) lucide.createIcons();
+}
+
+async function refreshPythonContext() {
+  try {
+    if (window.pywebview?.api) {
+      const res = await window.pywebview.api.python_get_folder_context();
+      if (res.success) {
+        document.getElementById("python-context-text").value = res.context_markdown;
+      }
+    }
+  } catch (e) {}
+}
+
+async function pythonOpenExplorer() {
+  try {
+    if (window.pywebview?.api) {
+      const res = await window.pywebview.api.python_open_folder();
+      if (res.success) {
+        setStatus("python", `Opened sandbox directory in Windows Explorer.`, "success");
+      } else {
+        setStatus("python", `Could not open folder: ${res.error}`, "error");
+      }
+    }
+  } catch (err) {
+    setStatus("python", `Explorer error: ${err}`, "error");
+  }
+}
+
+async function pythonOpenFile(filename) {
+  try {
+    if (window.pywebview?.api) {
+      const res = await window.pywebview.api.python_open_file(filename);
+      if (res.success) {
+        setStatus("python", `Opened ${filename}`, "success");
+      } else {
+        setStatus("python", res.error, "error");
+      }
+    }
+  } catch (err) {
+    setStatus("python", `Open file error: ${err}`, "error");
+  }
+}
+
+async function pythonCopyFolderContext() {
+  try {
+    if (window.pywebview?.api) {
+      const res = await window.pywebview.api.python_get_folder_context();
+      if (res.success && res.context_markdown) {
+        await navigator.clipboard.writeText(res.context_markdown);
+        document.getElementById("python-context-text").value = res.context_markdown;
+        setStatus("python", `✓ Folder context with ${res.file_count} file(s) copied to clipboard! Ready to paste into ChatGPT/LLM.`, "success");
+      } else {
+        setStatus("python", "Failed to retrieve folder context.", "error");
+      }
+    }
+  } catch (err) {
+    setStatus("python", `Copy context error: ${err}`, "error");
+  }
+}
+
+async function pythonClearWorkspace() {
+  if (!confirm("Are you sure you want to clear all files in the current Python sandbox?")) return;
+  try {
+    if (window.pywebview?.api) {
+      const res = await window.pywebview.api.python_clear_sandbox();
+      if (res.success) {
+        renderPythonFiles([]);
+        document.getElementById("python-log-console").innerHTML = `<span class="info-line"># Workspace cleared.</span>\n`;
+        refreshPythonContext();
+        setStatus("python", "Sandbox workspace cleared.", "success");
+      } else {
+        setStatus("python", res.error, "error");
+      }
+    }
+  } catch (err) {
+    setStatus("python", `Clear error: ${err}`, "error");
+  }
+}
+
+function escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, m => map[m]);
 }
 
 /* =========================================================================

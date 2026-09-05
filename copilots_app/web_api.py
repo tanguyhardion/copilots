@@ -37,6 +37,9 @@ from copilots_app.services.excel.models.protocol import ActionProtocol
 # CV services
 from copilots_app.services.cv import load_sample_cv, run_dq_audit, generate_cv
 
+# Python Copilot services
+from copilots_app.services.python_copilot.runner import PythonSandboxRunner
+
 
 WORD_SAMPLES = {
     "Complete Demo": SAMPLE_DSL,
@@ -110,6 +113,7 @@ class CopilotBridge:
         self.excel_executor = ActionExecutor()
         self.excel_current_path: Optional[str] = None
         self.excel_current_model = None
+        self.python_runner = PythonSandboxRunner()
 
     def set_window(self, window):
         self._window = window
@@ -437,3 +441,70 @@ class CopilotBridge:
             return {"success": True, "path": out_path, "message": f"✓ Europass CV generated and opened: {filename}"}
         except Exception as err:
             return {"success": False, "error": f"Word CV generation failed: {err}"}
+
+    # -------------------------------------------------------------------------
+    # Python Copilot API
+    # -------------------------------------------------------------------------
+    def python_run_code(self, code: str, persist: Optional[bool] = None) -> Dict[str, Any]:
+        """Execute pasted Python code inside the sandbox workspace."""
+        try:
+            return self.python_runner.run_code(code=code, persist=persist)
+        except Exception as err:
+            return {
+                "success": False,
+                "error": f"Run failed: {err}",
+                "stdout": "",
+                "stderr": str(err),
+                "exit_code": -1,
+                "duration_ms": 0,
+                "produced_files": [],
+                "all_files": [],
+            }
+
+    def python_get_folder_context(self) -> Dict[str, Any]:
+        """Retrieve structured markdown list of files in the current folder for LLM prompts."""
+        try:
+            return self.python_runner.get_folder_context_for_llm()
+        except Exception as err:
+            return {"success": False, "error": str(err)}
+
+    def python_open_folder(self) -> Dict[str, Any]:
+        """Open the active sandbox folder in Windows Explorer."""
+        try:
+            return self.python_runner.open_in_explorer()
+        except Exception as err:
+            return {"success": False, "error": str(err)}
+
+    def python_open_file(self, filename: str) -> Dict[str, Any]:
+        """Open a specific generated document or file in default application."""
+        try:
+            return self.python_runner.open_specific_file(filename)
+        except Exception as err:
+            return {"success": False, "error": str(err)}
+
+    def python_clear_sandbox(self) -> Dict[str, Any]:
+        """Clear the current sandbox files."""
+        try:
+            return self.python_runner.clear_sandbox()
+        except Exception as err:
+            return {"success": False, "error": str(err)}
+
+    def python_set_persistence(self, persist: bool) -> Dict[str, Any]:
+        """Toggle persistence mode on/off."""
+        try:
+            return self.python_runner.set_persistence(persist)
+        except Exception as err:
+            return {"success": False, "error": str(err)}
+
+    def python_get_status(self) -> Dict[str, Any]:
+        """Return current status: working folder, persistence flag, and file list."""
+        try:
+            return {
+                "success": True,
+                "folder_path": str(self.python_runner.current_dir),
+                "persist": self.python_runner.persist_mode,
+                "files": self.python_runner.list_files(),
+            }
+        except Exception as err:
+            return {"success": False, "error": str(err)}
+
