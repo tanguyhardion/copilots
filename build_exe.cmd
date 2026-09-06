@@ -2,7 +2,7 @@
 setlocal
 
 echo Building Copilots EXE with PyInstaller (pywebview backend)...
-py -m PyInstaller --noconfirm --onefile --windowed --name "Copilots" --icon "assets/icons/copilots.png" --add-data "assets;assets" --add-data "copilots_app/web;copilots_app/web" --add-data "copilots_app/prompts;copilots_app/prompts" app.py
+py -m PyInstaller --noconfirm --onefile --windowed --name "Copilots" --icon "assets/icons/copilots.ico" --add-data "assets;assets" --add-data "copilots_app/web;copilots_app/web" --add-data "copilots_app/prompts;copilots_app/prompts" app.py
 
 if %ERRORLEVEL% equ 0 (
     echo.
