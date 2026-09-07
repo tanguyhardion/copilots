@@ -174,7 +174,7 @@
             </div>
             <div class="tab-page active" id="tab-page-explorer">
               <div class="explorer-list" id="excel-sheets-list">
-                <div class="empty-state">No workbook connected. Click "Connect Active" to attach to open Excel or "Open Workbook" above.</div>
+                <div class="empty-state">No workbook connected. Click "Connect Active" to attach to open Excel or "Open Workbook" below.</div>
               </div>
             </div>
             <div class="tab-page" id="tab-page-context">
@@ -208,16 +208,23 @@
                 <input type="checkbox" id="excel-backup-checkbox" checked>
                 <span>Create backup before executing</span>
               </label>
-              <div class="right-buttons">
-                <button class="btn btn-excel-outline" id="excel-btn-validate">
-                  <i data-lucide="check-circle" class="btn-icon"></i> Validate Protocol
-                </button>
-                <button class="btn btn-excel-primary" id="excel-btn-execute">
-                  <i data-lucide="play" class="btn-icon"></i> Execute Protocol
-                </button>
-              </div>
             </div>
           </div>
+        </div>
+
+        <div class="action-bar">
+          <button class="btn btn-excel-subtle" id="excel-btn-open">
+            <i data-lucide="folder-open" class="btn-icon"></i> Open Workbook
+          </button>
+          <button class="btn btn-excel-outline" id="excel-btn-active">
+            <i data-lucide="link" class="btn-icon"></i> Connect Active
+          </button>
+          <button class="btn btn-excel-secondary" id="excel-btn-validate">
+            <i data-lucide="check-circle" class="btn-icon"></i> Validate Protocol
+          </button>
+          <button class="btn btn-excel-primary" id="excel-btn-execute">
+            <i data-lucide="play" class="btn-icon"></i> Execute Protocol
+          </button>
         </div>
 
         <footer class="status-bar" id="excel-status">
@@ -343,9 +350,12 @@
             </div>
 
             <div class="excel-actions-row" style="background: rgba(0, 0, 0, 0.25);">
-              <label class="checkbox-label" title="When unchecked, scripts run in a temporary sandbox session. When checked, files persist in your AppData Copilots folder.">
-                <input type="checkbox" id="python-persist-checkbox">
-                <span>Persist generated files &amp; scripts</span>
+              <label class="toggle-label" title="When off, scripts run in a temporary sandbox session. When on, files persist in your AppData Copilots folder.">
+                <input type="checkbox" id="python-persist-checkbox" class="toggle-input">
+                <span class="toggle-track">
+                  <span class="toggle-thumb"></span>
+                </span>
+                <span class="toggle-text">Persist generated files &amp; scripts</span>
               </label>
               <div class="right-buttons">
                 <button class="btn btn-secondary" id="python-btn-clear-code" title="Clear code editor">

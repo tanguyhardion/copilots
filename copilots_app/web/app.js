@@ -12,7 +12,6 @@ const ROUTES = {
     badgeColor: "var(--brand-ppt)",
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
-      { id: "action-cheatsheet", text: "DSL Cheatsheet", icon: "book-open" },
       { id: "action-help", text: "", icon: "help-circle", title: "PowerPoint Copilot Guide", isIconOnly: true },
     ]
   },
@@ -24,7 +23,6 @@ const ROUTES = {
     badgeColor: "var(--brand-word)",
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
-      { id: "action-cheatsheet", text: "Word DSL Cheatsheet", icon: "book-open" },
       { id: "action-help", text: "", icon: "help-circle", title: "Word Copilot Guide", isIconOnly: true },
     ]
   },
@@ -36,8 +34,6 @@ const ROUTES = {
     badgeColor: "var(--brand-excel)",
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
-      { id: "action-excel-active", text: "Connect Active", icon: "link" },
-      { id: "action-excel-open", text: "Open Workbook", icon: "folder-open" },
       { id: "action-help", text: "", icon: "help-circle", title: "Excel Copilot Guide", isIconOnly: true },
     ]
   },
@@ -398,6 +394,10 @@ async function setupExcelView() {
       setStatus("excel", "Copied LLM prompt context to clipboard!", "success");
     });
   });
+
+  // Connect Active & Open Workbook
+  document.getElementById("excel-btn-open").addEventListener("click", excelOpenFile);
+  document.getElementById("excel-btn-active").addEventListener("click", excelConnectActive);
 
   // Validate JSON
   document.getElementById("excel-btn-validate").addEventListener("click", () => {
@@ -1158,10 +1158,6 @@ function openHelpModal(routeId) {
             <p class="help-feature-desc">Opens the system prompt modal. View the default prompt instructions that teach LLMs how to construct valid DSL, or customize and save persistent overrides.</p>
           </div>
           <div class="help-feature-item">
-            <span class="help-feature-btn-badge"><i data-lucide="book-open"></i> DSL Cheatsheet</span>
-            <p class="help-feature-desc">Opens the quick DSL syntax reference modal with concrete examples of cards, chevrons, metrics, typography, and tables.</p>
-          </div>
-          <div class="help-feature-item">
             <span class="help-feature-btn-badge"><i data-lucide="clipboard"></i> Copy to Clipboard</span>
             <p class="help-feature-desc">Compiles the DSL shapes into native PowerPoint drawing objects and places them onto the Windows Clipboard. You can then switch to any slide in PowerPoint and press <code>Ctrl+V</code>.</p>
           </div>
@@ -1251,7 +1247,7 @@ function openHelpModal(routeId) {
         <div class="help-section-title"><i data-lucide="table"></i> Selecting the Active Document</div>
         <div class="help-feature-item">
           <div class="help-feature-desc">
-            Use <strong>Connect Active</strong> in the header to target the workbook that is currently open in Microsoft Excel. Alternatively, use <strong>Open Workbook</strong> to browse for any <code>.xlsx</code> or <code>.xlsm</code> file on your computer, which will launch and attach to it automatically.
+            Use <strong>Connect Active</strong> in the bottom action bar to target the workbook that is currently open in Microsoft Excel. Alternatively, use <strong>Open Workbook</strong> to browse for any <code>.xlsx</code> or <code>.xlsm</code> file on your computer, which will launch and attach to it automatically.
           </div>
         </div>
       </div>
