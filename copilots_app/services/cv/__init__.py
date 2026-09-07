@@ -3,6 +3,7 @@ CV Copilot Service Facade.
 """
 
 from copilots_app.services.cv.generator import generate_cv
+from copilots_app.services.cv.pptx_generator import generate_pptx_cv
 from copilots_app.services.cv.dq_engine import (
     _check_date_formats,
     _flag,

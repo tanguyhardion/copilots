@@ -33,7 +33,7 @@ from copilots_app.services.excel.protocol.action_parser import ActionParser
 from copilots_app.services.excel.models.protocol import ActionProtocol
 
 # CV services
-from copilots_app.services.cv import run_dq_audit, generate_cv
+from copilots_app.services.cv import run_dq_audit, generate_cv, generate_pptx_cv
 
 # Python Copilot services
 from copilots_app.services.python_copilot.runner import PythonSandboxRunner
@@ -309,27 +309,44 @@ class CopilotBridge:
     def cv_run_audit(self, cv_json_str: str) -> Dict[str, Any]:
         try:
             data = json.loads(cv_json_str)
-            audit_report = run_dq_audit(data)
+            flags = run_dq_audit(data)
             
             # Format report for UI
             issues = []
-            for issue in audit_report.issues:
+            error_count = 0
+            warning_count = 0
+            for flag in flags:
+                sev = (flag.get("severity") or "INFO").upper()
+                if sev == "ERROR":
+                    error_count += 1
+                elif sev == "WARNING":
+                    warning_count += 1
+
                 issues.append({
-                    "severity": issue.severity.value,
-                    "field": issue.field,
-                    "message": issue.message,
-                    "code": issue.code,
+                    "severity": sev,
+                    "field": flag.get("field") or flag.get("section") or "General",
+                    "message": flag.get("message", ""),
+                    "code": flag.get("rule_code", ""),
                 })
 
+            total_rules = 12
+            passed = error_count == 0
+            dq_score = max(0, min(100, 100 - (error_count * 20 + warning_count * 5)))
+
+            pi = data.get("personal_info") or data.get("personal_information") or {}
+            first_name = pi.get("first_name", "")
+            last_name = pi.get("last_name", "")
+            candidate_name = f"{first_name} {last_name}".strip() or "Unnamed"
+
             summary = {
-                "dq_score": audit_report.overall_score,
-                "passed": audit_report.passed,
-                "total_checks": audit_report.total_checks,
-                "passed_checks": audit_report.passed_checks,
+                "dq_score": dq_score,
+                "passed": passed,
+                "total_checks": total_rules,
+                "passed_checks": max(0, total_rules - error_count),
                 "issues": issues,
-                "candidate_name": f"{data.get('personal_information', {}).get('first_name', '')} {data.get('personal_information', {}).get('last_name', '')}".strip() or "Unnamed",
-                "experience_count": len(data.get("work_experience", [])),
-                "skills_count": len(data.get("skills", [])),
+                "candidate_name": candidate_name,
+                "experience_count": len(data.get("work_experience", []) or data.get("project_experience", [])),
+                "skills_count": len(data.get("skills", []) or data.get("personal_skills", {}).get("communication", [])),
             }
             return {"success": True, "audit": summary}
         except Exception as err:
@@ -339,8 +356,9 @@ class CopilotBridge:
         try:
             data = json.loads(cv_json_str)
             import tempfile
-            first_name = data.get("personal_information", {}).get("first_name", "Candidate")
-            last_name = data.get("personal_information", {}).get("last_name", "CV")
+            pi = data.get("personal_info") or data.get("personal_information") or {}
+            first_name = pi.get("first_name", "Candidate")
+            last_name = pi.get("last_name", "CV")
             filename = f"CV_{first_name}_{last_name}.docx".replace(" ", "_")
             out_path = os.path.join(tempfile.gettempdir(), filename)
 
@@ -352,6 +370,25 @@ class CopilotBridge:
             return {"success": True, "path": out_path, "message": f"✓ Europass CV generated and opened: {filename}"}
         except Exception as err:
             return {"success": False, "error": f"Word CV generation failed: {err}"}
+
+    def cv_generate_pptx(self, cv_json_str: str) -> Dict[str, Any]:
+        try:
+            data = json.loads(cv_json_str)
+            import tempfile
+            pi = data.get("personal_info") or data.get("personal_information") or {}
+            first_name = pi.get("first_name", "Candidate")
+            last_name = pi.get("last_name", "CV")
+            filename = f"CV_{first_name}_{last_name}_1Slide.pptx".replace(" ", "_")
+            out_path = os.path.join(tempfile.gettempdir(), filename)
+
+            generate_pptx_cv(data, out_path)
+            try:
+                os.startfile(out_path)
+            except Exception:
+                pass
+            return {"success": True, "path": out_path, "message": f"✓ 1-Slide Executive PowerPoint CV generated and opened: {filename}"}
+        except Exception as err:
+            return {"success": False, "error": f"PowerPoint CV generation failed: {err}"}
 
     # -------------------------------------------------------------------------
     # Python Copilot API

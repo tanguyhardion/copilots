@@ -271,11 +271,11 @@
           <!-- Left: CV JSON Editor -->
           <div class="panel-box left-panel">
             <div class="panel-header-simple">
-              <span>Europass Profile JSON</span>
+              <span>Candidate Profile JSON</span>
               <button class="btn-tiny" id="cv-btn-format">Format JSON</button>
             </div>
             <div class="code-area-wrapper flex-grow">
-              <textarea id="cv-editor" class="code-textarea" spellcheck="false" placeholder="Paste CV profile JSON here..."></textarea>
+              <textarea id="cv-editor" class="code-textarea" spellcheck="false" placeholder="Paste candidate profile JSON here (supports both Europass Word and 1-Slide PowerPoint formats)..."></textarea>
             </div>
           </div>
 
@@ -294,14 +294,18 @@
           <button class="btn btn-cv-outline" id="cv-btn-audit">
             <i data-lucide="shield-check" class="btn-icon"></i> Audit Data Quality
           </button>
-          <button class="btn btn-cv-primary" id="cv-btn-generate">
+          <div style="flex: 1;"></div>
+          <button class="btn btn-cv-secondary" id="cv-btn-generate-pptx" title="Generate 1-slide executive proposal CV based on template.pptx">
+            <i data-lucide="presentation" class="btn-icon"></i> Generate 1-Slide PowerPoint (.pptx)
+          </button>
+          <button class="btn btn-cv-primary" id="cv-btn-generate" title="Generate comprehensive multi-page Europass curriculum vitae in Word">
             <i data-lucide="file-check" class="btn-icon"></i> Generate Europass Word (.docx)
           </button>
         </div>
 
         <footer class="status-bar" id="cv-status">
           <span class="status-indicator"></span>
-          <span class="status-text">Ready — load profile, audit quality, or compile Word .docx</span>
+          <span class="status-text">Ready — load profile, audit quality, or compile Word .docx / PowerPoint .pptx</span>
         </footer>
       </section>
 
@@ -420,6 +424,9 @@
               <div class="right-buttons">
                 <button class="btn btn-secondary" id="python-btn-open-explorer">
                   <i data-lucide="external-link" class="btn-icon"></i> Open in Explorer
+                </button>
+                <button class="btn btn-secondary" id="python-btn-clear-sandbox" title="Clear all files in the current Python sandbox">
+                  <i data-lucide="trash-2" class="btn-icon"></i> Clear Sandbox
                 </button>
                 <button class="btn btn-python-outline" id="python-btn-copy-context">
                   <i data-lucide="copy" class="btn-icon"></i> Copy Folder Context

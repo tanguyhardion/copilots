@@ -56,8 +56,6 @@ const ROUTES = {
     badgeColor: "var(--brand-python)",
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
-      { id: "action-python-open-folder", text: "Open Folder", icon: "folder-open" },
-      { id: "action-python-clear", text: "Clear Sandbox", icon: "trash-2" },
       { id: "action-help", text: "", icon: "help-circle", title: "Python Copilot Guide", isIconOnly: true },
     ]
   }
@@ -556,19 +554,49 @@ async function setupCVView() {
         setStatus("cv", res.error, "error");
       }
     } catch (err) {
-      setStatus("cv", `Generation error: ${err}`, "error");
+      setStatus("cv", `Word generation error: ${err}`, "error");
     } finally {
       setButtonsDisabled("view-cv", false);
     }
   });
+
+  // Generate pptx (1-Slide Executive Proposal)
+  const btnPptx = document.getElementById("cv-btn-generate-pptx");
+  if (btnPptx) {
+    btnPptx.addEventListener("click", async () => {
+      setStatus("cv", "Generating 1-Slide Executive PowerPoint (.pptx) document…", "info", true);
+      setButtonsDisabled("view-cv", true);
+      try {
+        const res = await window.pywebview.api.cv_generate_pptx(cvEditor.value);
+        if (res.success) {
+          setStatus("cv", res.message, "success");
+        } else {
+          setStatus("cv", res.error, "error");
+        }
+      } catch (err) {
+        setStatus("cv", `PowerPoint generation error: ${err}`, "error");
+      } finally {
+        setButtonsDisabled("view-cv", false);
+      }
+    });
+  }
 }
 
 function updateCVMetrics(cvData) {
-  const p = cvData.personal_information || {};
+  const p = cvData.personal_info || cvData.personal_information || {};
   const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Candidate";
+  const expCount = (cvData.project_experience || cvData.work_experience || []).length;
+  let skillsCount = 0;
+  if (cvData.skills && Array.isArray(cvData.skills)) {
+    skillsCount = cvData.skills.length;
+  } else if (cvData.personal_skills && typeof cvData.personal_skills === "object") {
+    Object.values(cvData.personal_skills).forEach(val => {
+      if (Array.isArray(val)) skillsCount += val.length;
+    });
+  }
   document.getElementById("cv-metric-name").innerText = name;
-  document.getElementById("cv-metric-exp").innerText = `${(cvData.work_experience || []).length} Positions`;
-  document.getElementById("cv-metric-skills").innerText = `${(cvData.skills || []).length} Skills`;
+  document.getElementById("cv-metric-exp").innerText = `${expCount} Positions`;
+  document.getElementById("cv-metric-skills").innerText = `${skillsCount} Skills`;
 }
 
 function renderCVAuditResults(audit) {
@@ -671,6 +699,9 @@ async function setupPythonView() {
   // Explorer buttons
   document.getElementById("python-btn-open-explorer").addEventListener("click", pythonOpenExplorer);
   document.getElementById("python-btn-open-explorer-mini").addEventListener("click", pythonOpenExplorer);
+
+  // Clear sandbox button
+  document.getElementById("python-btn-clear-sandbox").addEventListener("click", pythonClearWorkspace);
 
   // Copy Context buttons
   document.getElementById("python-btn-copy-context").addEventListener("click", pythonCopyFolderContext);
@@ -1285,24 +1316,31 @@ function openHelpModal(routeId) {
         <div class="help-steps-grid">
           <div class="help-step-card">
             <div class="help-step-header"><span class="help-step-num">1</span> System Prompt</div>
-            <p>Click <strong>System Prompt</strong>. Copy the CV prompt into your LLM. Provide raw candidate notes, text resumes, or LinkedIn profiles to have the LLM format standard Europass JSON.</p>
+            <p>Click <strong>System Prompt</strong>. Copy the CV prompt into your LLM. Provide raw candidate notes, text resumes, or LinkedIn profiles to have the LLM format standard structured JSON.</p>
           </div>
           <div class="help-step-card">
             <div class="help-step-header"><span class="help-step-num">2</span> Audit Data Quality</div>
             <p>Paste the JSON into the profile editor and click <strong>Audit Data Quality</strong>. The engine evaluates 12+ deterministic rules (dates, emails, skill tags, descriptions, languages).</p>
           </div>
           <div class="help-step-card">
-            <div class="help-step-header"><span class="help-step-num">3</span> Compile Word .docx</div>
-            <p>Click <strong>Generate Europass Word (.docx)</strong>. The system compiles a standard European executive curriculum vitae and opens it in Word.</p>
+            <div class="help-step-header"><span class="help-step-num">3</span> Compile Word or PPTX</div>
+            <p>Generate either a <strong>1-Slide Executive PowerPoint (.pptx)</strong> proposal or a comprehensive multi-page <strong>Europass Word (.docx)</strong> document.</p>
           </div>
         </div>
       </div>
 
       <div class="help-guide-section">
-        <div class="help-section-title"><i data-lucide="file-check"></i> Output &amp; Target Document</div>
-        <div class="help-feature-item">
-          <div class="help-feature-desc">
-            CV Copilot generates a standalone, fully compliant Europass Word (.docx) file from your validated profile JSON. When you click <em>Generate Europass Word (.docx)</em>, the document is saved to your user documents directory and automatically launched in <strong>Microsoft Word</strong>.
+        <div class="help-section-title"><i data-lucide="file-check"></i> Output Document Formats</div>
+        <div class="help-feature-list">
+          <div class="help-feature-item">
+            <div class="help-feature-desc">
+              <strong>1-Slide Executive Proposal (.pptx)</strong>: Designed specifically for RFP bids, client proposals, and tender decks based on <code>template.pptx</code>. Condenses the profile into a high-impact single slide with Contact &amp; Role header, executive summary, 6 core subject matter skills, and top 5 relevant projects.
+            </div>
+          </div>
+          <div class="help-feature-item">
+            <div class="help-feature-desc">
+              <strong>Europass Word Document (.docx)</strong>: Generates an exhaustive, multi-page curriculum vitae fully compliant with European Commission standards, complete with full employment history, project breakdowns, education, languages, and certifications.
+            </div>
           </div>
         </div>
       </div>
@@ -1317,6 +1355,10 @@ function openHelpModal(routeId) {
           <div class="help-feature-item">
             <span class="help-feature-btn-badge"><i data-lucide="shield-check"></i> Audit Data Quality</span>
             <p class="help-feature-desc">Executes the Data Quality (DQ) rulebook, outputting a composite compliance score, pass/fail state, and actionable issues for missing fields or malformed data.</p>
+          </div>
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="presentation"></i> Generate 1-Slide PowerPoint (.pptx)</span>
+            <p class="help-feature-desc">Populates <code>template.pptx</code> in-place with candidate data, preserving exact geometry, coordinates, and typography, then opens the slide in PowerPoint.</p>
           </div>
           <div class="help-feature-item">
             <span class="help-feature-btn-badge"><i data-lucide="file-check"></i> Generate Europass Word (.docx)</span>

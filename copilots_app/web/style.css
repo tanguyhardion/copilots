@@ -1514,7 +1514,8 @@ body, html {
 .modal-box {
   width: 780px;
   max-width: 92vw;
-  max-height: 86vh;
+  min-height: 75vh;
+  max-height: 92vh;
   background-color: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: 12px;
@@ -1589,7 +1590,14 @@ body, html {
   flex: 1;
   padding: 16px 20px;
   display: flex;
+  flex-direction: column;
   overflow: hidden;
+}
+
+.modal-body .code-textarea {
+  flex: 1;
+  height: auto;
+  min-height: 0;
 }
 
 .modal-scrollable {
