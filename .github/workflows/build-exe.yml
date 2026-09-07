@@ -15,6 +15,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        shell: cmd
+        run: |
+          python -m pip install --upgrade pip
+          if exist requirements.txt (
+            pip install -r requirements.txt
+          )
+          pip install pyinstaller pywebview
+
       - name: Build EXE
         shell: cmd
         run: build_exe.cmd
@@ -24,5 +38,6 @@ jobs:
         with:
           name: built-exe
           path: |
+            dist/**/*.exe
             **/*.exe
           if-no-files-found: error
