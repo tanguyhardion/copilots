@@ -29,6 +29,13 @@ jobs:
           )
           pip install pyinstaller pywebview
 
+      - name: Debug Python environment
+        shell: cmd
+        run: |
+          where python
+          python --version
+          python -m pip show pyinstaller
+
       - name: Build EXE
         shell: cmd
         run: build_exe.cmd
