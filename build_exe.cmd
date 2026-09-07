@@ -2,14 +2,19 @@
 setlocal
 
 echo Building Copilots EXE with PyInstaller (pywebview backend)...
-py -m PyInstaller --noconfirm --onefile --windowed --name "Copilots" --icon "assets/icons/copilots.ico" --add-data "assets;assets" --add-data "copilots_app/web;copilots_app/web" --add-data "copilots_app/prompts;copilots_app/prompts" app.py
+python -m PyInstaller --noconfirm --onefile --windowed --name "Copilots" --icon "assets/icons/copilots.ico" --add-data "assets;assets" --add-data "copilots_app/web;copilots_app/web" --add-data "copilots_app/prompts;copilots_app/prompts" app.py
+set BUILD_ERRORLEVEL=%ERRORLEVEL%
 
-if %ERRORLEVEL% equ 0 (
+if %BUILD_ERRORLEVEL% equ 0 (
     echo.
     echo Build successful! Executable is located in dist\Copilots.exe
 ) else (
     echo.
-    echo Build failed with error code %ERRORLEVEL%.
+    echo Build failed with error code %BUILD_ERRORLEVEL%.
 )
 
-pause
+if not defined CI (
+    pause
+)
+
+exit /b %BUILD_ERRORLEVEL%
