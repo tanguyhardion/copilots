@@ -8,17 +8,7 @@ from copilots_app.services.cv.dq_engine import (
     _flag,
 )
 
-import json
-import os
 from typing import Dict, Any, List, Tuple
-
-
-def load_sample_cv() -> Dict[str, Any]:
-    json_path = os.path.join(os.path.dirname(__file__), "example_cv.json")
-    if os.path.exists(json_path):
-        with open(json_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
 
 
 def run_dq_audit(cv_data: Dict[str, Any]) -> List[Dict[str, Any]]:

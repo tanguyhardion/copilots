@@ -13,6 +13,7 @@ const ROUTES = {
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
       { id: "action-cheatsheet", text: "DSL Cheatsheet", icon: "book-open" },
+      { id: "action-help", text: "", icon: "help-circle", title: "PowerPoint Copilot Guide", isIconOnly: true },
     ]
   },
   word: {
@@ -24,6 +25,7 @@ const ROUTES = {
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
       { id: "action-cheatsheet", text: "Word DSL Cheatsheet", icon: "book-open" },
+      { id: "action-help", text: "", icon: "help-circle", title: "Word Copilot Guide", isIconOnly: true },
     ]
   },
   excel: {
@@ -36,7 +38,7 @@ const ROUTES = {
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
       { id: "action-excel-active", text: "Connect Active", icon: "link" },
       { id: "action-excel-open", text: "Open Workbook", icon: "folder-open" },
-      { id: "action-excel-demo", text: "Open Demo", icon: "flask-conical" },
+      { id: "action-help", text: "", icon: "help-circle", title: "Excel Copilot Guide", isIconOnly: true },
     ]
   },
   cv: {
@@ -47,7 +49,7 @@ const ROUTES = {
     badgeColor: "var(--brand-cv)",
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
-      { id: "action-cv-reset", text: "Reset Sample CV", icon: "rotate-ccw" },
+      { id: "action-help", text: "", icon: "help-circle", title: "CV Copilot Guide", isIconOnly: true },
     ]
   },
   python: {
@@ -60,6 +62,7 @@ const ROUTES = {
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
       { id: "action-python-open-folder", text: "Open Folder", icon: "folder-open" },
       { id: "action-python-clear", text: "Clear Sandbox", icon: "trash-2" },
+      { id: "action-help", text: "", icon: "help-circle", title: "Python Copilot Guide", isIconOnly: true },
     ]
   }
 };
@@ -149,9 +152,17 @@ function navigateTo(routeId) {
 
   routeMeta.actions.forEach(act => {
     const btn = document.createElement("button");
-    btn.className = "btn btn-secondary";
+    btn.className = act.isIconOnly ? "btn btn-secondary btn-icon-only" : "btn btn-secondary";
     btn.id = act.id;
-    btn.innerHTML = `<i data-lucide="${act.icon}" class="btn-icon"></i> ${act.text}`;
+    if (act.title) {
+      btn.title = act.title;
+      btn.setAttribute("aria-label", act.title);
+    }
+    if (act.isIconOnly) {
+      btn.innerHTML = `<i data-lucide="${act.icon}" class="btn-icon"></i>`;
+    } else {
+      btn.innerHTML = `<i data-lucide="${act.icon}" class="btn-icon"></i> ${act.text}`;
+    }
     btn.addEventListener("click", () => handleHeaderAction(act.id, routeId));
     actionsContainer.appendChild(btn);
   });
@@ -165,14 +176,12 @@ function handleHeaderAction(actionId, routeId) {
     openPromptModal(routeId);
   } else if (actionId === "action-cheatsheet") {
     openCheatsheetModal(routeId);
+  } else if (actionId === "action-help") {
+    openHelpModal(routeId);
   } else if (actionId === "action-excel-active") {
     excelConnectActive();
   } else if (actionId === "action-excel-open") {
     excelOpenFile();
-  } else if (actionId === "action-excel-demo") {
-    excelOpenDemo();
-  } else if (actionId === "action-cv-reset") {
-    cvResetSample();
   } else if (actionId === "action-python-open-folder") {
     pythonOpenExplorer();
   } else if (actionId === "action-python-copy-context") {
@@ -198,38 +207,7 @@ function setStatus(viewId, message, level = "info", loading = false) {
    PowerPoint View
    ========================================================================= */
 async function setupPowerPointView() {
-  const select = document.getElementById("ppt-samples-select");
   const editor = document.getElementById("ppt-editor");
-
-  // Load samples
-  if (window.pywebview?.api) {
-    try {
-      const samples = await window.pywebview.api.get_ppt_samples();
-      select.innerHTML = "";
-      for (const [name, dsl] of Object.entries(samples)) {
-        const opt = document.createElement("option");
-        opt.value = name;
-        opt.textContent = name;
-        select.appendChild(opt);
-      }
-
-      if (samples["Overview Demo"]) {
-        editor.value = samples["Overview Demo"];
-      } else if (Object.values(samples).length > 0) {
-        editor.value = Object.values(samples)[0];
-      }
-
-      select.addEventListener("change", () => {
-        const val = select.value;
-        if (samples[val]) {
-          editor.value = samples[val];
-          setStatus("ppt", `Loaded sample template: '${val}'`, "info");
-        }
-      });
-    } catch (e) {
-      console.warn("Could not load ppt samples:", e);
-    }
-  }
 
   // Copy to clipboard button
   document.getElementById("ppt-btn-copy").addEventListener("click", async () => {
@@ -308,37 +286,7 @@ async function setupPowerPointView() {
    Word View
    ========================================================================= */
 async function setupWordView() {
-  const select = document.getElementById("word-samples-select");
   const editor = document.getElementById("word-editor");
-
-  if (window.pywebview?.api) {
-    try {
-      const samples = await window.pywebview.api.get_word_samples();
-      select.innerHTML = "";
-      for (const [name, dsl] of Object.entries(samples)) {
-        const opt = document.createElement("option");
-        opt.value = name;
-        opt.textContent = name;
-        select.appendChild(opt);
-      }
-
-      if (samples["Complete Demo"]) {
-        editor.value = samples["Complete Demo"];
-      } else if (Object.values(samples).length > 0) {
-        editor.value = Object.values(samples)[0];
-      }
-
-      select.addEventListener("change", () => {
-        const val = select.value;
-        if (samples[val]) {
-          editor.value = samples[val];
-          setStatus("word", `Loaded template: '${val}'`, "info");
-        }
-      });
-    } catch (e) {
-      console.warn("Could not load word samples:", e);
-    }
-  }
 
   // Build & Open
   document.getElementById("word-btn-build").addEventListener("click", async () => {
@@ -422,12 +370,6 @@ async function setupWordView() {
    ========================================================================= */
 async function setupExcelView() {
   const protocolEditor = document.getElementById("excel-protocol-editor");
-  if (window.pywebview?.api) {
-    try {
-      const sampleJson = await window.pywebview.api.get_excel_sample_json();
-      protocolEditor.value = sampleJson;
-    } catch (e) {}
-  }
 
   // Tabs
   const btnExplorer = document.getElementById("tab-btn-explorer");
@@ -520,16 +462,6 @@ async function excelOpenFile() {
   }
 }
 
-async function excelOpenDemo() {
-  setStatus("excel", "Loading demo portfolio…", "info", true);
-  try {
-    const res = await window.pywebview.api.excel_open_demo();
-    handleExcelLoaded(res);
-  } catch (err) {
-    setStatus("excel", `Demo failed: ${err}`, "error");
-  }
-}
-
 function handleExcelLoaded(res) {
   if (res.cancelled) {
     setStatus("excel", "File open cancelled.", "info");
@@ -581,17 +513,6 @@ function handleExcelLoaded(res) {
 async function setupCVView() {
   const cvEditor = document.getElementById("cv-editor");
 
-  // Load sample data
-  if (window.pywebview?.api) {
-    try {
-      const res = await window.pywebview.api.cv_get_sample_data();
-      if (res.success) {
-        cvEditor.value = JSON.stringify(res.cv_data, null, 2);
-        updateCVMetrics(res.cv_data);
-      }
-    } catch (e) {}
-  }
-
   // Format JSON
   document.getElementById("cv-btn-format").addEventListener("click", () => {
     try {
@@ -640,20 +561,6 @@ async function setupCVView() {
       setButtonsDisabled("view-cv", false);
     }
   });
-}
-
-async function cvResetSample() {
-  setStatus("cv", "Resetting to default Europass profile…", "info");
-  try {
-    const res = await window.pywebview.api.cv_get_sample_data();
-    if (res.success) {
-      document.getElementById("cv-editor").value = JSON.stringify(res.cv_data, null, 2);
-      updateCVMetrics(res.cv_data);
-      setStatus("cv", "Sample CV profile reset.", "success");
-    }
-  } catch (err) {
-    setStatus("cv", `Reset error: ${err}`, "error");
-  }
 }
 
 function updateCVMetrics(cvData) {
@@ -708,60 +615,10 @@ function renderCVAuditResults(audit) {
 /* =========================================================================
    Python Copilot View
    ========================================================================= */
-const PYTHON_SNIPPETS = {
-  empty: `# Paste your Python code here (e.g. from ChatGPT or Claude)...
-# All files created in this active directory will be tracked automatically.
-
-import os
-import sys
-
-print("Python Copilot runner ready!")
-`,
-  csv_excel: `import csv
-from pathlib import Path
-
-# Create a sample sales report CSV
-csv_file = Path("monthly_sales_summary.csv")
-with open(csv_file, "w", newline="", encoding="utf-8") as f:
-    writer = csv.writer(f)
-    writer.writerow(["Region", "Units Sold", "Revenue USD", "Status"])
-    writer.writerow(["EMEA", 1420, 184600, "Closed"])
-    writer.writerow(["NA", 2180, 327000, "Closed"])
-    writer.writerow(["APAC", 950, 114000, "In Review"])
-
-print(f"✓ Generated CSV report: {csv_file.name}")
-print(f"Total entries written: 3 regions")
-`,
-  batch_rename: `from pathlib import Path
-
-# Example: generate mock project documents
-for i in range(1, 6):
-    doc_name = f"Project_Milestone_Phase_{i}.txt"
-    with open(doc_name, "w", encoding="utf-8") as f:
-        f.write(f"Milestone {i} specification and verification checks.\\nStatus: Pending Approval\\n")
-    print(f"✓ Created document: {doc_name}")
-
-print("\\nAll batch files prepared in working sandbox.")
-`,
-  file_summary: `import os
-from pathlib import Path
-
-cwd = Path(".")
-files = [f for f in cwd.iterdir() if f.is_file()]
-
-print(f"Current Directory: {cwd.resolve()}")
-print(f"Total Files Found: {len(files)}")
-print("-" * 50)
-for f in files:
-    print(f"• {f.name:<35} | {f.stat().st_size:>8} bytes")
-`
-};
-
 let pythonLastFiles = [];
 
 async function setupPythonView() {
   const editor = document.getElementById("python-editor");
-  const snippetSelect = document.getElementById("python-samples-select");
   const persistCheck = document.getElementById("python-persist-checkbox");
   const runBtn = document.getElementById("python-btn-run");
   const clearCodeBtn = document.getElementById("python-btn-clear-code");
@@ -784,14 +641,6 @@ async function setupPythonView() {
   tabBtnConsole.addEventListener("click", () => switchPyTab(tabBtnConsole, tabPageConsole));
   tabBtnFiles.addEventListener("click", () => switchPyTab(tabBtnFiles, tabPageFiles));
   tabBtnContext.addEventListener("click", () => switchPyTab(tabBtnContext, tabPageContext));
-
-  // Snippet selector
-  snippetSelect.addEventListener("change", (e) => {
-    const val = e.target.value;
-    if (PYTHON_SNIPPETS[val]) {
-      editor.value = PYTHON_SNIPPETS[val];
-    }
-  });
 
   // Clear code button
   clearCodeBtn.addEventListener("click", () => {
@@ -1147,9 +996,18 @@ function setupModals() {
   document.getElementById("cheatsheet-close").addEventListener("click", closeCheatsheetModal);
   document.getElementById("cheatsheet-btn-ok").addEventListener("click", closeCheatsheetModal);
 
+  // Help modal close buttons
+  document.getElementById("help-close").addEventListener("click", closeHelpModal);
+  document.getElementById("help-btn-ok").addEventListener("click", closeHelpModal);
+
   // Click outside (backdrop) to close cheatsheet modal
   document.getElementById("cheatsheet-modal").addEventListener("click", (e) => {
     if (e.target === document.getElementById("cheatsheet-modal")) closeCheatsheetModal();
+  });
+
+  // Click outside (backdrop) to close help modal
+  document.getElementById("help-modal").addEventListener("click", (e) => {
+    if (e.target === document.getElementById("help-modal")) closeHelpModal();
   });
 
   // Escape key closes any open modal
@@ -1157,6 +1015,7 @@ function setupModals() {
     if (e.key === "Escape") {
       closePromptModal();
       closeCheatsheetModal();
+      closeHelpModal();
     }
   });
 }
@@ -1242,6 +1101,293 @@ insert_after find="Summary" | "Appendix follow-up."</pre>
   }
 
   modal.classList.add("open");
+}
+
+function closeHelpModal() {
+  document.getElementById("help-modal").classList.remove("open");
+}
+
+function openHelpModal(routeId) {
+  const modal = document.getElementById("help-modal");
+  const title = document.getElementById("help-title");
+  const badge = document.getElementById("help-badge");
+  const icon = document.getElementById("help-modal-icon");
+  const content = document.getElementById("help-content");
+
+  const routeMeta = ROUTES[routeId] || { title: "Copilot" };
+  title.innerText = `How to Use ${routeMeta.title}`;
+  badge.innerText = `${routeMeta.badge || "Copilot"} · Workflow & Features`;
+  if (icon) {
+    icon.style.color = routeMeta.badgeColor || "var(--primary)";
+  }
+
+  if (routeId === "powerpoint") {
+    content.innerHTML = `
+      <div class="help-guide-section">
+        <div class="help-section-title"><i data-lucide="compass"></i> End-to-End Workflow</div>
+        <div class="help-steps-grid">
+          <div class="help-step-card">
+            <div class="help-step-header"><span class="help-step-num">1</span> System Prompt</div>
+            <p>Click <strong>System Prompt</strong> on the top right. Copy the prompt to clipboard and paste it into your LLM (ChatGPT, Claude, Gemini, etc.) as your custom instructions or system prompt.</p>
+          </div>
+          <div class="help-step-card">
+            <div class="help-step-header"><span class="help-step-num">2</span> Ask Your LLM</div>
+            <p>Ask the LLM to design a slide deck, card grid, process chevron, architecture diagram, or comparison table. The LLM will output pure PowerPoint DSL.</p>
+          </div>
+          <div class="help-step-card">
+            <div class="help-step-header"><span class="help-step-num">3</span> Paste &amp; Execute</div>
+            <p>Paste the generated DSL into the code editor. Open Microsoft PowerPoint, select the active presentation/slide, and click one of the action buttons below.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-guide-section">
+        <div class="help-section-title"><i data-lucide="layers"></i> Selecting the Active Document</div>
+        <div class="help-feature-item">
+          <div class="help-feature-desc">
+            PowerPoint Copilot attaches live to your running <strong>Microsoft PowerPoint</strong> application via Windows COM. Whatever presentation and slide is currently active (or open in the forefront of PowerPoint) is where elements will be inserted. If PowerPoint is not open, you will receive a status notification prompting you to start PowerPoint.
+          </div>
+        </div>
+      </div>
+
+      <div class="help-guide-section">
+        <div class="help-section-title"><i data-lucide="mouse-pointer"></i> Functions &amp; Buttons Explained</div>
+        <div class="help-feature-list">
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="settings"></i> System Prompt</span>
+            <p class="help-feature-desc">Opens the system prompt modal. View the default prompt instructions that teach LLMs how to construct valid DSL, or customize and save persistent overrides.</p>
+          </div>
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="book-open"></i> DSL Cheatsheet</span>
+            <p class="help-feature-desc">Opens the quick DSL syntax reference modal with concrete examples of cards, chevrons, metrics, typography, and tables.</p>
+          </div>
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="clipboard"></i> Copy to Clipboard</span>
+            <p class="help-feature-desc">Compiles the DSL shapes into native PowerPoint drawing objects and places them onto the Windows Clipboard. You can then switch to any slide in PowerPoint and press <code>Ctrl+V</code>.</p>
+          </div>
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="plus-circle"></i> Insert on Current Slide</span>
+            <p class="help-feature-desc">Directly injects the rendered shapes, text boxes, and tables onto whatever slide is currently active and visible in PowerPoint without replacing the slide background.</p>
+          </div>
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="presentation"></i> Create Full Slide(s)</span>
+            <p class="help-feature-desc">Creates brand new blank 16:9 slides at the end of the active presentation and renders all shapes, cards, and headers across the new slides.</p>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (routeId === "word") {
+    content.innerHTML = `
+      <div class="help-guide-section">
+        <div class="help-section-title"><i data-lucide="compass"></i> End-to-End Workflow</div>
+        <div class="help-steps-grid">
+          <div class="help-step-card">
+            <div class="help-step-header"><span class="help-step-num">1</span> System Prompt</div>
+            <p>Click <strong>System Prompt</strong> at top right. Copy the instructions to your LLM. The prompt trains the model on Word DSL creation, paragraph styling, and precise edit operations.</p>
+          </div>
+          <div class="help-step-card">
+            <div class="help-step-header"><span class="help-step-num">2</span> Select Document &amp; Plan</div>
+            <p>To edit an existing document, click <strong>Extract DSL from Word</strong>. Feed the extracted structure to your LLM and ask for modifications (using <code>edit target=active</code> commands).</p>
+          </div>
+          <div class="help-step-card">
+            <div class="help-step-header"><span class="help-step-num">3</span> Apply or Build</div>
+            <p>Paste the LLM's response. Click <strong>Apply Edits to Doc</strong> to modify the open document, or click <strong>Build &amp; Open Document</strong> to create a fresh <code>.docx</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-guide-section">
+        <div class="help-section-title"><i data-lucide="file-text"></i> Selecting the Active Document</div>
+        <div class="help-feature-item">
+          <div class="help-feature-desc">
+            Word Copilot connects directly to running <strong>Microsoft Word</strong> instances. When using <em>Extract DSL</em>, <em>Insert at Cursor</em>, or <em>Apply Edits</em>, the Copilot automatically targets the document in Word's currently active top window.
+          </div>
+        </div>
+      </div>
+
+      <div class="help-guide-section">
+        <div class="help-section-title"><i data-lucide="mouse-pointer"></i> Functions &amp; Buttons Explained</div>
+        <div class="help-feature-list">
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="download"></i> Extract DSL from Word</span>
+            <p class="help-feature-desc">Reads the active Microsoft Word document via COM, parses paragraphs, headings, tables, and lists, and outputs a clean structured DSL representation into the editor for LLM prompting.</p>
+          </div>
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="pen-tool"></i> Insert at Cursor</span>
+            <p class="help-feature-desc">Renders the DSL in the editor and inserts it at the exact blinking cursor selection in your currently active Word window.</p>
+          </div>
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="sparkles"></i> Apply Edits to Doc</span>
+            <p class="help-feature-desc">Executes deterministic in-place edits (like <code>replace</code>, <code>insert_before</code>, <code>insert_after</code>, <code>delete</code>) targeting paragraphs in the open Word document without losing styles.</p>
+          </div>
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="file-text"></i> Build &amp; Open Document</span>
+            <p class="help-feature-desc">Compiles full standalone documents from the editor's DSL into an executive styled <code>.docx</code> file and opens it in Word.</p>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (routeId === "excel") {
+    content.innerHTML = `
+      <div class="help-guide-section">
+        <div class="help-section-title"><i data-lucide="compass"></i> End-to-End Workflow</div>
+        <div class="help-steps-grid">
+          <div class="help-step-card">
+            <div class="help-step-header"><span class="help-step-num">1</span> Connect &amp; Analyze</div>
+            <p>Click <strong>Connect Active</strong> to attach to an open Excel workbook, or <strong>Open Workbook</strong> to select a file. The analyzer inspects sheet schemas, tables, and formulas.</p>
+          </div>
+          <div class="help-step-card">
+            <div class="help-step-header"><span class="help-step-num">2</span> Copy Context to LLM</div>
+            <p>Switch to the <strong>LLM Prompt Context</strong> tab and click <em>Copy Context</em>. Paste this alongside your prompt into your LLM to request data manipulations.</p>
+          </div>
+          <div class="help-step-card">
+            <div class="help-step-header"><span class="help-step-num">3</span> Validate &amp; Execute</div>
+            <p>Paste the LLM's JSON Action Protocol. Validate syntax, ensure the backup checkbox is checked, and click <strong>Execute Protocol</strong>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-guide-section">
+        <div class="help-section-title"><i data-lucide="table"></i> Selecting the Active Document</div>
+        <div class="help-feature-item">
+          <div class="help-feature-desc">
+            Use <strong>Connect Active</strong> in the header to target the workbook that is currently open in Microsoft Excel. Alternatively, use <strong>Open Workbook</strong> to browse for any <code>.xlsx</code> or <code>.xlsm</code> file on your computer, which will launch and attach to it automatically.
+          </div>
+        </div>
+      </div>
+
+      <div class="help-guide-section">
+        <div class="help-section-title"><i data-lucide="mouse-pointer"></i> Functions &amp; Buttons Explained</div>
+        <div class="help-feature-list">
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="link"></i> Connect Active</span>
+            <p class="help-feature-desc">Attaches to the active Excel window, extracts live table headers, sheets, and formula counts, and populates the Explorer.</p>
+          </div>
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="folder-open"></i> Open Workbook</span>
+            <p class="help-feature-desc">Presents a Windows file picker to open an existing spreadsheet file directly in Excel and generate semantic schema context.</p>
+          </div>
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="clipboard"></i> Copy Context</span>
+            <p class="help-feature-desc">Copies the full markdown schema (sheet names, column headers, data types, sample values) formatted specifically for LLM understanding.</p>
+          </div>
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="check-circle"></i> Validate Protocol</span>
+            <p class="help-feature-desc">Verifies that the JSON in the editor matches the expected Action Protocol schema with valid intents, targets, and operations.</p>
+          </div>
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="play"></i> Execute Protocol</span>
+            <p class="help-feature-desc">Runs the deterministic batch actions (writing values, creating tables, formatting ranges, setting formulas) against Excel, creating a safety backup first if selected.</p>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (routeId === "cv") {
+    content.innerHTML = `
+      <div class="help-guide-section">
+        <div class="help-section-title"><i data-lucide="compass"></i> End-to-End Workflow</div>
+        <div class="help-steps-grid">
+          <div class="help-step-card">
+            <div class="help-step-header"><span class="help-step-num">1</span> System Prompt</div>
+            <p>Click <strong>System Prompt</strong>. Copy the CV prompt into your LLM. Provide raw candidate notes, text resumes, or LinkedIn profiles to have the LLM format standard Europass JSON.</p>
+          </div>
+          <div class="help-step-card">
+            <div class="help-step-header"><span class="help-step-num">2</span> Audit Data Quality</div>
+            <p>Paste the JSON into the profile editor and click <strong>Audit Data Quality</strong>. The engine evaluates 12+ deterministic rules (dates, emails, skill tags, descriptions, languages).</p>
+          </div>
+          <div class="help-step-card">
+            <div class="help-step-header"><span class="help-step-num">3</span> Compile Word .docx</div>
+            <p>Click <strong>Generate Europass Word (.docx)</strong>. The system compiles a standard European executive curriculum vitae and opens it in Word.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-guide-section">
+        <div class="help-section-title"><i data-lucide="file-check"></i> Output &amp; Target Document</div>
+        <div class="help-feature-item">
+          <div class="help-feature-desc">
+            CV Copilot generates a standalone, fully compliant Europass Word (.docx) file from your validated profile JSON. When you click <em>Generate Europass Word (.docx)</em>, the document is saved to your user documents directory and automatically launched in <strong>Microsoft Word</strong>.
+          </div>
+        </div>
+      </div>
+
+      <div class="help-guide-section">
+        <div class="help-section-title"><i data-lucide="mouse-pointer"></i> Functions &amp; Buttons Explained</div>
+        <div class="help-feature-list">
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge">Format JSON</span>
+            <p class="help-feature-desc">Pretty-prints and validates the JSON document in the editor, updating the top candidate metrics.</p>
+          </div>
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="shield-check"></i> Audit Data Quality</span>
+            <p class="help-feature-desc">Executes the Data Quality (DQ) rulebook, outputting a composite compliance score, pass/fail state, and actionable issues for missing fields or malformed data.</p>
+          </div>
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="file-check"></i> Generate Europass Word (.docx)</span>
+            <p class="help-feature-desc">Generates a Microsoft Word document matching the standard Europass layout with clean margins, timeline tables, and skills matrix.</p>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (routeId === "python") {
+    content.innerHTML = `
+      <div class="help-guide-section">
+        <div class="help-section-title"><i data-lucide="compass"></i> End-to-End Workflow</div>
+        <div class="help-steps-grid">
+          <div class="help-step-card">
+            <div class="help-step-header"><span class="help-step-num">1</span> Prompt Your LLM</div>
+            <p>Click <strong>System Prompt</strong> to copy Python Copilot's prompt. Ask your LLM to write scripts to process data, generate charts, convert files, or manipulate documents.</p>
+          </div>
+          <div class="help-step-card">
+            <div class="help-step-header"><span class="help-step-num">2</span> Run Code in Sandbox</div>
+            <p>Paste the Python code into the runner editor and click <strong>Run Python Code</strong>. Execution runs asynchronously with live stdout/stderr streams.</p>
+          </div>
+          <div class="help-step-card">
+            <div class="help-step-header"><span class="help-step-num">3</span> Inspect Artifacts</div>
+            <p>View produced files in the <strong>Generated Files</strong> tab. Click <em>Open</em> to view any generated file, or copy folder context back to your LLM for multi-step tasks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-guide-section">
+        <div class="help-section-title"><i data-lucide="folder"></i> Sandbox Directory &amp; File Persistence</div>
+        <div class="help-feature-item">
+          <div class="help-feature-desc">
+            By default, Python Copilot runs scripts in a sandboxed session. Checking <strong>Persist generated files &amp; scripts</strong> saves files in your user AppData directory so work is retained between sessions.
+          </div>
+        </div>
+      </div>
+
+      <div class="help-guide-section">
+        <div class="help-section-title"><i data-lucide="mouse-pointer"></i> Functions &amp; Buttons Explained</div>
+        <div class="help-feature-list">
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="play"></i> Run Python Code</span>
+            <p class="help-feature-desc">Executes the code editor's script inside the current sandbox environment, recording stdout, stderr, execution time, and new files.</p>
+          </div>
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="rotate-ccw"></i> Clear Editor</span>
+            <p class="help-feature-desc">Quickly resets the Python script editor to write or paste a new script.</p>
+          </div>
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="folder-open"></i> Open Folder / Explorer</span>
+            <p class="help-feature-desc">Opens the active sandbox working directory in Windows File Explorer so you can view all outputs or add input files.</p>
+          </div>
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="copy"></i> Copy Folder Context</span>
+            <p class="help-feature-desc">Generates and copies a structured markdown directory listing to clipboard, making it effortless to prompt an LLM about files in your workspace.</p>
+          </div>
+          <div class="help-feature-item">
+            <span class="help-feature-btn-badge"><i data-lucide="trash-2"></i> Clear Sandbox</span>
+            <p class="help-feature-desc">Purges all generated files and artifacts in the sandbox workspace to start fresh.</p>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  modal.classList.add("open");
+  if (window.lucide) lucide.createIcons();
 }
 
 function setButtonsDisabled(containerId, disabled) {

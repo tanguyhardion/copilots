@@ -79,10 +79,6 @@
         <div class="editor-section">
           <div class="editor-toolbar">
             <span class="toolbar-title">DSL Code Editor</span>
-            <div class="sample-picker">
-              <label for="ppt-samples-select">Template:</label>
-              <select id="ppt-samples-select"></select>
-            </div>
           </div>
           <div class="code-area-wrapper">
             <textarea id="ppt-editor" class="code-textarea" spellcheck="false" placeholder="Enter PowerPoint DSL here..."></textarea>
@@ -110,10 +106,6 @@
         <div class="editor-section">
           <div class="editor-toolbar">
             <span class="toolbar-title">Word DSL &amp; Edit Engine</span>
-            <div class="sample-picker">
-              <label for="word-samples-select">Template:</label>
-              <select id="word-samples-select"></select>
-            </div>
           </div>
           <div class="code-area-wrapper">
             <textarea id="word-editor" class="code-textarea" spellcheck="false" placeholder="Enter Word DSL or edit mode instructions..."></textarea>
@@ -276,7 +268,7 @@
               <button class="btn-tiny" id="cv-btn-format">Format JSON</button>
             </div>
             <div class="code-area-wrapper flex-grow">
-              <textarea id="cv-editor" class="code-textarea" spellcheck="false" placeholder="Loading sample CV profile JSON..."></textarea>
+              <textarea id="cv-editor" class="code-textarea" spellcheck="false" placeholder="Paste CV profile JSON here..."></textarea>
             </div>
           </div>
 
@@ -345,25 +337,9 @@
           <div class="panel-box left-panel">
             <div class="editor-toolbar" style="padding: 10px 14px; margin-bottom: 0; border-bottom: 1px solid var(--border-subtle); background: rgba(0,0,0,0.15);">
               <span class="toolbar-title">Python Code Runner</span>
-              <div class="sample-picker">
-                <label for="python-samples-select">Snippets:</label>
-                <select id="python-samples-select">
-                  <option value="empty">Blank Script</option>
-                  <option value="csv_excel">Generate Excel &amp; CSV</option>
-                  <option value="batch_rename">Document Batch Processor</option>
-                  <option value="file_summary">Directory Files Inspector</option>
-                </select>
-              </div>
             </div>
             <div class="code-area-wrapper flex-grow">
-              <textarea id="python-editor" class="code-textarea" spellcheck="false" placeholder="# Paste your Python code here (e.g. from ChatGPT or Claude)...
-# All files created in the active directory will be tracked on the right panel.
-
-import os
-import sys
-
-print('Python Copilot Runner ready!')
-"></textarea>
+              <textarea id="python-editor" class="code-textarea" spellcheck="false" placeholder="# Paste your Python code here..."></textarea>
             </div>
 
             <div class="excel-actions-row" style="background: rgba(0, 0, 0, 0.25);">
@@ -489,6 +465,35 @@ print('Python Copilot Runner ready!')
       </div>
       <div class="modal-footer">
         <button class="btn btn-primary" id="cheatsheet-btn-ok">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Help & User Guide -->
+  <div class="modal-overlay" id="help-modal">
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <i data-lucide="help-circle" id="help-modal-icon" style="color:var(--copilot-accent, var(--primary)); width:20px; height:20px;"></i>
+          <div>
+            <h2 id="help-title">How to Use this Copilot</h2>
+            <span class="modal-badge" id="help-badge">Workflow &amp; Feature Guide</span>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="help-close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body modal-scrollable" id="help-content">
+        <!-- Loaded dynamically based on active copilot -->
+      </div>
+      <div class="modal-footer">
+        <div class="modal-left-actions">
+          <span style="font-size:11.5px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+            <i data-lucide="info" style="width:13px; height:13px;"></i> Press Esc to close
+          </span>
+        </div>
+        <div class="modal-right-actions">
+          <button class="btn btn-primary" id="help-btn-ok">Got it</button>
+        </div>
       </div>
     </div>
   </div>

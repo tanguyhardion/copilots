@@ -13,7 +13,6 @@ from copilots_app.core.prompt_manager import PromptManager
 
 # PowerPoint services
 from copilots_app.services.powerpoint import (
-    PPT_SAMPLES,
     PowerPointConnector,
     parse_dsl_slides,
     refresh_dsl_theme_colors,
@@ -26,7 +25,6 @@ from copilots_app.services.word.extractor import WordExtractor
 from copilots_app.services.word.colors import refresh_word_theme_colors
 from copilots_app.services.word.dsl.parser import parse_dsl_pages
 from copilots_app.services.word.dsl.edit_parser import parse_edit_dsl
-from copilots_app.services.word.sample import SAMPLE_DSL
 
 # Excel services
 from copilots_app.services.excel.analyzer.workbook_analyzer import WorkbookAnalyzer
@@ -35,69 +33,10 @@ from copilots_app.services.excel.protocol.action_parser import ActionParser
 from copilots_app.services.excel.models.protocol import ActionProtocol
 
 # CV services
-from copilots_app.services.cv import load_sample_cv, run_dq_audit, generate_cv
+from copilots_app.services.cv import run_dq_audit, generate_cv
 
 # Python Copilot services
 from copilots_app.services.python_copilot.runner import PythonSandboxRunner
-
-
-WORD_SAMPLES = {
-    "Complete Demo": SAMPLE_DSL,
-    "Executive Report": """// Document setup
-page size=a4 orientation=portrait margin=54,54,54,54
-
-h1 align=center color=a4 | "Quarterly Strategy Review"
-h3 align=center color=a2 | "Digital Operations & Modernization Program"
-
-hr color=a3 weight=2
-
-p spacing_after=8 | "This executive summary details the operational performance, technical deliverables, and roadmap milestones accomplished during the current cycle."
-
-// Deliverables Table
-table width=100% header_fill=a4 header_text_color=#FFFFFF text_color=t1 border_color=a3 border_weight=1 header_bold=true
-cols=30%,45%,25%
-header="Stream","Strategic Objective","Status"
-row="Cloud Architecture","Scalable microservices migration","✓ Complete"
-row="Automation Suite","Desktop Copilots unification with pywebview","✓ Production"
-row="Data Quality","Automated compliance validation","✓ Verified"
-
-br
-
-h2 color=a4 | "Key Recommendations"
-ul indent=1
-  item | "Maintain strict deterministic data validation across all output formats."
-  item | "Accelerate user enablement sessions with interactive cheatsheets."
-  item | "Continuous integration testing for COM office automation hooks."
-""",
-    "Edit Mode Example": """// Target active document in Microsoft Word
-edit target=active
-
-// Search and replace or update headings
-replace find="Draft" replace="Final Approved Version"
-insert_before find="Key Recommendations" | "Note: All milestones reviewed by Executive Sponsor."
-""",
-}
-
-SAMPLE_EXCEL_ACTION_JSON = """{
-  "intent": "MODIFY_WORKBOOK",
-  "version": "1.0",
-  "actions": [
-    {
-      "action": "SET_CELL_VALUE",
-      "sheet": "Summary",
-      "cell": "B2",
-      "value": "Updated by Copilot Suite"
-    },
-    {
-      "action": "FORMAT_CELL",
-      "sheet": "Summary",
-      "range": "B2:D2",
-      "bold": true,
-      "fill_color": "E2EFDA",
-      "font_color": "375623"
-    }
-  ]
-}"""
 
 
 class CopilotBridge:
@@ -148,9 +87,6 @@ class CopilotBridge:
     # -------------------------------------------------------------------------
     # PowerPoint Copilot API
     # -------------------------------------------------------------------------
-    def get_ppt_samples(self) -> Dict[str, str]:
-        return PPT_SAMPLES
-
     def ppt_copy_clipboard(self, dsl_text: str) -> Dict[str, Any]:
         dsl_text = dsl_text.strip()
         if not dsl_text:
@@ -214,9 +150,6 @@ class CopilotBridge:
     # -------------------------------------------------------------------------
     # Word Copilot API
     # -------------------------------------------------------------------------
-    def get_word_samples(self) -> Dict[str, str]:
-        return WORD_SAMPLES
-
     def word_build_and_open(self, dsl_text: str) -> Dict[str, Any]:
         dsl_text = dsl_text.strip()
         if not dsl_text:
@@ -284,9 +217,6 @@ class CopilotBridge:
     # -------------------------------------------------------------------------
     # Excel Copilot API
     # -------------------------------------------------------------------------
-    def get_excel_sample_json(self) -> str:
-        return SAMPLE_EXCEL_ACTION_JSON
-
     def excel_connect_active(self) -> Dict[str, Any]:
         """Connect directly to the currently active workbook in Microsoft Excel."""
         return self._analyze_excel_path(None)
@@ -301,18 +231,6 @@ class CopilotBridge:
             return {"success": False, "cancelled": True}
         file_path = res[0]
         return self._analyze_excel_path(file_path)
-
-    def excel_open_demo(self) -> Dict[str, Any]:
-        """Ensure sample portfolio workbook exists, open in Excel, and analyze."""
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        demo_path = os.path.join(base_dir, "services", "excel", "sample_portfolio.xlsx")
-        if not os.path.exists(demo_path):
-            from copilots_app.services.excel.sample_data import create_sample_workbook
-            try:
-                create_sample_workbook(demo_path)
-            except Exception as e:
-                return {"success": False, "error": f"Could not create demo workbook: {e}"}
-        return self._analyze_excel_path(demo_path)
 
     def _analyze_excel_path(self, file_path: Optional[str] = None) -> Dict[str, Any]:
         try:
@@ -388,13 +306,6 @@ class CopilotBridge:
     # -------------------------------------------------------------------------
     # CV Copilot API
     # -------------------------------------------------------------------------
-    def cv_get_sample_data(self) -> Dict[str, Any]:
-        try:
-            data = load_sample_cv()
-            return {"success": True, "cv_data": data}
-        except Exception as err:
-            return {"success": False, "error": str(err)}
-
     def cv_run_audit(self, cv_json_str: str) -> Dict[str, Any]:
         try:
             data = json.loads(cv_json_str)
