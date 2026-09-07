@@ -1,0 +1,28 @@
+name: Build EXE
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-exe:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build EXE
+        shell: cmd
+        run: build_exe.cmd
+
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: built-exe
+          path: |
+            **/*.exe
+          if-no-files-found: error
