@@ -36,6 +36,7 @@ VALID_SHAPE_TYPES = {
     "icon",
     "svg",
     "image",
+    "slide",
 }
 
 DEFAULT_DSL_COLORS = {

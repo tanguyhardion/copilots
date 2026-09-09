@@ -10,6 +10,8 @@ const ROUTES = {
     icon: "../../assets/icons/powerpoint.png",
     badge: "PowerPoint COM",
     badgeColor: "var(--brand-ppt)",
+    badgeSubtleColor: "var(--brand-ppt-subtle)",
+    badgeGlowColor: "var(--brand-ppt-glow)",
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
       { id: "action-help", text: "", icon: "help-circle", title: "PowerPoint Copilot Guide", isIconOnly: true },
@@ -21,6 +23,8 @@ const ROUTES = {
     icon: "../../assets/icons/word.png",
     badge: "Word COM",
     badgeColor: "var(--brand-word)",
+    badgeSubtleColor: "var(--brand-word-subtle)",
+    badgeGlowColor: "var(--brand-word-glow)",
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
       { id: "action-help", text: "", icon: "help-circle", title: "Word Copilot Guide", isIconOnly: true },
@@ -32,6 +36,8 @@ const ROUTES = {
     icon: "../../assets/icons/excel.png",
     badge: "Excel COM (pywin32)",
     badgeColor: "var(--brand-excel)",
+    badgeSubtleColor: "var(--brand-excel-subtle)",
+    badgeGlowColor: "var(--brand-excel-glow)",
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
       { id: "action-help", text: "", icon: "help-circle", title: "Excel Copilot Guide", isIconOnly: true },
@@ -43,6 +49,8 @@ const ROUTES = {
     icon: "../../assets/icons/cv.png",
     badge: "DQ Engine + docx",
     badgeColor: "var(--brand-cv)",
+    badgeSubtleColor: "var(--brand-cv-subtle)",
+    badgeGlowColor: "var(--brand-cv-glow)",
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
       { id: "action-help", text: "", icon: "help-circle", title: "CV Copilot Guide", isIconOnly: true },
@@ -54,9 +62,24 @@ const ROUTES = {
     icon: "../../assets/icons/python.png",
     badge: "Python Runner Sandbox",
     badgeColor: "var(--brand-python)",
+    badgeSubtleColor: "var(--brand-python-subtle)",
+    badgeGlowColor: "var(--brand-python-glow)",
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
       { id: "action-help", text: "", icon: "help-circle", title: "Python Copilot Guide", isIconOnly: true },
+    ]
+  },
+  organizer: {
+    title: "Folder/File Organizer Copilot",
+    subtitle: "Analyze recursive folder context, prepare LLM-ready summaries, and execute safe copy-only reorganization plans",
+    icon: "../../assets/icons/folder-organizer-placeholder.png",
+    badge: "Folder DSL + Safe Copy",
+    badgeColor: "var(--brand-organizer)",
+    badgeSubtleColor: "var(--brand-organizer-subtle)",
+    badgeGlowColor: "var(--brand-organizer-glow)",
+    actions: [
+      { id: "action-prompt", text: "System Prompt", icon: "settings" },
+      { id: "action-help", text: "", icon: "help-circle", title: "Folder Organizer Copilot Guide", isIconOnly: true },
     ]
   }
 };
@@ -85,6 +108,7 @@ function initApp() {
   setupExcelView();
   setupCVView();
   setupPythonView();
+  setupOrganizerView();
   setupModals();
 
   navigateTo("powerpoint");
@@ -134,7 +158,8 @@ function navigateTo(routeId) {
 
   // Set active copilot theme variables
   document.documentElement.style.setProperty("--copilot-accent", routeMeta.badgeColor);
-  document.documentElement.style.setProperty("--copilot-accent-subtle", `var(--brand-${routeId}-subtle)`);
+  document.documentElement.style.setProperty("--copilot-accent-subtle", routeMeta.badgeSubtleColor || "var(--primary-subtle)");
+  document.documentElement.style.setProperty("--copilot-accent-glow", routeMeta.badgeGlowColor || "var(--primary-glow)");
 
   const badge = document.getElementById("header-badge");
   badge.innerText = routeMeta.badge;
@@ -959,6 +984,126 @@ async function pythonClearWorkspace() {
   }
 }
 
+/* =========================================================================
+   Folder/File Organizer Copilot View
+   ========================================================================= */
+async function setupOrganizerView() {
+  const selectBtn = document.getElementById("organizer-btn-select-folder");
+  const copyBtn = document.getElementById("organizer-btn-copy-context");
+  const validateBtn = document.getElementById("organizer-btn-validate-plan");
+  const executeBtn = document.getElementById("organizer-btn-execute-plan");
+
+  if (!selectBtn || !copyBtn || !validateBtn || !executeBtn) return;
+
+  selectBtn.addEventListener("click", organizerSelectFolder);
+  copyBtn.addEventListener("click", organizerCopyContext);
+  validateBtn.addEventListener("click", organizerValidatePlan);
+  executeBtn.addEventListener("click", organizerExecutePlan);
+
+  try {
+    const res = await window.pywebview?.api?.organizer_get_status?.();
+    if (res?.success) {
+      updateOrganizerLabels(res.source_root, res.last_output_root);
+    }
+  } catch (e) {}
+}
+
+function updateOrganizerLabels(sourceRoot, outputRoot) {
+  const sourceLabel = document.getElementById("organizer-source-label");
+  const outputLabel = document.getElementById("organizer-output-label");
+
+  if (sourceLabel) {
+    sourceLabel.innerText = sourceRoot ? `Source: ${sourceRoot}` : "No folder selected.";
+    sourceLabel.title = sourceRoot || "";
+  }
+  if (outputLabel) {
+    outputLabel.innerText = outputRoot ? `Output: ${outputRoot}` : "Output: not generated yet";
+    outputLabel.title = outputRoot || "";
+  }
+}
+
+async function organizerSelectFolder() {
+  try {
+    if (window.pywebview?.api) {
+      const res = await window.pywebview.api.organizer_select_folder();
+      if (res.success) {
+        updateOrganizerLabels(res.source_root, "");
+        setStatus("organizer", "Folder selected. Click 'Copy for LLM' to generate recursive context.", "success");
+      } else if (!res.cancelled) {
+        setStatus("organizer", res.error || "Could not select folder.", "error");
+      }
+    }
+  } catch (err) {
+    setStatus("organizer", `Folder selection error: ${err}`, "error");
+  }
+}
+
+async function organizerCopyContext() {
+  try {
+    if (window.pywebview?.api) {
+      const res = await window.pywebview.api.organizer_build_context();
+      if (res.success) {
+        document.getElementById("organizer-context-text").value = res.context_markdown;
+        await navigator.clipboard.writeText(res.context_markdown);
+        setStatus("organizer", `✓ Copied recursive context (${res.file_count} file(s), ${res.excerpted_count} excerpt(s)) to clipboard.`, "success");
+      } else {
+        setStatus("organizer", res.error || "Could not build folder context.", "error");
+      }
+    }
+  } catch (err) {
+    setStatus("organizer", `Context generation error: ${err}`, "error");
+  }
+}
+
+async function organizerValidatePlan() {
+  const planText = document.getElementById("organizer-plan-text").value;
+  if (!planText.trim()) {
+    setStatus("organizer", "Plan is empty. Add MOVE instructions first.", "warning");
+    return;
+  }
+
+  try {
+    if (window.pywebview?.api) {
+      const res = await window.pywebview.api.organizer_parse_plan(planText);
+      if (res.instruction_count > 0) {
+        const suffix = (res.errors && res.errors.length) ? ` (${res.errors.length} invalid line(s) ignored)` : "";
+        setStatus("organizer", `Plan parsed: ${res.instruction_count} valid MOVE instruction(s).${suffix}`, "success");
+      } else {
+        setStatus("organizer", (res.errors && res.errors[0]) || "No valid MOVE instructions parsed.", "warning");
+      }
+    }
+  } catch (err) {
+    setStatus("organizer", `Plan validation error: ${err}`, "error");
+  }
+}
+
+async function organizerExecutePlan() {
+  const planText = document.getElementById("organizer-plan-text").value;
+  if (!planText.trim()) {
+    setStatus("organizer", "Plan is empty. Add MOVE instructions first.", "warning");
+    return;
+  }
+
+  try {
+    if (window.pywebview?.api) {
+      const res = await window.pywebview.api.organizer_execute_plan(planText);
+      if (res.success) {
+        const status = await window.pywebview.api.organizer_get_status();
+        if (status?.success) {
+          updateOrganizerLabels(status.source_root, res.output_root || status.last_output_root);
+        } else {
+          updateOrganizerLabels("", res.output_root);
+        }
+        setStatus("organizer", res.message, "success");
+      } else {
+        setStatus("organizer", res.error || res.message || "Plan execution failed.", "error");
+      }
+    }
+  } catch (err) {
+    setStatus("organizer", `Plan execution error: ${err}`, "error");
+  }
+}
+
 function escapeHtml(text) {
   const map = {
     '&': '&amp;',
@@ -1418,6 +1563,35 @@ function openHelpModal(routeId) {
           <div class="help-feature-item">
             <span class="help-feature-btn-badge"><i data-lucide="trash-2"></i> Clear Sandbox</span>
             <p class="help-feature-desc">Purges all generated files and artifacts in the sandbox workspace to start fresh.</p>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (routeId === "organizer") {
+    content.innerHTML = `
+      <div class="help-guide-section">
+        <div class="help-section-title"><i data-lucide="compass"></i> End-to-End Workflow</div>
+        <div class="help-steps-grid">
+          <div class="help-step-card">
+            <div class="help-step-header"><span class="help-step-num">1</span> Select Source Folder</div>
+            <p>Click <strong>Select Folder</strong> to choose the source tree to analyze. The original folder is always read-only from this copilot.</p>
+          </div>
+          <div class="help-step-card">
+            <div class="help-step-header"><span class="help-step-num">2</span> Copy LLM Context</div>
+            <p>Use <strong>Copy for LLM</strong> to generate a full recursive tree plus non-image file excerpts. Paste this into your LLM to request a reorganization plan.</p>
+          </div>
+          <div class="help-step-card">
+            <div class="help-step-header"><span class="help-step-num">3</span> Execute Copy Plan</div>
+            <p>Paste DSL instructions and click <strong>Execute Copy Plan</strong>. Files are copied into a separate output folder; source files are never moved or deleted.</p>
+          </div>
+        </div>
+      </div>
+      <div class="help-guide-section">
+        <div class="help-section-title"><i data-lucide="code"></i> DSL</div>
+        <div class="help-feature-item">
+          <div class="help-feature-desc">
+            One instruction per line: <code>MOVE "source/relative/path.ext" -> "dest/relative/path.ext"</code><br/>
+            Comments supported with <code>#</code> or <code>//</code>. Invalid lines are reported and skipped.
           </div>
         </div>
       </div>

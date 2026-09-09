@@ -535,6 +535,18 @@ def build_line_shape(fields: Dict[str, str], source_line: Optional[int] = None) 
     return shape
 
 
+def build_slide_command(fields: Dict[str, str], source_line: Optional[int] = None) -> Optional[Dict[str, Any]]:
+    bg_raw = fields.get("background") or fields.get("bg") or fields.get("color")
+    bg_color = dsl_resolve_color(bg_raw) if bg_raw else None
+    if not bg_color:
+        return None
+    return {
+        "type": "slide",
+        "_source_line": source_line,
+        "background_color": bg_color,
+    }
+
+
 def build_icon_shape(fields: Dict[str, str], source_line: Optional[int] = None) -> Optional[Dict[str, Any]]:
     name = fields.get("name", "").strip()
     if not name:
@@ -746,6 +758,11 @@ def parse_dsl(dsl_string: str) -> List[Dict[str, Any]]:
                     "_source_line": source_line,
                 }
                 shapes.append(shape)
+            i += 1
+        elif shape_type == "slide":
+            slide_cmd = build_slide_command(fields, source_line)
+            if slide_cmd:
+                shapes.append(slide_cmd)
             i += 1
         else:
             shape = build_shape_from_fields(shape_type, fields, text_part, source_line)

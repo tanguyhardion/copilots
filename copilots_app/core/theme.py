@@ -28,6 +28,7 @@ class AppPalette:
     BRAND_WORD = "#2B579A"     # Word Classic Blue
     BRAND_EXCEL = "#217346"    # Excel Emerald Green
     BRAND_CV = "#7C3AED"       # CV Builder Royal Violet
+    BRAND_ORGANIZER = "#D946EF"  # Folder Organizer Magenta
 
     # Accent and Semantic
     PRIMARY = "#6366F1"        # Indigo
