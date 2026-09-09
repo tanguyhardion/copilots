@@ -354,6 +354,21 @@ image url=https://example.com/chart.jpg left=300 top=200 width=400 height=300
 - The image is centered within the specified box if its natural aspect ratio does not match the box.
 - Do not expect images to stretch to fill the box exactly.
 
+## Slide Background Syntax
+
+Use this to set a slide's background directly (preferred over drawing a full-canvas rectangle):
+
+```dsl
+slide background=bg1
+slide background=#0F172A
+slide bg=a1_d1
+```
+
+Rules:
+- Place it once per slide block (before or after shapes is fine).
+- Color supports theme tokens and hex, same as other color fields.
+- For multi-slide DSL, set each slide background in its own block separated by `---`.
+
 ### Commonly Useful URLs
 
 **Deloitte logo for light backgrounds (dark logo on light slide):**
@@ -457,7 +472,7 @@ Use `z_order` to override that ordering when you need specific layering.
 - Icons: size consistently across a row (32–56pt). Pair with a `text` label 8pt below. Tint with a palette color token.
 - Text wraps automatically — do not insert `\n` unless a deliberate hard break is needed.
 - Plain `text` shapes auto-resize to fit their content, so keep them narrowly sized in width and let height grow naturally.
-- No need to paint a background the size of the slide — slide background is white by default and you shouldn't cover it completely with something else (there are footers, etc).
+- Use `slide background=...` whenever you need a full-slide background color.
 - Prefer theme tokens (`a1`–`a6`, `bg1`, `bg2`, `t1`, `t2`) for primary styling so output stays aligned to the active PowerPoint theme.
 - Use theme variants (`_l1`, `_l2`, `_d1`, `_d2`) for softer panels, muted supporting text, contrast adjustments, secondary fills, and dividers.
 - When describing colors in rationale, refer to them as theme accents, text colors, background colors, or lighter/darker variants unless fixed brand hex values are explicitly provided.
@@ -550,7 +565,7 @@ Use `z_order` to override that ordering when you need specific layering.
 | Never assume `a1` is a fixed hue like green or blue | Treat `a1` as Theme Accent 1 from the active PowerPoint theme |
 | Prefer not using raw hex for every lightened/darkened theme color | Prefer theme variants like `a1_l1`, `a1_d1`, `t1_l1`, `bg2_d1` unless specified by the user |
 | Never set a separate `text` shape overlaid on top of another shape | Use the built-in text system with `|` syntax. Instead of `rect ... ` then `text left=X top=Y ...`, combine them: `rect left=48 top=128 width=180 height=60 color=a1 | "Label" size=12 bold=true color=#FFFFFF` |
-| Never create a full-slide background rectangle: `rect left=0 top=0 width=960 height=540 color=...` | The slide background is white by default. Use smaller panels, cards, or targeted fills instead. Only add rectangles for specific content areas, not the entire canvas. |
+| Never create a full-slide background rectangle: `rect left=0 top=0 width=960 height=540 color=...` | Use `slide background=...` for full-slide backgrounds. Keep rectangles for local panels/content regions only. |
 | Never assume text has automatic internal padding |Text defaults to padding=0 unless padding is explicitly set. Add padding=left,right,top,bottom when breathing room is needed, e.g. padding=8,8,4,4. |
 | Never expect image to fill both width and height exactly when proportions differ | `width` and `height` define a bounding box; the image will fit inside it while preserving aspect ratio |
 | Never rely on image distortion for layout | Choose a box that matches the image’s intended visual proportions |

@@ -96,12 +96,39 @@ class PowerPointConnector:
                 cache[key] = download_icon(name, style)
         return cache
 
+    @staticmethod
+    def _extract_slide_commands(shapes: List[Dict[str, Any]]) -> tuple[Optional[str], List[Dict[str, Any]]]:
+        background_color = None
+        render_shapes = []
+        for shape in shapes:
+            if shape.get("type") == "slide" and shape.get("background_color"):
+                background_color = shape.get("background_color")
+                continue
+            render_shapes.append(shape)
+        return background_color, render_shapes
+
+    def _apply_slide_background(self, slide, color: Optional[str]):
+        if not color:
+            return
+        try:
+            slide.FollowMasterBackground = False
+            fill = slide.Background.Fill
+            if is_theme_color(color):
+                fill.ForeColor.ObjectThemeColor = PPT_THEME_MAP[color]
+            else:
+                r, g, b = hex_to_rgb(color)
+                fill.ForeColor.RGB = rgb_to_bgr_int(r, g, b)
+            fill.Solid()
+        except Exception as err:
+            print(f"[ppt] Failed to set slide background color: {err}")
+
     def create_shapes_and_copy(self, shapes: List[Dict[str, Any]], status_cb: Optional[Callable[[str], None]] = None) -> bool:
         import pythoncom
 
         pythoncom.CoInitialize()
         try:
-            icon_cache = self._prefetch_icons(shapes, status_cb)
+            background_color, render_shapes = self._extract_slide_commands(shapes)
+            icon_cache = self._prefetch_icons(render_shapes, status_cb)
             if status_cb:
                 status_cb("Connecting to PowerPoint…")
             self.connect()
@@ -111,8 +138,9 @@ class PowerPointConnector:
             temp_pres.PageSetup.SlideWidth = SLIDE_WIDTH
             temp_pres.PageSetup.SlideHeight = SLIDE_HEIGHT
             slide = temp_pres.Slides.Add(1, 12)
+            self._apply_slide_background(slide, background_color)
 
-            ordered_shapes = sort_shapes_for_render(shapes)
+            ordered_shapes = sort_shapes_for_render(render_shapes)
             total = len(ordered_shapes)
             for i, sd in enumerate(ordered_shapes):
                 if status_cb:
@@ -162,6 +190,8 @@ class PowerPointConnector:
                 if status_cb:
                     status_cb(f"Creating slide {slide_num + 1}/{total_slides} (index {new_index})…")
                 slide = pres.Slides.Add(new_index, 12)
+                background_color, render_shapes = self._extract_slide_commands(shapes)
+                self._apply_slide_background(slide, background_color)
 
                 try:
                     ppt.ActiveWindow.View.GotoSlide(new_index)
@@ -169,7 +199,7 @@ class PowerPointConnector:
                 except Exception:
                     pass
 
-                ordered = sort_shapes_for_render(shapes)
+                ordered = sort_shapes_for_render(render_shapes)
                 total_shapes = len(ordered)
                 for i, sd in enumerate(ordered):
                     if status_cb:
@@ -177,7 +207,8 @@ class PowerPointConnector:
                     self._create_single_shape(slide, sd, icon_cache)
 
             if status_cb:
-                status_cb(f"✓ {total_slides} slide(s) created ({sum(len(s) for s in slides_data)} shapes total)!")
+                total_render_shapes = sum(len(self._extract_slide_commands(s)[1]) for s in slides_data)
+                status_cb(f"✓ {total_slides} slide(s) created ({total_render_shapes} shapes total)!")
         finally:
             pythoncom.CoUninitialize()
 
@@ -186,7 +217,8 @@ class PowerPointConnector:
 
         pythoncom.CoInitialize()
         try:
-            icon_cache = self._prefetch_icons(shapes, status_cb)
+            background_color, render_shapes = self._extract_slide_commands(shapes)
+            icon_cache = self._prefetch_icons(render_shapes, status_cb)
             self.connect()
             ppt = self.ppt_app
 
@@ -199,7 +231,8 @@ class PowerPointConnector:
             except Exception:
                 raise Exception("Could not get active slide. Please click on a slide in PowerPoint first.")
 
-            ordered_shapes = sort_shapes_for_render(shapes)
+            self._apply_slide_background(slide, background_color)
+            ordered_shapes = sort_shapes_for_render(render_shapes)
             total = len(ordered_shapes)
             for i, sd in enumerate(ordered_shapes):
                 if status_cb:

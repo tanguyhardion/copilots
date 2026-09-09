@@ -37,6 +37,7 @@ from copilots_app.services.cv import run_dq_audit, generate_cv, generate_pptx_cv
 
 # Python Copilot services
 from copilots_app.services.python_copilot.runner import PythonSandboxRunner
+from copilots_app.services.folder_organizer.runner import FolderOrganizerRunner
 
 
 class CopilotBridge:
@@ -53,6 +54,7 @@ class CopilotBridge:
         self.excel_current_path: Optional[str] = None
         self.excel_current_model = None
         self.python_runner = PythonSandboxRunner()
+        self.organizer_runner = FolderOrganizerRunner()
 
     def set_window(self, window):
         self._window = window
@@ -99,11 +101,14 @@ class CopilotBridge:
         try:
             slides = parse_dsl_slides(dsl_text)
             shapes = slides[0] if slides else []
+            render_shapes = [s for s in shapes if s.get("type") != "slide"]
             if not shapes:
                 return {"success": False, "error": "No shapes parsed from DSL."}
 
             self.ppt_connector.create_shapes_and_copy(shapes)
-            return {"success": True, "message": "✓ Shapes copied to clipboard — switch to PowerPoint and press Ctrl+V."}
+            if render_shapes:
+                return {"success": True, "message": "✓ Shapes copied to clipboard — switch to PowerPoint and press Ctrl+V."}
+            return {"success": True, "message": "✓ Slide background updated on temporary slide (no drawable shapes to copy)."}
         except Exception as err:
             return {"success": False, "error": f"Clipboard copy failed: {err}"}
 
@@ -119,11 +124,14 @@ class CopilotBridge:
         try:
             slides = parse_dsl_slides(dsl_text)
             shapes = slides[0] if slides else []
+            render_shapes = [s for s in shapes if s.get("type") != "slide"]
             if not shapes:
                 return {"success": False, "error": "No shapes parsed from DSL."}
 
             self.ppt_connector.create_on_current_slide(shapes)
-            return {"success": True, "message": "✓ Shapes successfully inserted on active PowerPoint slide!"}
+            if render_shapes:
+                return {"success": True, "message": "✓ Shapes successfully inserted on active PowerPoint slide!"}
+            return {"success": True, "message": "✓ Active slide background color updated successfully!"}
         except Exception as err:
             return {"success": False, "error": f"Insert failed: {err}"}
 
@@ -138,12 +146,15 @@ class CopilotBridge:
 
         try:
             slides = parse_dsl_slides(dsl_text)
-            total_shapes = sum(len(s) for s in slides)
-            if total_shapes == 0:
+            total_shapes = sum(len([shape for shape in s if shape.get("type") != "slide"]) for s in slides)
+            total_directives = sum(len([shape for shape in s if shape.get("type") == "slide"]) for s in slides)
+            if total_shapes == 0 and total_directives == 0:
                 return {"success": False, "error": "No valid shapes found to create."}
 
             self.ppt_connector.create_on_new_slide(slides)
-            return {"success": True, "message": f"✓ Created {len(slides)} slide(s) ({total_shapes} shapes total) successfully!"}
+            if total_shapes > 0:
+                return {"success": True, "message": f"✓ Created {len(slides)} slide(s) ({total_shapes} shapes total) successfully!"}
+            return {"success": True, "message": f"✓ Created {len(slides)} slide(s) with background directives successfully!"}
         except Exception as err:
             return {"success": False, "error": f"Slide creation failed: {err}"}
 
@@ -456,3 +467,37 @@ class CopilotBridge:
         except Exception as err:
             return {"success": False, "error": str(err)}
 
+    # -------------------------------------------------------------------------
+    # Folder/File Organizer Copilot API
+    # -------------------------------------------------------------------------
+    def organizer_select_folder(self) -> Dict[str, Any]:
+        if not self._window:
+            return {"success": False, "error": "Window not initialized."}
+        res = self._window.create_file_dialog(webview.FOLDER_DIALOG, allow_multiple=False)
+        if not res or len(res) == 0:
+            return {"success": False, "cancelled": True}
+        return self.organizer_runner.set_source_root(res[0])
+
+    def organizer_get_status(self) -> Dict[str, Any]:
+        try:
+            return self.organizer_runner.get_status()
+        except Exception as err:
+            return {"success": False, "error": str(err)}
+
+    def organizer_build_context(self) -> Dict[str, Any]:
+        try:
+            return self.organizer_runner.generate_context_for_llm()
+        except Exception as err:
+            return {"success": False, "error": str(err)}
+
+    def organizer_parse_plan(self, dsl_text: str) -> Dict[str, Any]:
+        try:
+            return self.organizer_runner.parse_plan(dsl_text)
+        except Exception as err:
+            return {"success": False, "error": str(err)}
+
+    def organizer_execute_plan(self, dsl_text: str) -> Dict[str, Any]:
+        try:
+            return self.organizer_runner.execute_plan(dsl_text)
+        except Exception as err:
+            return {"success": False, "error": str(err)}

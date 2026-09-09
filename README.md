@@ -1,11 +1,13 @@
 # Office & Document Copilots — Unified Desktop Suite
 
-A unified, maintainable, and modern desktop application built with **pywebview** (HTML5 / CSS3 / JavaScript frontend backed by native WebView2 and Python automation engines) that brings together four essential Office & Document AI Copilots:
+A unified, maintainable, and modern desktop application built with **pywebview** (HTML5 / CSS3 / JavaScript frontend backed by native WebView2 and Python automation engines) that brings together six essential Office & Document AI Copilots:
 
 1. **PowerPoint Copilot** — Design Consultant & Shape Architect (DSL to PowerPoint shapes, slides, tables, gradients, and icons via COM).
 2. **Word Copilot** — Document generator, live cursor injector, and active document editor with DSL extraction.
 3. **Excel Copilot** — Air-gapped semantic analyzer, LLM context generator, and deterministic JSON Action Protocol executor.
 4. **CV Copilot** — Deterministic Data Quality (DQ) validation engine and standard Europass Word (.docx) generator.
+5. **Python Copilot** — Sandboxed script execution, artifact inspection, and folder context export for LLM loops.
+6. **Folder/File Organizer Copilot** — Recursive folder summarization and safe copy-only reorganization from DSL plans.
 
 ---
 

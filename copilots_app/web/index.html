@@ -51,6 +51,11 @@
           <img class="nav-icon" src="../../assets/icons/python.png" alt="Python">
           <span class="nav-label">Python Copilot</span>
         </button>
+        <button class="nav-item" data-route="organizer">
+          <span class="indicator" style="background-color: var(--brand-organizer)"></span>
+          <img class="nav-icon" src="../../assets/icons/folder-organizer-placeholder.png" alt="Organizer">
+          <span class="nav-label">Folder Organizer</span>
+        </button>
       </nav>
 
     </aside>
@@ -134,29 +139,29 @@
       <!-- VIEW 3: Excel Copilot -->
       <section class="view-panel" id="view-excel">
         <!-- Metric Cards -->
-        <div class="metrics-row">
-          <div class="metric-card" style="border-left-color: var(--brand-excel)">
+        <div class="metrics-row metrics-row-excel">
+          <div class="metric-card">
             <i data-lucide="file" class="metric-icon"></i>
             <div class="metric-details">
               <span class="metric-title">Active File</span>
               <span class="metric-value" id="excel-metric-file">None</span>
             </div>
           </div>
-          <div class="metric-card" style="border-left-color: var(--primary)">
+          <div class="metric-card">
             <i data-lucide="layers" class="metric-icon"></i>
             <div class="metric-details">
               <span class="metric-title">Sheets</span>
               <span class="metric-value" id="excel-metric-sheets">0</span>
             </div>
           </div>
-          <div class="metric-card" style="border-left-color: var(--info)">
+          <div class="metric-card">
             <i data-lucide="table-2" class="metric-icon"></i>
             <div class="metric-details">
               <span class="metric-title">Tables</span>
               <span class="metric-value" id="excel-metric-tables">0</span>
             </div>
           </div>
-          <div class="metric-card" style="border-left-color: var(--warning)">
+          <div class="metric-card">
             <i data-lucide="sigma" class="metric-icon"></i>
             <div class="metric-details">
               <span class="metric-title">Formulas</span>
@@ -236,29 +241,29 @@
       <!-- VIEW 4: CV Copilot -->
       <section class="view-panel" id="view-cv">
         <!-- Metric Cards -->
-        <div class="metrics-row">
-          <div class="metric-card" style="border-left-color: var(--brand-cv)">
+        <div class="metrics-row metrics-row-cv">
+          <div class="metric-card">
             <i data-lucide="user" class="metric-icon"></i>
             <div class="metric-details">
               <span class="metric-title">Candidate</span>
               <span class="metric-value" id="cv-metric-name">—</span>
             </div>
           </div>
-          <div class="metric-card" style="border-left-color: var(--primary)">
+          <div class="metric-card">
             <i data-lucide="briefcase" class="metric-icon"></i>
             <div class="metric-details">
               <span class="metric-title">Work Experience</span>
               <span class="metric-value" id="cv-metric-exp">0</span>
             </div>
           </div>
-          <div class="metric-card" style="border-left-color: var(--info)">
+          <div class="metric-card">
             <i data-lucide="wrench" class="metric-icon"></i>
             <div class="metric-details">
               <span class="metric-title">Skills</span>
               <span class="metric-value" id="cv-metric-skills">0</span>
             </div>
           </div>
-          <div class="metric-card" style="border-left-color: var(--success)">
+          <div class="metric-card">
             <i data-lucide="bar-chart-2" class="metric-icon"></i>
             <div class="metric-details">
               <span class="metric-title">DQ Audit Score</span>
@@ -312,29 +317,29 @@
       <!-- VIEW 5: Python Copilot -->
       <section class="view-panel" id="view-python">
         <!-- Metric Cards -->
-        <div class="metrics-row">
-          <div class="metric-card" style="border-left-color: var(--brand-python)">
+        <div class="metrics-row metrics-row-python">
+          <div class="metric-card">
             <i data-lucide="terminal" class="metric-icon"></i>
             <div class="metric-details">
               <span class="metric-title">Last Execution</span>
               <span class="metric-value" id="python-metric-status">Ready</span>
             </div>
           </div>
-          <div class="metric-card" style="border-left-color: var(--primary)">
+          <div class="metric-card">
             <i data-lucide="clock" class="metric-icon"></i>
             <div class="metric-details">
               <span class="metric-title">Execution Time</span>
               <span class="metric-value" id="python-metric-duration">0 ms</span>
             </div>
           </div>
-          <div class="metric-card" style="border-left-color: var(--info)">
+          <div class="metric-card">
             <i data-lucide="files" class="metric-icon"></i>
             <div class="metric-details">
               <span class="metric-title">Folder Files</span>
               <span class="metric-value" id="python-metric-files">0 Files</span>
             </div>
           </div>
-          <div class="metric-card" style="border-left-color: var(--warning)">
+          <div class="metric-card">
             <i data-lucide="hard-drive" class="metric-icon"></i>
             <div class="metric-details">
               <span class="metric-title">Persistence Mode</span>
@@ -422,14 +427,14 @@
                 Sandbox: Temp
               </span>
               <div class="right-buttons">
-                <button class="btn btn-secondary" id="python-btn-open-explorer">
-                  <i data-lucide="external-link" class="btn-icon"></i> Open in Explorer
+                <button class="btn btn-secondary btn-icon-only" id="python-btn-open-explorer" title="Open &amp; Explore" aria-label="Open &amp; Explore">
+                  <i data-lucide="folder-open" class="btn-icon"></i>
                 </button>
-                <button class="btn btn-secondary" id="python-btn-clear-sandbox" title="Clear all files in the current Python sandbox">
-                  <i data-lucide="trash-2" class="btn-icon"></i> Clear Sandbox
+                <button class="btn btn-secondary btn-icon-only" id="python-btn-clear-sandbox" title="Clear Sandbox" aria-label="Clear Sandbox">
+                  <i data-lucide="trash-2" class="btn-icon"></i>
                 </button>
-                <button class="btn btn-python-outline" id="python-btn-copy-context">
-                  <i data-lucide="copy" class="btn-icon"></i> Copy Folder Context
+                <button class="btn btn-python-outline btn-icon-only" id="python-btn-copy-context" title="Copy Folder Context" aria-label="Copy Folder Context">
+                  <i data-lucide="copy" class="btn-icon"></i>
                 </button>
               </div>
             </div>
@@ -439,6 +444,56 @@
         <footer class="status-bar" id="python-status">
           <span class="status-indicator"></span>
           <span class="status-text">Ready — paste code, execute scripts, and inspect generated documents</span>
+        </footer>
+      </section>
+
+      <!-- VIEW 6: Folder/File Organizer Copilot -->
+      <section class="view-panel" id="view-organizer">
+        <div class="organizer-split-body">
+          <div class="panel-box left-panel">
+            <div class="panel-header-simple">
+              <span>Source Folder Context</span>
+              <button class="btn-tiny" id="organizer-btn-copy-context" title="Copy full tree + excerpts to clipboard for LLM prompting">
+                <i data-lucide="copy" style="width:11px;height:11px;vertical-align:middle;"></i> Copy for LLM
+              </button>
+            </div>
+            <div style="padding: 10px 14px; border-bottom: 1px solid var(--border-subtle); display:flex; align-items:center; justify-content:space-between; gap:10px;">
+              <span id="organizer-source-label" style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">No folder selected.</span>
+              <button class="btn btn-organizer-outline" id="organizer-btn-select-folder">
+                <i data-lucide="folder-search" class="btn-icon"></i> Select Folder
+              </button>
+            </div>
+            <div class="code-area-wrapper flex-grow">
+              <textarea id="organizer-context-text" class="code-textarea" readonly placeholder="Select a source folder and generate context to preview recursive tree + text excerpts..."></textarea>
+            </div>
+          </div>
+
+          <div class="panel-box right-panel">
+            <div class="panel-header-simple">
+              <span>Reorganization Plan DSL (Copy-Only)</span>
+            </div>
+            <div style="padding: 10px 14px; border-bottom: 1px solid var(--border-subtle); font-size:11px; color:var(--text-secondary);">
+              Syntax: <code>MOVE "source/relative/file.ext" -&gt; "new/folder/file.ext"</code> (one per line)
+            </div>
+            <div class="code-area-wrapper flex-grow">
+              <textarea id="organizer-plan-text" class="code-textarea" spellcheck="false" placeholder="# Comments allowed&#10;MOVE &quot;docs/plan.md&quot; -&gt; &quot;knowledge/plan.md&quot;&#10;MOVE src/main.py -&gt; app/main.py"></textarea>
+            </div>
+            <div class="excel-actions-row">
+              <span id="organizer-output-label" style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;">Output: not generated yet</span>
+              <div class="right-buttons">
+                <button class="btn btn-organizer-secondary" id="organizer-btn-validate-plan">
+                  <i data-lucide="check-circle" class="btn-icon"></i> Validate Plan
+                </button>
+                <button class="btn btn-organizer-primary" id="organizer-btn-execute-plan">
+                  <i data-lucide="copy-check" class="btn-icon"></i> Execute Copy Plan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <footer class="status-bar" id="organizer-status">
+          <span class="status-indicator"></span>
+          <span class="status-text">Ready — select a folder, copy context to your LLM, then execute a copy-only DSL plan</span>
         </footer>
       </section>
     </main>
