@@ -211,9 +211,12 @@
             </div>
 
             <div class="excel-actions-row">
-              <label class="checkbox-label">
-                <input type="checkbox" id="excel-backup-checkbox" checked>
-                <span>Create backup before executing</span>
+              <label class="toggle-label" title="When enabled, a backup of the workbook is created before executing the protocol.">
+                <input type="checkbox" id="excel-backup-checkbox" class="toggle-input" checked>
+                <span class="toggle-track">
+                  <span class="toggle-thumb"></span>
+                </span>
+                <span class="toggle-text">Create backup before executing</span>
               </label>
             </div>
           </div>
@@ -490,6 +493,9 @@
             <div class="excel-actions-row">
               <span id="organizer-output-label" style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;">Output: not generated yet</span>
               <div class="right-buttons">
+                <button class="btn btn-organizer-outline" id="organizer-btn-open-folder" title="Open generated output folder in Explorer" disabled>
+                  <i data-lucide="folder-open" class="btn-icon"></i> Open Folder
+                </button>
                 <button class="btn btn-organizer-primary" id="organizer-btn-execute-plan">
                   <i data-lucide="copy-check" class="btn-icon"></i> Execute Copy Plan
                 </button>

@@ -501,3 +501,10 @@ class CopilotBridge:
             return self.organizer_runner.execute_plan(dsl_text)
         except Exception as err:
             return {"success": False, "error": str(err)}
+
+    def organizer_open_output_folder(self) -> Dict[str, Any]:
+        """Open the last generated output folder in the system file explorer."""
+        try:
+            return self.organizer_runner.open_output_folder()
+        except Exception as err:
+            return {"success": False, "error": str(err)}

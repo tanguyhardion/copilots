@@ -9,6 +9,8 @@ from __future__ import annotations
 import os
 import re
 import shutil
+import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -26,9 +28,6 @@ class FolderOrganizerRunner:
     )
 
     def __init__(self):
-        appdata = os.environ.get("APPDATA") or os.path.expanduser("~")
-        self.output_base = Path(appdata) / "CopilotsApp" / "folder_organizer_outputs"
-        self.output_base.mkdir(parents=True, exist_ok=True)
         self.source_root: Optional[Path] = None
         self.last_output_root: Optional[Path] = None
 
@@ -159,7 +158,9 @@ class FolderOrganizerRunner:
             }
 
         stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_root = self.output_base / f"{source_root.name}_organized_{stamp}"
+        # Place the output folder next to the source folder (sibling)
+        output_base = source_root.parent
+        output_root = output_base / f"{source_root.name}_organized_{stamp}"
         output_root.mkdir(parents=True, exist_ok=True)
 
         copied_count = 0
@@ -212,6 +213,22 @@ class FolderOrganizerRunner:
             "errors": errors,
             "report_lines": report_lines,
         }
+
+    def open_output_folder(self) -> Dict[str, Any]:
+        """Open the last generated output folder in the system file explorer."""
+        if not self.last_output_root or not self.last_output_root.exists():
+            return {"success": False, "error": "No output folder generated yet."}
+        folder = self.last_output_root
+        try:
+            if sys.platform == "win32":
+                os.startfile(str(folder))
+            elif sys.platform == "darwin":
+                subprocess.Popen(["open", str(folder)])
+            else:
+                subprocess.Popen(["xdg-open", str(folder)])
+            return {"success": True, "path": str(folder)}
+        except Exception as err:
+            return {"success": False, "error": f"Failed to open folder: {err}"}
 
     def _render_tree(self, source_root: Path) -> List[str]:
         lines = [f"{source_root.name}/"]

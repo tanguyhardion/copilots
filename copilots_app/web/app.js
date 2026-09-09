@@ -991,6 +991,7 @@ async function setupOrganizerView() {
   const selectBtn = document.getElementById("organizer-btn-select-folder");
   const copyBtn = document.getElementById("organizer-btn-copy-context");
   const executeBtn = document.getElementById("organizer-btn-execute-plan");
+  const openFolderBtn = document.getElementById("organizer-btn-open-folder");
   const planTextarea = document.getElementById("organizer-plan-text");
 
   if (!selectBtn || !copyBtn || !executeBtn) return;
@@ -998,6 +999,7 @@ async function setupOrganizerView() {
   selectBtn.addEventListener("click", organizerSelectFolder);
   copyBtn.addEventListener("click", organizerCopyContext);
   executeBtn.addEventListener("click", organizerExecutePlan);
+  if (openFolderBtn) openFolderBtn.addEventListener("click", organizerOpenOutputFolder);
 
   // Auto-validate on paste or typing (debounced)
   let _validateTimer = null;
@@ -1010,6 +1012,9 @@ async function setupOrganizerView() {
     const res = await window.pywebview?.api?.organizer_get_status?.();
     if (res?.success) {
       updateOrganizerLabels(res.source_root, res.last_output_root);
+      // Enable the open-folder button if there's an existing output
+      const openFolderBtn = document.getElementById("organizer-btn-open-folder");
+      if (openFolderBtn && res.last_output_root) openFolderBtn.disabled = false;
     }
   } catch (e) {}
 }
@@ -1100,6 +1105,9 @@ async function organizerExecutePlan() {
         } else {
           updateOrganizerLabels("", res.output_root);
         }
+        // Enable the open-folder button now that we have an output
+        const openFolderBtn = document.getElementById("organizer-btn-open-folder");
+        if (openFolderBtn) openFolderBtn.disabled = false;
         setStatus("organizer", res.message, "success");
       } else {
         setStatus("organizer", res.error || res.message || "Plan execution failed.", "error");
@@ -1107,6 +1115,19 @@ async function organizerExecutePlan() {
     }
   } catch (err) {
     setStatus("organizer", `Plan execution error: ${err}`, "error");
+  }
+}
+
+async function organizerOpenOutputFolder() {
+  try {
+    if (window.pywebview?.api) {
+      const res = await window.pywebview.api.organizer_open_output_folder();
+      if (!res.success) {
+        setStatus("organizer", res.error || "Could not open output folder.", "error");
+      }
+    }
+  } catch (err) {
+    setStatus("organizer", `Open folder error: ${err}`, "error");
   }
 }
 
