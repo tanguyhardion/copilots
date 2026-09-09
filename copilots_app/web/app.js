@@ -34,7 +34,7 @@ const ROUTES = {
     title: "Excel Copilot",
     subtitle: "Active workbook COM automation, real-time spreadsheet analysis, and deterministic JSON action execution",
     icon: "../../assets/icons/excel.png",
-    badge: "Excel COM (pywin32)",
+    badge: "Excel COM",
     badgeColor: "var(--brand-excel)",
     badgeSubtleColor: "var(--brand-excel-subtle)",
     badgeGlowColor: "var(--brand-excel-glow)",
@@ -72,7 +72,7 @@ const ROUTES = {
   organizer: {
     title: "Folder/File Organizer Copilot",
     subtitle: "Analyze recursive folder context, prepare LLM-ready summaries, and execute safe copy-only reorganization plans",
-    icon: "../../assets/icons/folder-organizer-placeholder.png",
+    icon: "../../assets/icons/folder-organizer.png",
     badge: "Folder DSL + Safe Copy",
     badgeColor: "var(--brand-organizer)",
     badgeSubtleColor: "var(--brand-organizer-subtle)",
@@ -990,15 +990,21 @@ async function pythonClearWorkspace() {
 async function setupOrganizerView() {
   const selectBtn = document.getElementById("organizer-btn-select-folder");
   const copyBtn = document.getElementById("organizer-btn-copy-context");
-  const validateBtn = document.getElementById("organizer-btn-validate-plan");
   const executeBtn = document.getElementById("organizer-btn-execute-plan");
+  const planTextarea = document.getElementById("organizer-plan-text");
 
-  if (!selectBtn || !copyBtn || !validateBtn || !executeBtn) return;
+  if (!selectBtn || !copyBtn || !executeBtn) return;
 
   selectBtn.addEventListener("click", organizerSelectFolder);
   copyBtn.addEventListener("click", organizerCopyContext);
-  validateBtn.addEventListener("click", organizerValidatePlan);
   executeBtn.addEventListener("click", organizerExecutePlan);
+
+  // Auto-validate on paste or typing (debounced)
+  let _validateTimer = null;
+  planTextarea.addEventListener("input", () => {
+    clearTimeout(_validateTimer);
+    _validateTimer = setTimeout(organizerValidatePlan, 500);
+  });
 
   try {
     const res = await window.pywebview?.api?.organizer_get_status?.();

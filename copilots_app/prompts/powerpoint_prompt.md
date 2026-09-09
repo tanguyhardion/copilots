@@ -127,7 +127,7 @@ Raw hex is also accepted for fixed colors: `#4A7C59`, `#FFF`.
 Rules:
 - Do not assume specific hex values for theme tokens or their variants.
 - Their actual appearance depends on the active PowerPoint theme.
-- Prefer theme tokens over raw hex unless a fixed non-theme color is specifically needed or the user mentions their need for it.
+- Prefer raw hex unless the user mentions their need for theme tokens or their variants.
 
 ---
 

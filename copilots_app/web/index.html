@@ -40,6 +40,7 @@
           <span class="indicator" style="background-color: var(--brand-excel)"></span>
           <img class="nav-icon" src="../../assets/icons/excel.png" alt="Excel">
           <span class="nav-label">Excel Copilot</span>
+          <span class="nav-tag nav-tag-beta">BETA</span>
         </button>
         <button class="nav-item" data-route="cv">
           <span class="indicator" style="background-color: var(--brand-cv)"></span>
@@ -53,8 +54,9 @@
         </button>
         <button class="nav-item" data-route="organizer">
           <span class="indicator" style="background-color: var(--brand-organizer)"></span>
-          <img class="nav-icon" src="../../assets/icons/folder-organizer-placeholder.png" alt="Organizer">
+          <img class="nav-icon" src="../../assets/icons/folder-organizer.png" alt="Organizer">
           <span class="nav-label">Folder Organizer</span>
+          <span class="nav-tag nav-tag-beta">BETA</span>
         </button>
       </nav>
 
@@ -280,7 +282,7 @@
               <button class="btn-tiny" id="cv-btn-format">Format JSON</button>
             </div>
             <div class="code-area-wrapper flex-grow">
-              <textarea id="cv-editor" class="code-textarea" spellcheck="false" placeholder="Paste candidate profile JSON here (supports both Europass Word and 1-Slide PowerPoint formats)..."></textarea>
+              <textarea id="cv-editor" class="code-textarea" spellcheck="false" placeholder="Paste candidate profile JSON here..."></textarea>
             </div>
           </div>
 
@@ -453,9 +455,6 @@
           <div class="panel-box left-panel">
             <div class="panel-header-simple">
               <span>Source Folder Context</span>
-              <button class="btn-tiny" id="organizer-btn-copy-context" title="Copy full tree + excerpts to clipboard for LLM prompting">
-                <i data-lucide="copy" style="width:11px;height:11px;vertical-align:middle;"></i> Copy for LLM
-              </button>
             </div>
             <div style="padding: 10px 14px; border-bottom: 1px solid var(--border-subtle); display:flex; align-items:center; justify-content:space-between; gap:10px;">
               <span id="organizer-source-label" style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">No folder selected.</span>
@@ -465,6 +464,16 @@
             </div>
             <div class="code-area-wrapper flex-grow">
               <textarea id="organizer-context-text" class="code-textarea" readonly placeholder="Select a source folder and generate context to preview recursive tree + text excerpts..."></textarea>
+            </div>
+            <div class="excel-actions-row" style="background: rgba(0, 0, 0, 0.25);">
+              <span style="font-size:11px; color:var(--text-muted);">
+                Generates tree &amp; excerpts
+              </span>
+              <div class="right-buttons">
+                <button class="btn btn-organizer-primary" id="organizer-btn-copy-context" title="Copy full tree + excerpts to clipboard for LLM prompting">
+                  <i data-lucide="copy" class="btn-icon"></i> Copy for LLM
+                </button>
+              </div>
             </div>
           </div>
 
@@ -481,9 +490,6 @@
             <div class="excel-actions-row">
               <span id="organizer-output-label" style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;">Output: not generated yet</span>
               <div class="right-buttons">
-                <button class="btn btn-organizer-secondary" id="organizer-btn-validate-plan">
-                  <i data-lucide="check-circle" class="btn-icon"></i> Validate Plan
-                </button>
                 <button class="btn btn-organizer-primary" id="organizer-btn-execute-plan">
                   <i data-lucide="copy-check" class="btn-icon"></i> Execute Copy Plan
                 </button>

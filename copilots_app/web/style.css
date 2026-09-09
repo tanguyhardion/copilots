@@ -249,6 +249,24 @@ body, html {
   transition: color var(--transition-fast);
 }
 
+.nav-tag {
+  margin-left: auto;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.nav-tag-beta {
+  background: rgba(245, 158, 11, 0.15);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.15);
+}
+
 .nav-item:hover .nav-label {
   color: var(--text-primary);
 }
@@ -958,6 +976,19 @@ body, html {
   transform: translateY(-1px);
 }
 
+.btn-organizer-subtle {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.btn-organizer-subtle:hover {
+  background: rgba(217, 70, 239, 0.12);
+  border-color: rgba(217, 70, 239, 0.35);
+  color: #F0ABFC;
+  transform: translateY(-1px);
+}
+
 .btn-tiny {
   display: inline-flex;
   align-items: center;
@@ -1046,7 +1077,6 @@ body, html {
 .metric-card {
   background: linear-gradient(135deg, var(--bg-card) 0%, rgba(21, 25, 38, 0.6) 100%);
   border: 1px solid var(--border-color);
-  border-left: 4px solid transparent;
   border-radius: 9px;
   padding: 10px 14px;
   display: flex;
@@ -1056,18 +1086,6 @@ body, html {
   transition: all var(--transition-fast);
 }
 
-.metrics-row-excel .metric-card {
-  border-left-color: var(--brand-excel);
-}
-
-.metrics-row-cv .metric-card {
-  border-left-color: var(--brand-cv);
-}
-
-.metrics-row-python .metric-card {
-  border-left-color: var(--brand-python);
-}
-
 .metric-card:hover {
   background-color: var(--bg-card-hover);
   border-color: var(--border-hover);
@@ -1075,22 +1093,21 @@ body, html {
 }
 
 .metric-icon {
-  width: 34px;
-  height: 34px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-subtle);
+  background: transparent;
+  border: none;
   flex-shrink: 0;
 }
 
 .metric-icon svg {
-  width: 16px;
-  height: 16px;
-  stroke-width: 1.75;
-  color: var(--text-secondary);
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.85;
+  color: inherit;
 }
 
 .metric-details {
