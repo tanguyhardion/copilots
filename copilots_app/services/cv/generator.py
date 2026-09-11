@@ -431,8 +431,12 @@ def two_col_para(
     # Left-aligned tab stop for right column content
     add_tab_stop(para, TABLE_INDENT_CM, "left")
     if left_text:
-        para.add_run("\t")  # jump to right-aligned tab
-        add_run(para, left_text, size=left_size, bold=left_bold, color=left_color)
+        lines = left_text.split("\n")
+        for i, line in enumerate(lines):
+            if i > 0:
+                para.add_run("\n")
+            para.add_run("\t")  # jump to right-aligned tab
+            add_run(para, line, size=left_size, bold=left_bold, color=left_color)
     para.add_run("\t")  # jump to left-aligned tab for right content
     if right_text:
         add_run(para, right_text, size=right_size, bold=right_bold, color=right_color)
