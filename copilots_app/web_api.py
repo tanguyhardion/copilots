@@ -5,6 +5,7 @@ Provides full access to all Copilots engines: PowerPoint, Word, Excel, CV, and S
 
 import os
 import json
+import tempfile
 import traceback
 from typing import Dict, Any, List, Optional
 import webview
@@ -363,17 +364,36 @@ class CopilotBridge:
         except Exception as err:
             return {"success": False, "error": f"Audit failed: {err}"}
 
-    def cv_generate_docx(self, cv_json_str: str) -> Dict[str, Any]:
+    def _resolve_cv_output_path(self, filename: str, output_dir: Optional[str] = None) -> str:
+        target_dir = (output_dir or "").strip() or tempfile.gettempdir()
+        target_dir = os.path.abspath(os.path.expanduser(target_dir))
+        os.makedirs(target_dir, exist_ok=True)
+        return os.path.join(target_dir, filename)
+
+    def cv_select_output_folder(self) -> Dict[str, Any]:
+        if not self._window:
+            return {"success": False, "error": "Window not initialized."}
+        res = self._window.create_file_dialog(webview.FOLDER_DIALOG, allow_multiple=False)
+        if not res or len(res) == 0:
+            return {"success": False, "cancelled": True}
+        return {"success": True, "path": res[0]}
+
+    def cv_generate_docx(
+        self,
+        cv_json_str: str,
+        language: str = "en",
+        sections: Optional[Dict[str, bool]] = None,
+        output_dir: Optional[str] = None,
+    ) -> Dict[str, Any]:
         try:
             data = json.loads(cv_json_str)
-            import tempfile
             pi = data.get("personal_info") or data.get("personal_information") or {}
             first_name = pi.get("first_name", "Candidate")
             last_name = pi.get("last_name", "CV")
             filename = f"CV_{first_name}_{last_name}.docx".replace(" ", "_")
-            out_path = os.path.join(tempfile.gettempdir(), filename)
+            out_path = self._resolve_cv_output_path(filename, output_dir)
 
-            generate_cv(data, out_path)
+            generate_cv(data, out_path, language=language, sections=sections)
             try:
                 os.startfile(out_path)
             except Exception:
@@ -382,17 +402,22 @@ class CopilotBridge:
         except Exception as err:
             return {"success": False, "error": f"Word CV generation failed: {err}"}
 
-    def cv_generate_pptx(self, cv_json_str: str) -> Dict[str, Any]:
+    def cv_generate_pptx(
+        self,
+        cv_json_str: str,
+        language: str = "en",
+        sections: Optional[Dict[str, bool]] = None,
+        output_dir: Optional[str] = None,
+    ) -> Dict[str, Any]:
         try:
             data = json.loads(cv_json_str)
-            import tempfile
             pi = data.get("personal_info") or data.get("personal_information") or {}
             first_name = pi.get("first_name", "Candidate")
             last_name = pi.get("last_name", "CV")
             filename = f"CV_{first_name}_{last_name}_1Slide.pptx".replace(" ", "_")
-            out_path = os.path.join(tempfile.gettempdir(), filename)
+            out_path = self._resolve_cv_output_path(filename, output_dir)
 
-            generate_pptx_cv(data, out_path)
+            generate_pptx_cv(data, out_path, language=language, sections=sections)
             try:
                 os.startfile(out_path)
             except Exception:

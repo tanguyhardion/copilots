@@ -1453,6 +1453,101 @@ body, html {
   background: rgba(0, 0, 0, 0.15);
 }
 
+.cv-options-panel {
+  margin-top: 16px;
+  overflow: hidden;
+}
+
+.cv-options-grid,
+.cv-sections-grid {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+}
+
+.cv-options-grid {
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.cv-sections-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cv-option-field,
+.cv-section-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cv-option-field > span,
+.cv-section-group-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.cv-option-input {
+  width: 100%;
+  min-height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text-primary);
+  padding: 0 12px;
+  font-family: var(--font-body);
+}
+
+.cv-option-input[readonly] {
+  color: var(--text-secondary);
+}
+
+.cv-output-field {
+  min-width: 0;
+}
+
+.cv-output-row {
+  display: flex;
+  gap: 10px;
+}
+
+.cv-output-row .cv-option-input {
+  min-width: 0;
+}
+
+.cv-section-group {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cv-section-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.cv-section-option input {
+  accent-color: var(--brand-cv);
+}
+
+@media (max-width: 1100px) {
+  .cv-options-grid,
+  .cv-sections-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cv-output-row {
+    flex-direction: column;
+  }
+}
+
 /* Toggle switch */
 .toggle-label {
   display: flex;

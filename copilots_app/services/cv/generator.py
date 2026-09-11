@@ -10,6 +10,12 @@ from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
 
+from copilots_app.services.cv.i18n import (
+    DOCX_SECTION_DEFAULTS,
+    get_cv_strings,
+    normalize_sections,
+)
+
 # ─────────────────────────────────────────────
 # CONSTANTS
 # ─────────────────────────────────────────────
@@ -288,31 +294,16 @@ def new_para(doc, alignment=WD_ALIGN_PARAGRAPH.LEFT, before_pt=0, after_pt=0):
 # DATE HELPERS
 # ─────────────────────────────────────────────
 
-MONTHS = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-]
-
-
-def fmt_date(ym: str) -> str:
+def fmt_date(ym: str, strings: dict | None = None) -> str:
+    strings = strings or get_cv_strings()
     if ym == "Present":
-        return "Present"
+        return strings["present"]
     y, m = ym.split("-")
-    return f"{MONTHS[int(m) - 1]} {y}"
+    return f"{strings['docx_months'][int(m) - 1]} {y}"
 
 
-def fmt_date_range(date_from: str, date_to: str) -> str:
-    return f"{fmt_date(date_from)} – {fmt_date(date_to)}"
+def fmt_date_range(date_from: str, date_to: str, strings: dict | None = None) -> str:
+    return f"{fmt_date(date_from, strings)} – {fmt_date(date_to, strings)}"
 
 
 def calc_months(date_from: str, date_to: str) -> int:
@@ -326,13 +317,14 @@ def calc_months(date_from: str, date_to: str) -> int:
     return delta.years * 12 + delta.months
 
 
-def fmt_cert_expiry(cert: dict) -> str:
+def fmt_cert_expiry(cert: dict, strings: dict | None = None) -> str:
+    strings = strings or get_cv_strings()
     expiry = cert.get("expiry_year")
     if expiry is None:
-        return "(perpetual)"
+        return strings["perpetual"]
     if expiry < datetime.today().year:
-        return f"(expired in {expiry})"
-    return f"(expires in {expiry})"
+        return strings["expired_in"].format(year=expiry)
+    return strings["expires_in"].format(year=expiry)
 
 
 # ─────────────────────────────────────────────
@@ -360,7 +352,7 @@ def setup_document() -> Document:
 # ─────────────────────────────────────────────
 
 
-def build_header(doc: Document, first_name: str, last_name: str):
+def build_header(doc: Document, first_name: str, last_name: str, strings: dict):
     section = doc.sections[0]
     header = section.header
     for p in header.paragraphs:
@@ -371,8 +363,8 @@ def build_header(doc: Document, first_name: str, last_name: str):
     row = tbl.rows[0]
     for i, (w, align, text) in enumerate(
         [
-            (3.0, WD_ALIGN_PARAGRAPH.LEFT, "Europass"),
-            (9.0, WD_ALIGN_PARAGRAPH.CENTER, "Curriculum Vitae"),
+            (3.0, WD_ALIGN_PARAGRAPH.LEFT, strings["europass"]),
+            (9.0, WD_ALIGN_PARAGRAPH.CENTER, strings["curriculum_vitae"]),
             (6.3, WD_ALIGN_PARAGRAPH.RIGHT, f"{first_name} {last_name}"),
         ]
     ):
@@ -383,7 +375,7 @@ def build_header(doc: Document, first_name: str, last_name: str):
         add_run(p, text, size=10, color=COLOR_BLUE_LIGHT)
 
 
-def build_footer(doc: Document):
+def build_footer(doc: Document, strings: dict):
     section = doc.sections[0]
     footer = section.footer
     for p in footer.paragraphs:
@@ -407,7 +399,7 @@ def build_footer(doc: Document):
             r.font.name = FONT_NAME
             r._r.append(el)
 
-    add_run(para, "Page ", size=7, color=COLOR_BLUE_LIGHT)
+    add_run(para, strings["page"], size=7, color=COLOR_BLUE_LIGHT)
     _field("PAGE")
     add_run(para, " / ", size=7, color=COLOR_BLUE_LIGHT)
     _field("NUMPAGES")
@@ -565,13 +557,13 @@ def section_label_with_divider(doc: Document, label: str):
 # ─────────────────────────────────────────────
 
 
-def build_personal_info(doc: Document, info: dict):
+def build_personal_info(doc: Document, info: dict, strings: dict):
     p_sec = doc.add_paragraph()
     p_sec.alignment = WD_ALIGN_PARAGRAPH.LEFT
     set_para_spacing(p_sec, 0, 4)
     add_tab_stop(p_sec, TABLE_INDENT_CM - 0.3, "right")
     p_sec.add_run("\t")
-    add_run(p_sec, "PERSONAL INFORMATION", size=DEFAULT_SIZE, color=COLOR_BLUE_DARK)
+    add_run(p_sec, strings["personal_information"], size=DEFAULT_SIZE, color=COLOR_BLUE_DARK)
 
     tbl = doc.add_table(rows=1, cols=2)
     set_table_borders_none(tbl)
@@ -587,7 +579,7 @@ def build_personal_info(doc: Document, info: dict):
 
     p_ph = c_pic.paragraphs[0]
     set_para_spacing(p_ph, 0, 0)
-    add_run(p_ph, "[Photo 3.8×3.8cm]", size=DEFAULT_SIZE)
+    add_run(p_ph, strings["photo_placeholder"], size=DEFAULT_SIZE)
 
     p_name = c_det.paragraphs[0]
     set_para_spacing(p_name, 0, 3)
@@ -616,7 +608,9 @@ def build_personal_info(doc: Document, info: dict):
     set_para_spacing(p_sex, 4, 0)
     add_run(
         p_sex,
-        f"Sex {info.get('sex', '')} | Nationality {info.get('nationality', '')}",
+        strings["sex_nationality"].format(
+            sex=info.get("sex", ""), nationality=info.get("nationality", "")
+        ),
         size=DEFAULT_SIZE,
         color=COLOR_BLUE_LIGHT,
     )
@@ -627,10 +621,10 @@ def build_personal_info(doc: Document, info: dict):
 # ─────────────────────────────────────────────
 
 
-def build_proposed_role(doc: Document, tender_info: dict):
+def build_proposed_role(doc: Document, tender_info: dict, strings: dict):
     two_col_para(
         doc,
-        left_text="PROPOSED ROLE",
+        left_text=strings["proposed_role"],
         right_text=tender_info.get("proposed_role", ""),
         left_color=COLOR_BLUE_DARK,
         right_size=11,
@@ -643,16 +637,15 @@ def build_proposed_role(doc: Document, tender_info: dict):
 # SECTION: PROFESSIONAL EXPERIENCE (tick-box)
 # ─────────────────────────────────────────────
 
-BUCKET_LABELS = ["Less than 4", "4 – 9", "10 – 14", "15+"]
 BUCKET_KEYS = ["less_than_4", "4_to_9", "10_to_14", "15_plus"]
 
 
-def build_professional_experience(doc: Document, personal_info: dict):
+def build_professional_experience(doc: Document, personal_info: dict, strings: dict):
     """years_experience_bucket is now read from personal_info."""
     two_col_para(
         doc,
-        left_text="PROFESSIONAL EXPERIENCE",
-        right_text="Number of years of work experience:",
+        left_text=strings["professional_experience"],
+        right_text=strings["years_of_work_experience"],
         left_color=COLOR_BLUE_DARK,
         right_size=11,
         right_color=COLOR_BLUE_DARK,
@@ -671,7 +664,7 @@ def build_professional_experience(doc: Document, personal_info: dict):
     label_w = 2.5
     tick_w = 0.6
 
-    for i, (lbl, key) in enumerate(zip(BUCKET_LABELS, BUCKET_KEYS)):
+    for i, (lbl, key) in enumerate(zip(strings["experience_buckets"], BUCKET_KEYS)):
         c_lbl = cells[i * 2]
         c_tick = cells[i * 2 + 1]
         set_col_width(c_lbl, label_w)
@@ -698,17 +691,17 @@ def build_professional_experience(doc: Document, personal_info: dict):
 # ─────────────────────────────────────────────
 
 
-def build_work_experience(doc: Document, work_exp: list):
+def build_work_experience(doc: Document, work_exp: list, strings: dict):
     two_col_para(
         doc,
-        left_text="WORK EXPERIENCE",
+        left_text=strings["work_experience"],
         left_color=COLOR_BLUE_DARK,
         before_pt=SECTION_SPACE,
         after_pt=2,
     )
 
     col_widths = [3.5, 5.5, 4.3]
-    headers = ["DATE", "TITLE", "ORGANISATION"]
+    headers = [strings["date"], strings["title"], strings["organisation"]]
 
     tbl = doc.add_table(rows=1, cols=3)
     set_table_borders_none(tbl)
@@ -725,7 +718,7 @@ def build_work_experience(doc: Document, work_exp: list):
 
     for entry in work_exp:
         row = tbl.add_row()
-        date_str = fmt_date_range(entry["date_from"], entry["date_to"])
+        date_str = fmt_date_range(entry["date_from"], entry["date_to"], strings)
         org_str = entry["organisation"]
         if entry.get("organisation_country"):
             org_str += f", {entry['organisation_country']}"
@@ -746,10 +739,10 @@ def build_work_experience(doc: Document, work_exp: list):
 # ─────────────────────────────────────────────
 
 
-def build_profile(doc: Document, profile_text: str):
+def build_profile(doc: Document, profile_text: str, strings: dict):
     two_col_para(
         doc,
-        left_text="PROFILE",
+        left_text=strings["profile"],
         left_color=COLOR_BLUE_DARK,
         before_pt=SECTION_SPACE,
         after_pt=2,
@@ -790,13 +783,13 @@ def _style_full_table_header(row, col_widths: list):
             )
 
 
-def build_requirements_matrix(doc: Document, tender_info: dict):
+def build_requirements_matrix(doc: Document, tender_info: dict, strings: dict):
     reqs = tender_info.get("requirements_matrix", [])
     full_name = (
         tender_info.get("_first_name", "") + " " + tender_info.get("_last_name", "")
     ).strip()
 
-    _full_width_label(doc, "Requirements matrix")
+    _full_width_label(doc, strings["requirements_matrix"])
 
     col_widths = [14.5, 3.8]
     tbl = doc.add_table(rows=1, cols=2)
@@ -804,7 +797,7 @@ def build_requirements_matrix(doc: Document, tender_info: dict):
     set_table_width(tbl, FULL_WIDTH_CM)
 
     hdr = tbl.rows[0]
-    hdr.cells[0].paragraphs[0].add_run("Requirement")
+    hdr.cells[0].paragraphs[0].add_run(strings["requirement"])
     hdr.cells[1].paragraphs[0].add_run(full_name)
     _style_full_table_header(hdr, col_widths)
 
@@ -827,15 +820,15 @@ def build_requirements_matrix(doc: Document, tender_info: dict):
     apply_standard_table_borders(tbl)
 
 
-def build_experience_overview(doc: Document, overview: list):
-    _full_width_label(doc, "Experience overview")
+def build_experience_overview(doc: Document, overview: list, strings: dict):
+    _full_width_label(doc, strings["experience_overview"])
 
     col_widths = [2.5, 11.5, 1.8, 2.5]
     headers = [
-        "Date",
-        "Roles and Responsibilities",
-        "Number of Months",
-        "Total Number of Months of Relevant Professional Experience",
+        strings["date"],
+        strings["roles_and_responsibilities"],
+        strings["number_of_months"],
+        strings["total_relevant_months"],
     ]
 
     tbl = doc.add_table(rows=1, cols=4)
@@ -865,7 +858,7 @@ def build_experience_overview(doc: Document, overview: list):
         )
         relevant = entry.get("relevant_months", duration)
 
-        date_str = fmt_date_range(entry["date_from"], entry["date_to"])
+        date_str = fmt_date_range(entry["date_from"], entry["date_to"], strings)
 
         for i, w in enumerate(col_widths):
             set_col_width(row.cells[i], w)
@@ -877,9 +870,9 @@ def build_experience_overview(doc: Document, overview: list):
 
         p1 = row.cells[1].paragraphs[0]
         set_para_spacing(p1, 0, 0)
-        add_run(p1, "Role: ", size=DEFAULT_SIZE, bold=True)
+        add_run(p1, strings["role_prefix"], size=DEFAULT_SIZE, bold=True)
         add_run(p1, entry["role"], size=DEFAULT_SIZE)
-        add_run(p1, "\nResponsibilities: ", size=DEFAULT_SIZE, bold=True)
+        add_run(p1, strings["responsibilities_prefix"], size=DEFAULT_SIZE, bold=True)
         add_run(p1, entry["responsibilities"], size=DEFAULT_SIZE)
 
         p2 = row.cells[2].paragraphs[0]
@@ -901,11 +894,11 @@ def build_experience_overview(doc: Document, overview: list):
 # ─────────────────────────────────────────────
 
 
-def build_project_experience(doc: Document, projects: list):
-    section_label_with_divider(doc, "Project Experience")
+def build_project_experience(doc: Document, projects: list, strings: dict):
+    section_label_with_divider(doc, strings["project_experience"])
 
     for proj in projects:
-        date_str = fmt_date_range(proj["date_from"], proj["date_to"])
+        date_str = fmt_date_range(proj["date_from"], proj["date_to"], strings)
 
         two_col_para(
             doc,
@@ -935,7 +928,7 @@ def build_project_experience(doc: Document, projects: list):
         alloc = proj.get("allocation_percent")
         if alloc:
             p_alloc = right_col_para(doc, before_pt=3, after_pt=0)
-            add_run(p_alloc, "Project Allocation in % (only specified in case of parallel projects)", size=DEFAULT_SIZE, underline=True)
+            add_run(p_alloc, strings["project_allocation"], size=DEFAULT_SIZE, underline=True)
             add_run(p_alloc, f": {alloc}", size=DEFAULT_SIZE)
 
         spacer = doc.add_paragraph()
@@ -947,11 +940,11 @@ def build_project_experience(doc: Document, projects: list):
 # ─────────────────────────────────────────────
 
 
-def build_education(doc: Document, education: list):
-    section_label_with_divider(doc, "Education and Training")
+def build_education(doc: Document, education: list, strings: dict):
+    section_label_with_divider(doc, strings["education_and_training"])
 
     for edu in education:
-        date_str = fmt_date_range(edu["date_from"], edu["date_to"])
+        date_str = fmt_date_range(edu["date_from"], edu["date_to"], strings)
 
         two_col_para(
             doc,
@@ -981,14 +974,14 @@ def build_education(doc: Document, education: list):
 # ─────────────────────────────────────────────
 
 
-def build_language_table(doc: Document, languages: dict):
+def build_language_table(doc: Document, languages: dict, strings: dict):
     other = languages.get("other", [])
     if not other:
         return
 
     two_col_para(
         doc,
-        left_text="Other language(s)",
+        left_text=strings["other_languages"],
         left_color=COLOR_BLUE_DARK,
         before_pt=4,
         after_pt=2,
@@ -1037,7 +1030,7 @@ def build_language_table(doc: Document, languages: dict):
     r0.cells[1].merge(r0.cells[2])
     r0.cells[3].merge(r0.cells[4])
 
-    group_labels = {1: "UNDERSTANDING", 3: "SPEAKING", 5: "WRITING"}
+    group_labels = {1: strings["understanding"], 3: strings["speaking"], 5: strings["writing"]}
     for col_idx in [1, 3, 5]:
         cell = r0.cells[col_idx]
         set_col_width(cell, data_col_w * (2 if col_idx in [1, 3] else 1))
@@ -1056,11 +1049,11 @@ def build_language_table(doc: Document, languages: dict):
     r1 = tbl.rows[1]
     sub_labels = [
         "",
-        "Listening",
-        "Reading",
-        "Spoken interaction",
-        "Spoken production",
-        "Writing",
+        strings["listening"],
+        strings["reading"],
+        strings["spoken_interaction"],
+        strings["spoken_production"],
+        strings["writing"],
     ]
     for i, lbl in enumerate(sub_labels):
         cell = r1.cells[i]
@@ -1125,8 +1118,8 @@ def build_language_table(doc: Document, languages: dict):
 
     # CEFR disclaimer
     for line in [
-        "Levels: A1/2: Basic user - B1/2: Independent user - C1/2 Proficient user",
-        "Common European Framework of Reference for Languages",
+        strings["cefr_levels"],
+        strings["cefr_reference"],
     ]:
         p = doc.add_paragraph()
         set_para_spacing(p, 0, 0)
@@ -1164,40 +1157,40 @@ def _skill_bullets(doc, label, bullets, before_pt=SKILL_SUBSECTION_SPACE):
         add_bullet_para(doc, bullet, before_pt=3, after_pt=0)
 
 
-def build_personal_skills(doc: Document, skills: dict, languages: dict):
-    section_label_with_divider(doc, "Personal Skills")
+def build_personal_skills(doc: Document, skills: dict, languages: dict, strings: dict):
+    section_label_with_divider(doc, strings["personal_skills"])
 
     # Mother tongue
     mother = languages.get("mother_tongue", [])
     two_col_para(
         doc,
-        left_text="Mother tongue(s)",
+        left_text=strings["mother_tongues"],
         right_text=", ".join(mother),
         left_color=COLOR_BLUE_DARK,
         before_pt=4,
     )
 
     # Language table
-    build_language_table(doc, languages)
+    build_language_table(doc, languages, strings)
 
     # Skill subsections with consistent spacing between them
     _skill_bullets(
         doc,
-        "Communication skills",
+        strings["communication_skills"],
         skills.get("communication", []),
         before_pt=SKILL_SUBSECTION_SPACE,
     )
 
     _skill_bullets(
         doc,
-        "Organisational / managerial skills",
+        strings["organisational_managerial_skills"],
         skills.get("organisational_managerial", []),
         before_pt=SKILL_SUBSECTION_SPACE,
     )
 
     _skill_bullets(
         doc,
-        "Computer skills",
+        strings["computer_skills"],
         skills.get("computer_skills", []),
         before_pt=SKILL_SUBSECTION_SPACE,
     )
@@ -1207,7 +1200,7 @@ def build_personal_skills(doc: Document, skills: dict, languages: dict):
     if certs:
         # First cert with label
         cert = certs[0]
-        expiry_str = fmt_cert_expiry(cert)
+        expiry_str = fmt_cert_expiry(cert, strings)
         para = doc.add_paragraph()
         para.alignment = WD_ALIGN_PARAGRAPH.LEFT
         set_para_spacing(para, SKILL_SUBSECTION_SPACE, 0)
@@ -1217,7 +1210,7 @@ def build_personal_skills(doc: Document, skills: dict, languages: dict):
             left_cm=TABLE_INDENT_CM + BULLET_INDENT_CM,
             hanging_cm=TABLE_INDENT_CM + BULLET_INDENT_CM,
         )
-        add_run(para, "Certifications", size=DEFAULT_SIZE, color=COLOR_BLUE_DARK)
+        add_run(para, strings["certifications"], size=DEFAULT_SIZE, color=COLOR_BLUE_DARK)
         para.add_run("\t")
         add_run(para, BULLET_CHAR, size=8)
         add_run(para, f"  {cert['year']} \u2013 {cert['title']} ", size=DEFAULT_SIZE)
@@ -1225,7 +1218,7 @@ def build_personal_skills(doc: Document, skills: dict, languages: dict):
 
         # Remaining certs
         for cert in certs[1:]:
-            expiry_str = fmt_cert_expiry(cert)
+            expiry_str = fmt_cert_expiry(cert, strings)
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.LEFT
             set_para_spacing(p, 3, 0)
@@ -1244,29 +1237,46 @@ def build_personal_skills(doc: Document, skills: dict, languages: dict):
 # ─────────────────────────────────────────────
 
 
-def generate_cv(cv_json: dict, output_path: str):
+def generate_cv(
+    cv_json: dict,
+    output_path: str,
+    language: str = "en",
+    sections: dict | None = None,
+):
     doc = setup_document()
+    strings = get_cv_strings(language)
+    selected_sections = normalize_sections(sections, DOCX_SECTION_DEFAULTS)
 
     pi = cv_json["personal_info"]
     tender_info = cv_json.get("tender_info", {})
     tender_info["_first_name"] = pi["first_name"]
     tender_info["_last_name"] = pi["last_name"]
 
-    build_header(doc, pi["first_name"], pi["last_name"])
-    build_footer(doc)
+    build_header(doc, pi["first_name"], pi["last_name"], strings)
+    build_footer(doc, strings)
 
-    build_personal_info(doc, pi)
-    build_proposed_role(doc, tender_info)
-    build_professional_experience(doc, pi)  # ← Now reads from personal_info
-    build_work_experience(doc, cv_json.get("work_experience", []))
-    build_profile(doc, cv_json.get("profile", ""))
-    build_requirements_matrix(doc, tender_info)
-    build_experience_overview(doc, cv_json.get("experience_overview", []))
-    build_project_experience(doc, cv_json.get("project_experience", []))
-    build_education(doc, cv_json.get("education", []))
-    build_personal_skills(
-        doc, cv_json.get("personal_skills", {}), cv_json.get("languages", {})
-    )
+    if selected_sections["personal_info"]:
+        build_personal_info(doc, pi, strings)
+    if selected_sections["proposed_role"]:
+        build_proposed_role(doc, tender_info, strings)
+    if selected_sections["professional_experience"]:
+        build_professional_experience(doc, pi, strings)  # ← Now reads from personal_info
+    if selected_sections["work_experience"]:
+        build_work_experience(doc, cv_json.get("work_experience", []), strings)
+    if selected_sections["profile"]:
+        build_profile(doc, cv_json.get("profile", ""), strings)
+    if selected_sections["requirements_matrix"]:
+        build_requirements_matrix(doc, tender_info, strings)
+    if selected_sections["experience_overview"]:
+        build_experience_overview(doc, cv_json.get("experience_overview", []), strings)
+    if selected_sections["project_experience"]:
+        build_project_experience(doc, cv_json.get("project_experience", []), strings)
+    if selected_sections["education"]:
+        build_education(doc, cv_json.get("education", []), strings)
+    if selected_sections["personal_skills"]:
+        build_personal_skills(
+            doc, cv_json.get("personal_skills", {}), cv_json.get("languages", {}), strings
+        )
 
     doc.save(output_path)
     print(f"✓ CV saved → {output_path}")
