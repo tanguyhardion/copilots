@@ -198,7 +198,7 @@ class CVGeneratorTests(unittest.TestCase):
 
     def test_docx_format_helpers_localize_output(self):
         strings = get_cv_strings("fr")
-        self.assertEqual(fmt_date("2021-01", strings), "janv. 2021")
+        self.assertEqual(fmt_date("2021-01", strings), "Janv. 2021")
         self.assertEqual(fmt_date("Present", strings), "Présent")
         self.assertEqual(fmt_cert_expiry({"expiry_year": None}, strings), "(perpétuelle)")
 
@@ -217,7 +217,7 @@ class CVGeneratorTests(unittest.TestCase):
         self.assertEqual(fake_prs.header_shape.text_frame.paragraphs[4].text, "E-mail: jean.dupont@example.com")
         self.assertEqual(
             fake_prs.experience_table.cell(0, 0).text_frame.paragraphs[0].text,
-            "janv. 2021 – Présent",
+            "Janv. 2021 – Présent",
         )
 
     def test_generate_pptx_respects_section_toggles(self):
