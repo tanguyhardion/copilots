@@ -81,7 +81,7 @@ def main():
 
     # Create native WebView window (Edge Chromium WebView2 on Windows)
     window = webview.create_window(
-        title="Copilots — Unified Suite",
+        title="Copilots",
         url=f"file:///{html_path.replace(os.sep, '/')}",
         js_api=bridge,
         width=1280,

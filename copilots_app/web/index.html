@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Copilots — Unified Desktop Suite</title>
+  <title>Copilots</title>
   <link rel="icon" type="image/png" href="../../assets/icons/copilots.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,7 +21,7 @@
         </div>
         <div class="brand-text">
           <span class="brand-title">Copilots</span>
-          <span class="brand-version">Suite v1.3</span>
+          <span class="brand-version" id="brand-version">Suite</span>
         </div>
       </div>
 
@@ -295,7 +295,7 @@
               <span>Deterministic DQ Audit Results</span>
             </div>
             <div class="audit-results-wrapper" id="cv-audit-results">
-              <div class="empty-state">Click "Audit Data Quality" to validate profile schema and European compliance.</div>
+              <div class="empty-state">Paste candidate profile JSON to automatically run the DQ audit.</div>
             </div>
           </div>
         </div>
@@ -347,10 +347,6 @@
         </div>
 
         <div class="action-bar">
-          <button class="btn btn-cv-outline" id="cv-btn-audit">
-            <i data-lucide="shield-check" class="btn-icon"></i> Audit Data Quality
-          </button>
-          <div style="flex: 1;"></div>
           <button class="btn btn-cv-secondary" id="cv-btn-generate-pptx" title="Generate 1-slide executive proposal CV based on template.pptx">
             <i data-lucide="presentation" class="btn-icon"></i> Generate 1-Slide PowerPoint (.pptx)
           </button>
@@ -361,7 +357,7 @@
 
         <footer class="status-bar" id="cv-status">
           <span class="status-indicator"></span>
-          <span class="status-text">Ready — load profile, audit quality, or compile Word .docx / PowerPoint .pptx</span>
+          <span class="status-text">Ready — paste profile JSON to audit, then compile Word .docx / PowerPoint .pptx</span>
         </footer>
       </section>
 
@@ -628,6 +624,6 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

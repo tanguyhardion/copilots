@@ -10,6 +10,8 @@ import traceback
 from typing import Dict, Any, List, Optional
 import webview
 
+from copilots_app import __version__
+
 from copilots_app.core.prompt_manager import PromptManager
 
 # PowerPoint services
@@ -59,6 +61,10 @@ class CopilotBridge:
 
     def set_window(self, window):
         self._window = window
+
+    def get_version(self) -> str:
+        """Return the application version string."""
+        return __version__
 
     # -------------------------------------------------------------------------
     # System Prompts API
