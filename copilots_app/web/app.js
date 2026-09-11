@@ -535,6 +535,34 @@ function handleExcelLoaded(res) {
    ========================================================================= */
 async function setupCVView() {
   const cvEditor = document.getElementById("cv-editor");
+  const cvLanguageSelect = document.getElementById("cv-language-select");
+  const cvOutputPathInput = document.getElementById("cv-output-path");
+  const cvSelectOutputBtn = document.getElementById("cv-btn-select-output");
+
+  const collectCVSections = (format) => {
+    const sections = {};
+    document.querySelectorAll(`#view-cv input[data-cv-format="${format}"]`).forEach((checkbox) => {
+      sections[checkbox.dataset.section] = checkbox.checked;
+    });
+    return sections;
+  };
+
+  if (cvSelectOutputBtn) {
+    cvSelectOutputBtn.addEventListener("click", async () => {
+      try {
+        const res = await window.pywebview.api.cv_select_output_folder();
+        if (res.success) {
+          cvOutputPathInput.value = res.path || "";
+          cvOutputPathInput.title = res.path || "";
+          setStatus("cv", "Output folder selected.", "success");
+        } else if (!res.cancelled) {
+          setStatus("cv", res.error || "Could not select output folder.", "error");
+        }
+      } catch (err) {
+        setStatus("cv", `Folder selection error: ${err}`, "error");
+      }
+    });
+  }
 
   // Format JSON
   document.getElementById("cv-btn-format").addEventListener("click", () => {
@@ -572,7 +600,12 @@ async function setupCVView() {
     setStatus("cv", "Generating Europass Word (.docx) document…", "info", true);
     setButtonsDisabled("view-cv", true);
     try {
-      const res = await window.pywebview.api.cv_generate_docx(cvEditor.value);
+      const res = await window.pywebview.api.cv_generate_docx(
+        cvEditor.value,
+        cvLanguageSelect.value,
+        collectCVSections("docx"),
+        cvOutputPathInput.value.trim()
+      );
       if (res.success) {
         setStatus("cv", res.message, "success");
       } else {
@@ -592,7 +625,12 @@ async function setupCVView() {
       setStatus("cv", "Generating 1-Slide Executive PowerPoint (.pptx) document…", "info", true);
       setButtonsDisabled("view-cv", true);
       try {
-        const res = await window.pywebview.api.cv_generate_pptx(cvEditor.value);
+        const res = await window.pywebview.api.cv_generate_pptx(
+          cvEditor.value,
+          cvLanguageSelect.value,
+          collectCVSections("pptx"),
+          cvOutputPathInput.value.trim()
+        );
         if (res.success) {
           setStatus("cv", res.message, "success");
         } else {
@@ -1496,7 +1534,7 @@ function openHelpModal(routeId) {
           </div>
           <div class="help-step-card">
             <div class="help-step-header"><span class="help-step-num">3</span> Compile Word or PPTX</div>
-            <p>Generate either a <strong>1-Slide Executive PowerPoint (.pptx)</strong> proposal or a comprehensive multi-page <strong>Europass Word (.docx)</strong> document.</p>
+            <p>Choose the output language, sections to include, and destination folder, then generate either a <strong>1-Slide Executive PowerPoint (.pptx)</strong> proposal or a comprehensive multi-page <strong>Europass Word (.docx)</strong> document.</p>
           </div>
         </div>
       </div>
@@ -1530,11 +1568,11 @@ function openHelpModal(routeId) {
           </div>
           <div class="help-feature-item">
             <span class="help-feature-btn-badge"><i data-lucide="presentation"></i> Generate 1-Slide PowerPoint (.pptx)</span>
-            <p class="help-feature-desc">Populates <code>template.pptx</code> in-place with candidate data, preserving exact geometry, coordinates, and typography, then opens the slide in PowerPoint.</p>
+            <p class="help-feature-desc">Populates <code>template.pptx</code> in-place with candidate data, preserving exact geometry, coordinates, and typography, while honoring the selected language, included sections, and output folder.</p>
           </div>
           <div class="help-feature-item">
             <span class="help-feature-btn-badge"><i data-lucide="file-check"></i> Generate Europass Word (.docx)</span>
-            <p class="help-feature-desc">Generates a Microsoft Word document matching the standard Europass layout with clean margins, timeline tables, and skills matrix.</p>
+            <p class="help-feature-desc">Generates a Microsoft Word document matching the standard Europass layout with clean margins, timeline tables, and skills matrix, using the selected language, included sections, and output folder.</p>
           </div>
         </div>
       </div>

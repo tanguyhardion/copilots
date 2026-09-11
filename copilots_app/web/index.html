@@ -300,6 +300,52 @@
           </div>
         </div>
 
+        <div class="panel-box cv-options-panel">
+          <div class="panel-header-simple">
+            <span>Generation Options</span>
+          </div>
+          <div class="cv-options-grid">
+            <label class="cv-option-field">
+              <span>Language</span>
+              <select id="cv-language-select" class="cv-option-input">
+                <option value="en" selected>English</option>
+                <option value="fr">Français</option>
+              </select>
+            </label>
+            <div class="cv-option-field cv-output-field">
+              <span>Output Folder</span>
+              <div class="cv-output-row">
+                <input id="cv-output-path" class="cv-option-input" type="text" readonly placeholder="Default: system temp directory">
+                <button class="btn btn-cv-outline" id="cv-btn-select-output" type="button">
+                  <i data-lucide="folder-search" class="btn-icon"></i> Browse...
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="cv-sections-grid">
+            <div class="cv-section-group">
+              <span class="cv-section-group-title">Word sections</span>
+              <label class="cv-section-option"><input type="checkbox" data-cv-format="docx" data-section="personal_info" checked> Personal information</label>
+              <label class="cv-section-option"><input type="checkbox" data-cv-format="docx" data-section="proposed_role" checked> Proposed role</label>
+              <label class="cv-section-option"><input type="checkbox" data-cv-format="docx" data-section="professional_experience" checked> Professional experience</label>
+              <label class="cv-section-option"><input type="checkbox" data-cv-format="docx" data-section="work_experience" checked> Work experience</label>
+              <label class="cv-section-option"><input type="checkbox" data-cv-format="docx" data-section="profile" checked> Profile</label>
+              <label class="cv-section-option"><input type="checkbox" data-cv-format="docx" data-section="requirements_matrix" checked> Requirements matrix</label>
+              <label class="cv-section-option"><input type="checkbox" data-cv-format="docx" data-section="experience_overview" checked> Experience overview</label>
+              <label class="cv-section-option"><input type="checkbox" data-cv-format="docx" data-section="project_experience" checked> Project experience</label>
+              <label class="cv-section-option"><input type="checkbox" data-cv-format="docx" data-section="education" checked> Education and training</label>
+              <label class="cv-section-option"><input type="checkbox" data-cv-format="docx" data-section="personal_skills" checked> Personal skills</label>
+            </div>
+            <div class="cv-section-group">
+              <span class="cv-section-group-title">PowerPoint sections</span>
+              <label class="cv-section-option"><input type="checkbox" data-cv-format="pptx" data-section="header_contact" checked> Header and contact</label>
+              <label class="cv-section-option"><input type="checkbox" data-cv-format="pptx" data-section="profile" checked> Profile summary</label>
+              <label class="cv-section-option"><input type="checkbox" data-cv-format="pptx" data-section="skills" checked> Skills</label>
+              <label class="cv-section-option"><input type="checkbox" data-cv-format="pptx" data-section="relevant_experience" checked> Relevant experience</label>
+            </div>
+          </div>
+        </div>
+
         <div class="action-bar">
           <button class="btn btn-cv-outline" id="cv-btn-audit">
             <i data-lucide="shield-check" class="btn-icon"></i> Audit Data Quality
