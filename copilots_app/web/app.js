@@ -14,6 +14,7 @@ import { setupExcelView }           from "./js/views/excel.js";
 import { setupCVView }              from "./js/views/cv.js";
 import { setupPythonView }          from "./js/views/python.js";
 import { setupOrganizerView }       from "./js/views/organizer.js";
+import { initWrapToggles }          from "./js/components/wrapToggle.js";
 
 // Wait for pywebview API to be ready
 window.addEventListener("pywebviewready", () => {
@@ -45,7 +46,21 @@ async function initApp() {
 
   navigateTo("powerpoint");
 
-  // Render all static Lucide icons
+  // Initialise wrap-toggle buttons on all main textarea editors
+  initWrapToggles([
+    "ppt-editor",
+    "word-editor",
+    "excel-protocol-editor",
+    "excel-context-text",
+    "cv-editor",
+    "python-editor",
+    "python-context-text",
+    "organizer-context-text",
+    "organizer-plan-text",
+    "modal-prompt-editor",
+  ]);
+
+  // Render all static Lucide icons (must run after wrap-toggle buttons are injected)
   if (window.lucide) lucide.createIcons();
 }
 

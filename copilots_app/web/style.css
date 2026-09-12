@@ -526,12 +526,80 @@ body, html {
   outline: none;
   overflow-y: auto;
   user-select: text;
-  white-space: pre;
+  white-space: pre-wrap; /* wrap on by default; JS toggles this */
   tab-size: 2;
 }
 
 .code-textarea::placeholder {
   color: var(--text-disabled);
+}
+
+/* =========================================================================
+   Wrap Toggle Button
+   ========================================================================= */
+.wrap-toggle-btn {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  color: var(--text-disabled);
+  transition: color var(--transition-fast), background var(--transition-fast),
+              border-color var(--transition-fast);
+  /* Prevent textarea focus-within glow from clashing */
+  outline: none;
+  flex-shrink: 0;
+}
+
+.wrap-toggle-btn:hover {
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border-subtle);
+}
+
+.wrap-toggle-btn:active {
+  transform: scale(0.9);
+}
+
+/* Highlight the button when wrap is ON */
+.wrap-toggle-btn[data-wrapped="true"] {
+  color: var(--copilot-accent, var(--primary));
+  opacity: 0.65;
+}
+
+.wrap-toggle-btn[data-wrapped="true"]:hover {
+  opacity: 1;
+  background: var(--copilot-accent-subtle, var(--primary-subtle));
+  border-color: var(--copilot-accent, var(--primary));
+}
+
+.wrap-toggle-icon {
+  width: 13px;
+  height: 13px;
+  pointer-events: none;
+  display: block;
+}
+
+/* Lucide icons rendered inside the button */
+.wrap-toggle-btn i[data-lucide] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wrap-toggle-btn svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 2;
 }
 
 /* =========================================================================
@@ -1705,15 +1773,15 @@ body, html {
 }
 
 .audit-issue-card.error {
-  border-left: 3px solid var(--error);
+  border: 1px solid color-mix(in srgb, var(--error) 40%, transparent);
 }
 
 .audit-issue-card.warning {
-  border-left: 3px solid var(--warning);
+  border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
 }
 
 .audit-issue-card.info {
-  border-left: 3px solid var(--info);
+  border: 1px solid color-mix(in srgb, var(--info) 40%, transparent);
 }
 
 /* =========================================================================

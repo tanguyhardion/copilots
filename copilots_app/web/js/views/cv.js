@@ -58,18 +58,6 @@ export async function setupCVView() {
     });
   }
 
-  // Format JSON and refresh metrics
-  document.getElementById("cv-btn-format").addEventListener("click", () => {
-    try {
-      const parsed = JSON.parse(cvEditor.value);
-      cvEditor.value = JSON.stringify(parsed, null, 2);
-      updateCVMetrics(parsed);
-      setStatus("cv", "JSON formatted successfully.", "info");
-    } catch (e) {
-      setStatus("cv", `Invalid JSON: ${e.message}`, "error");
-    }
-  });
-
   // Auto-audit on paste
   cvEditor.addEventListener("paste", async () => {
     await new Promise(r => setTimeout(r, 0));
