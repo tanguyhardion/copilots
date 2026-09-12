@@ -107,6 +107,7 @@ export async function openPromptModal(copilotKey) {
   // Tint modal primary buttons with this copilot's brand color
   const accentColor = ROUTES[copilotKey]?.badgeColor || "var(--primary)";
   modal.style.setProperty("--modal-accent", accentColor);
+  modal.setAttribute("data-copilot", copilotKey);
 
   try {
     const info = await window.pywebview.api.get_prompt_info(copilotKey);
@@ -142,6 +143,7 @@ export function openCheatsheetModal(routeId) {
   // Tint modal primary buttons with this copilot's brand color
   const accentColor = ROUTES[routeId]?.badgeColor || "var(--primary)";
   modal.style.setProperty("--modal-accent", accentColor);
+  modal.setAttribute("data-copilot", routeId);
 
   if (routeId === "powerpoint") {
     title.innerText = "PowerPoint DSL Cheatsheet & Syntax";
@@ -220,6 +222,7 @@ export function openHelpModal(routeId) {
 
   // Tint modal primary buttons with this copilot's brand color
   modal.style.setProperty("--modal-accent", routeMeta.badgeColor || "var(--primary)");
+  modal.setAttribute("data-copilot", routeId);
 
   content.innerHTML = HELP_CONTENT[routeId] || "";
 
