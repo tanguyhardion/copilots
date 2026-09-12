@@ -277,45 +277,35 @@ body, html {
 }
 
 .sidebar-footer {
-  padding: 14px 12px;
+  padding: 14px 16px;
   border-top: 1px solid var(--border-subtle);
   background: rgba(0, 0, 0, 0.15);
 }
 
-.footer-btn {
-  width: 100%;
+.author-credits {
   display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 8px 12px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-size: 12px;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.author-label {
+  font-size: 10px;
   font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.author-name {
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-secondary);
-  cursor: pointer;
-  transition: all var(--transition-fast);
+  letter-spacing: 0.2px;
+  transition: color var(--transition-fast);
 }
 
-.footer-btn:hover {
-  background: var(--bg-card-hover);
+.author-credits:hover .author-name {
   color: var(--text-primary);
-  border-color: var(--border-hover);
-}
-
-.footer-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.footer-icon svg {
-  width: 15px;
-  height: 15px;
-  stroke-width: 2;
-  opacity: 0.8;
 }
 
 /* =========================================================================
