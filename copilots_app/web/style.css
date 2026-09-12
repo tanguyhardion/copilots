@@ -678,6 +678,21 @@ body, html {
   transform: translateY(-1px);
 }
 
+/* Modal primary buttons inherit the active copilot's brand color */
+.modal-overlay .btn-primary {
+  background: linear-gradient(180deg, var(--modal-accent, #6366F1) 0%, color-mix(in srgb, var(--modal-accent, #4F46E5) 80%, #000) 100%);
+  border-color: var(--modal-accent, #6366F1);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--modal-accent, #6366F1) 40%, transparent);
+}
+
+.modal-overlay .btn-primary:hover {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--modal-accent, #6366F1) 85%, #fff) 0%, var(--modal-accent, #4F46E5) 100%);
+  border-color: color-mix(in srgb, var(--modal-accent, #6366F1) 70%, #fff);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--modal-accent, #6366F1) 50%, transparent);
+  transform: translateY(-1px);
+}
+
+
 /* Success Button (Emerald) */
 .btn-success {
   background: linear-gradient(180deg, #10B981 0%, #059669 100%);

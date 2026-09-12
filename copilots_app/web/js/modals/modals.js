@@ -104,6 +104,10 @@ export async function openPromptModal(copilotKey) {
   const title  = document.getElementById("modal-prompt-title");
   const badge  = document.getElementById("modal-prompt-badge");
 
+  // Tint modal primary buttons with this copilot's brand color
+  const accentColor = ROUTES[copilotKey]?.badgeColor || "var(--primary)";
+  modal.style.setProperty("--modal-accent", accentColor);
+
   try {
     const info = await window.pywebview.api.get_prompt_info(copilotKey);
     if (info.success) {
@@ -134,6 +138,10 @@ export function openCheatsheetModal(routeId) {
   const modal   = document.getElementById("cheatsheet-modal");
   const title   = document.getElementById("cheatsheet-title");
   const content = document.getElementById("cheatsheet-content");
+
+  // Tint modal primary buttons with this copilot's brand color
+  const accentColor = ROUTES[routeId]?.badgeColor || "var(--primary)";
+  modal.style.setProperty("--modal-accent", accentColor);
 
   if (routeId === "powerpoint") {
     title.innerText = "PowerPoint DSL Cheatsheet & Syntax";
@@ -209,6 +217,9 @@ export function openHelpModal(routeId) {
   title.innerText = `How to Use ${routeMeta.title}`;
   badge.innerText = `${routeMeta.badge || "Copilot"} · Workflow & Features`;
   if (icon) icon.style.color = routeMeta.badgeColor || "var(--primary)";
+
+  // Tint modal primary buttons with this copilot's brand color
+  modal.style.setProperty("--modal-accent", routeMeta.badgeColor || "var(--primary)");
 
   content.innerHTML = HELP_CONTENT[routeId] || "";
 
