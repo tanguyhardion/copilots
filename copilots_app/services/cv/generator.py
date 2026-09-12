@@ -1141,20 +1141,50 @@ def _skill_bullets(doc, label, bullets, before_pt=SKILL_SUBSECTION_SPACE):
     if not bullets:
         return
 
-    # First bullet on same line as label (via tab)
-    para0 = doc.add_paragraph()
-    para0.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    set_para_spacing(para0, before_pt, 0)
-    add_tab_stop(para0, TABLE_INDENT_CM, "left")
-    set_para_indent(
-        para0,
-        left_cm=TABLE_INDENT_CM + BULLET_INDENT_CM,
-        hanging_cm=TABLE_INDENT_CM + BULLET_INDENT_CM,
-    )
-    add_run(para0, label, size=DEFAULT_SIZE, color=COLOR_BLUE_DARK)
-    para0.add_run("\t")
-    add_run(para0, BULLET_CHAR, size=8)
-    add_run(para0, f"  {bullets[0]}", size=DEFAULT_SIZE)
+    lines = label.split("\n")
+    if len(lines) > 1:
+        # Preceding label lines (left column)
+        for i, line in enumerate(lines[:-1]):
+            p = doc.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            set_para_spacing(p, before_pt if i == 0 else 0, 0)
+            add_tab_stop(p, TABLE_INDENT_CM, "left")
+            set_para_indent(
+                p,
+                left_cm=TABLE_INDENT_CM + BULLET_INDENT_CM,
+                hanging_cm=TABLE_INDENT_CM + BULLET_INDENT_CM,
+            )
+            add_run(p, line, size=DEFAULT_SIZE, color=COLOR_BLUE_DARK)
+
+        # Last label line + first bullet on same line (via tab)
+        para0 = doc.add_paragraph()
+        para0.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        set_para_spacing(para0, 0, 0)
+        add_tab_stop(para0, TABLE_INDENT_CM, "left")
+        set_para_indent(
+            para0,
+            left_cm=TABLE_INDENT_CM + BULLET_INDENT_CM,
+            hanging_cm=TABLE_INDENT_CM + BULLET_INDENT_CM,
+        )
+        add_run(para0, lines[-1], size=DEFAULT_SIZE, color=COLOR_BLUE_DARK)
+        para0.add_run("\t")
+        add_run(para0, BULLET_CHAR, size=8)
+        add_run(para0, f"  {bullets[0]}", size=DEFAULT_SIZE)
+    else:
+        # First bullet on same line as label (via tab)
+        para0 = doc.add_paragraph()
+        para0.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        set_para_spacing(para0, before_pt, 0)
+        add_tab_stop(para0, TABLE_INDENT_CM, "left")
+        set_para_indent(
+            para0,
+            left_cm=TABLE_INDENT_CM + BULLET_INDENT_CM,
+            hanging_cm=TABLE_INDENT_CM + BULLET_INDENT_CM,
+        )
+        add_run(para0, label, size=DEFAULT_SIZE, color=COLOR_BLUE_DARK)
+        para0.add_run("\t")
+        add_run(para0, BULLET_CHAR, size=8)
+        add_run(para0, f"  {bullets[0]}", size=DEFAULT_SIZE)
 
     # Remaining bullets — same style as project experience bullets
     for bullet in bullets[1:]:

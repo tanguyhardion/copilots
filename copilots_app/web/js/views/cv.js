@@ -12,6 +12,20 @@ export async function setupCVView() {
   const cvLanguageSelect  = document.getElementById("cv-language-select");
   const cvOutputPathInput = document.getElementById("cv-output-path");
   const cvSelectOutputBtn = document.getElementById("cv-btn-select-output");
+  const cvOptionsPanel    = document.getElementById("cv-options-panel");
+  const cvOptionsToggle   = document.getElementById("cv-options-toggle");
+
+  // Collapsible Generation Options panel
+  if (cvOptionsToggle && cvOptionsPanel) {
+    cvOptionsToggle.addEventListener("click", () => {
+      const isCollapsed = cvOptionsPanel.classList.toggle("collapsed");
+      cvOptionsToggle.setAttribute("aria-expanded", String(!isCollapsed));
+      const hint = cvOptionsToggle.querySelector(".cv-options-hint");
+      if (hint) {
+        hint.textContent = isCollapsed ? "Click to expand" : "Click to collapse";
+      }
+    });
+  }
 
   /**
    * Collect the section checkboxes for a given output format.

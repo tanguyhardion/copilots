@@ -201,6 +201,23 @@ class CVGeneratorTests(unittest.TestCase):
         self.assertEqual(fmt_date("2021-01", strings), "Janv. 2021")
         self.assertEqual(fmt_date("Present", strings), "Présent")
         self.assertEqual(fmt_cert_expiry({"expiry_year": None}, strings), "(perpétuelle)")
+        self.assertEqual(
+            strings["organisational_managerial_skills"],
+            "Compétences organisationnelles\n/ managériales",
+        )
+
+    def test_skill_bullets_multiline_stays_in_left_column(self):
+        from docx import Document
+        from copilots_app.services.cv.generator import _skill_bullets
+        doc = Document()
+        _skill_bullets(
+            doc,
+            "Compétences organisationnelles\n/ managériales",
+            ["Bullet 1", "Bullet 2"],
+        )
+        self.assertEqual(doc.paragraphs[0].text, "Compétences organisationnelles")
+        self.assertEqual(doc.paragraphs[1].text, "/ managériales\t●  Bullet 1")
+        self.assertEqual(doc.paragraphs[2].text, "●  Bullet 2")
 
     def test_generate_pptx_localizes_labels_and_dates(self):
         fake_prs = FakePresentation()

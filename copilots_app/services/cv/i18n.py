@@ -122,7 +122,7 @@ CV_STRINGS = {
         "personal_skills": "Compétences personnelles",
         "mother_tongues": "Langue(s) maternelle(s)",
         "communication_skills": "Compétences en communication",
-        "organisational_managerial_skills": "Compétences organisationnelles / managériales",
+        "organisational_managerial_skills": "Compétences organisationnelles\n/ managériales",
         "computer_skills": "Compétences informatiques",
         "certifications": "Certifications",
         "perpetual": "(perpétuelle)",
