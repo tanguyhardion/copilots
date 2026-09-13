@@ -1,11 +1,3 @@
-# ── ICON CACHE ─────────────────────────────────────────────────────────────────
-ICON_CACHE_DIR = "icons"
-FA_BASE_URL = (
-    "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/"
-    "6.x/svgs/{style}/{icon}.svg"
-)
-VALID_ICON_STYLES = ["solid", "regular", "brands"]
-
 # ── COLOR SYSTEM ───────────────────────────────────────────────────────────────
 DEFAULT_DSL_COLORS = {
     "a1": "#A4D65E",
@@ -86,7 +78,6 @@ FLOW_TYPES = {
     "pagebreak",
     "table",
     "image",
-    "icon",
     "svg",
     "textbox",
     "page",

@@ -47,9 +47,6 @@ row="Val1","Val2",…
 ### Image
 image url=https://… [width=<px>] [height=<px>] [align=left|center|right]
 
-### Icon (Font Awesome 6)
-icon name=<fa-icon-name> [style=solid|regular|brands] [width=<px>] [height=<px>] [color=<color>] [align=left|center|right]
-
 ### Inline SVG
 svg [width=<px>] [height=<px>] [color=<color>] [align=left|center|right]
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -177,7 +174,7 @@ Floating textbox positions (page-relative, not margin-relative):
 4. Every `ul` or `ol` must be immediately followed by its `item` lines with no blank lines between them.
 5. Table `cols=` widths must sum to the table width. Use % for proportional columns.
 6. `---` creates a new page (BUILD MODE only). Use it only when the user explicitly asks for multiple pages or a page break.
-7. `icon` names must be valid Font Awesome 6 icon names in kebab-case (e.g. circle-check, house, arrow-right, chart-bar). Never use underscores.
+7. Icons are not supported in Word Copilot. Never emit `icon` directives. Use styled text, bullet characters, or inline `svg` if graphic artwork is requested.
 8. SVG blocks must start with a valid `<svg …>` tag and end with `endsvg` on its own line.
 9. `textbox` is for floating callouts, sidebars, and pull-quotes only — not for body text.
 10. Rich text segments are joined with `+`. Each segment after the first inherits nothing from the previous — always re-declare bold/italic/color/size if needed.

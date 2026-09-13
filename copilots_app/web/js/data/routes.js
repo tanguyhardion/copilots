@@ -11,6 +11,8 @@ export const ROUTES = {
     badgeColor: "var(--brand-ppt)",
     badgeSubtleColor: "var(--brand-ppt-subtle)",
     badgeGlowColor: "var(--brand-ppt-glow)",
+    bgGlowColor: "var(--brand-ppt-bg-glow)",
+    bgGlowSubtleColor: "var(--brand-ppt-bg-glow-subtle)",
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
       { id: "action-help", text: "", icon: "help-circle", title: "PowerPoint Copilot Guide", isIconOnly: true },
@@ -24,6 +26,8 @@ export const ROUTES = {
     badgeColor: "var(--brand-word)",
     badgeSubtleColor: "var(--brand-word-subtle)",
     badgeGlowColor: "var(--brand-word-glow)",
+    bgGlowColor: "var(--brand-word-bg-glow)",
+    bgGlowSubtleColor: "var(--brand-word-bg-glow-subtle)",
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
       { id: "action-help", text: "", icon: "help-circle", title: "Word Copilot Guide", isIconOnly: true },
@@ -37,6 +41,8 @@ export const ROUTES = {
     badgeColor: "var(--brand-excel)",
     badgeSubtleColor: "var(--brand-excel-subtle)",
     badgeGlowColor: "var(--brand-excel-glow)",
+    bgGlowColor: "var(--brand-excel-bg-glow)",
+    bgGlowSubtleColor: "var(--brand-excel-bg-glow-subtle)",
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
       { id: "action-help", text: "", icon: "help-circle", title: "Excel Copilot Guide", isIconOnly: true },
@@ -50,6 +56,8 @@ export const ROUTES = {
     badgeColor: "var(--brand-cv)",
     badgeSubtleColor: "var(--brand-cv-subtle)",
     badgeGlowColor: "var(--brand-cv-glow)",
+    bgGlowColor: "var(--brand-cv-bg-glow)",
+    bgGlowSubtleColor: "var(--brand-cv-bg-glow-subtle)",
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
       { id: "action-help", text: "", icon: "help-circle", title: "CV Copilot Guide", isIconOnly: true },
@@ -63,6 +71,8 @@ export const ROUTES = {
     badgeColor: "var(--brand-python)",
     badgeSubtleColor: "var(--brand-python-subtle)",
     badgeGlowColor: "var(--brand-python-glow)",
+    bgGlowColor: "var(--brand-python-bg-glow)",
+    bgGlowSubtleColor: "var(--brand-python-bg-glow-subtle)",
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
       { id: "action-help", text: "", icon: "help-circle", title: "Python Copilot Guide", isIconOnly: true },
@@ -76,6 +86,8 @@ export const ROUTES = {
     badgeColor: "var(--brand-organizer)",
     badgeSubtleColor: "var(--brand-organizer-subtle)",
     badgeGlowColor: "var(--brand-organizer-glow)",
+    bgGlowColor: "var(--brand-organizer-bg-glow)",
+    bgGlowSubtleColor: "var(--brand-organizer-bg-glow-subtle)",
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
       { id: "action-help", text: "", icon: "help-circle", title: "Folder Organizer Copilot Guide", isIconOnly: true },

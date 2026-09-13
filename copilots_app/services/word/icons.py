@@ -5,38 +5,9 @@ import tempfile
 import requests
 import urllib3
 
-from copilots_app.services.word.constants import ICON_CACHE_DIR, FA_BASE_URL, VALID_ICON_STYLES
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-
 def download_icon(icon_name, style="solid"):
-    if style not in VALID_ICON_STYLES:
-        style = "solid"
-    style_dir = os.path.join(ICON_CACHE_DIR, style)
-    os.makedirs(style_dir, exist_ok=True)
-    file_path = os.path.join(style_dir, f"{icon_name}.svg")
-    if os.path.exists(file_path):
-        return file_path
-    url = FA_BASE_URL.format(style=style, icon=icon_name)
-    try:
-        r = requests.get(url, verify=False, timeout=10)
-        if r.status_code == 200:
-            with open(file_path, "wb") as f:
-                f.write(r.content)
-            return file_path
-        for alt in VALID_ICON_STYLES:
-            if alt == style:
-                continue
-            r2 = requests.get(
-                FA_BASE_URL.format(style=alt, icon=icon_name), verify=False, timeout=10
-            )
-            if r2.status_code == 200:
-                print(f"[icon] '{icon_name}' available as style '{alt}'")
-        return None
-    except Exception as e:
-        print(f"[icon] Download error '{icon_name}': {e}")
-        return None
+    """Disabled: icon downloading and generation are disabled in Word Copilot."""
+    return None
 
 
 def colorize_svg(svg_path, hex_color):

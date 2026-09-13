@@ -4,14 +4,14 @@
    ========================================================================= */
 
 :root {
-  /* Ultra-refined dark canvas & elevated surfaces */
-  --bg-dark: #0B0D13;
-  --bg-surface: #11141E;
-  --bg-surface-elevated: #161A28;
-  --bg-card: #151926;
-  --bg-card-hover: #1C2234;
-  --bg-input: #0E1018;
-  --bg-glass: rgba(17, 20, 30, 0.75);
+  /* Ultra-refined neutral dark canvas & elevated surfaces */
+  --bg-dark: #09090B;
+  --bg-surface: #121215;
+  --bg-surface-elevated: #18181B;
+  --bg-card: #161619;
+  --bg-card-hover: #202024;
+  --bg-input: #0D0D10;
+  --bg-glass: rgba(18, 18, 21, 0.75);
   
   /* Borders & Dividers */
   --border-subtle: rgba(255, 255, 255, 0.05);
@@ -19,11 +19,11 @@
   --border-hover: rgba(255, 255, 255, 0.16);
   --border-focus: rgba(99, 102, 241, 0.5);
 
-  /* Typography Colors */
-  --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
-  --text-disabled: #475569;
+  /* Typography Colors (Clean Neutral) */
+  --text-primary: #F4F4F5;
+  --text-secondary: #A1A1AA;
+  --text-muted: #71717A;
+  --text-disabled: #52525B;
 
   /* Accent & Vibrant Brand Colors */
   --primary: #6366F1;
@@ -34,30 +34,56 @@
   --brand-ppt: #F97316;
   --brand-ppt-glow: rgba(249, 115, 22, 0.25);
   --brand-ppt-subtle: rgba(249, 115, 22, 0.12);
+  --brand-ppt-bg-glow: rgba(249, 115, 22, 0.08);
+  --brand-ppt-bg-glow-subtle: rgba(249, 115, 22, 0.035);
+  --brand-ppt-bg-glow: rgba(249, 115, 22, 0.15);
+  --brand-ppt-bg-glow-subtle: rgba(249, 115, 22, 0.07);
 
   --brand-word: #3B82F6;
   --brand-word-glow: rgba(59, 130, 246, 0.25);
   --brand-word-subtle: rgba(59, 130, 246, 0.12);
+  --brand-word-bg-glow: rgba(59, 130, 246, 0.08);
+  --brand-word-bg-glow-subtle: rgba(59, 130, 246, 0.035);
+  --brand-word-bg-glow: rgba(59, 130, 246, 0.15);
+  --brand-word-bg-glow-subtle: rgba(59, 130, 246, 0.07);
 
   --brand-excel: #10B981;
   --brand-excel-glow: rgba(16, 185, 129, 0.25);
   --brand-excel-subtle: rgba(16, 185, 129, 0.12);
+  --brand-excel-bg-glow: rgba(16, 185, 129, 0.08);
+  --brand-excel-bg-glow-subtle: rgba(16, 185, 129, 0.035);
+  --brand-excel-bg-glow: rgba(16, 185, 129, 0.15);
+  --brand-excel-bg-glow-subtle: rgba(16, 185, 129, 0.07);
 
   --brand-cv: #8B5CF6;
   --brand-cv-glow: rgba(139, 92, 246, 0.25);
   --brand-cv-subtle: rgba(139, 92, 246, 0.12);
+  --brand-cv-bg-glow: rgba(139, 92, 246, 0.08);
+  --brand-cv-bg-glow-subtle: rgba(139, 92, 246, 0.035);
+  --brand-cv-bg-glow: rgba(139, 92, 246, 0.15);
+  --brand-cv-bg-glow-subtle: rgba(139, 92, 246, 0.07);
 
   --brand-python: #EAB308;
   --brand-python-glow: rgba(234, 179, 8, 0.28);
   --brand-python-subtle: rgba(234, 179, 8, 0.12);
+  --brand-python-bg-glow: rgba(234, 179, 8, 0.08);
+  --brand-python-bg-glow-subtle: rgba(234, 179, 8, 0.035);
+  --brand-python-bg-glow: rgba(234, 179, 8, 0.15);
+  --brand-python-bg-glow-subtle: rgba(234, 179, 8, 0.07);
 
   --brand-organizer: #D946EF;
   --brand-organizer-glow: rgba(217, 70, 239, 0.25);
   --brand-organizer-subtle: rgba(217, 70, 239, 0.12);
+  --brand-organizer-bg-glow: rgba(217, 70, 239, 0.08);
+  --brand-organizer-bg-glow-subtle: rgba(217, 70, 239, 0.035);
+  --brand-organizer-bg-glow: rgba(217, 70, 239, 0.15);
+  --brand-organizer-bg-glow-subtle: rgba(217, 70, 239, 0.07);
 
   --copilot-accent: var(--primary);
   --copilot-accent-subtle: var(--primary-subtle);
   --copilot-accent-glow: var(--primary-glow);
+  --copilot-bg-glow: var(--brand-ppt-bg-glow);
+  --copilot-bg-glow-subtle: var(--brand-ppt-bg-glow-subtle);
 
   /* Semantic Feedback */
   --success: #10B981;
@@ -114,9 +140,7 @@ body, html {
   display: flex;
   width: 100vw;
   height: 100vh;
-  background: radial-gradient(circle at 80% 0%, rgba(99, 102, 241, 0.04) 0%, transparent 40%),
-              radial-gradient(circle at 10% 100%, rgba(139, 92, 246, 0.03) 0%, transparent 40%),
-              var(--bg-dark);
+  background-color: var(--bg-dark);
 }
 
 /* =========================================================================
@@ -277,7 +301,7 @@ body, html {
 }
 
 .sidebar-footer {
-  padding: 14px 16px;
+  padding: 10px 14px;
   border-top: 1px solid var(--border-subtle);
   background: rgba(0, 0, 0, 0.15);
 }
@@ -289,7 +313,7 @@ body, html {
 }
 
 .author-label {
-  font-size: 10px;
+  font-size: 8.5px;
   font-weight: 500;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -297,7 +321,7 @@ body, html {
 }
 
 .author-name {
-  font-size: 12px;
+  font-size: 10.5px;
   font-weight: 600;
   color: var(--text-secondary);
   letter-spacing: 0.2px;
@@ -309,7 +333,7 @@ body, html {
 }
 
 /* =========================================================================
-   Main Content Area
+   Main Content Area & Ambient Dynamic Background Glow
    ========================================================================= */
 .main-container {
   flex: 1;
@@ -318,12 +342,39 @@ body, html {
   height: 100vh;
   overflow: hidden;
   background-color: var(--bg-dark);
+  position: relative;
+  isolation: isolate;
+}
+
+/* Faint ambient glow & gradient unique to each selected copilot */
+/* Ambient background glow & gradient unique to each selected copilot */
+.main-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 55% at 85% 0%, var(--copilot-bg-glow, rgba(99, 102, 241, 0.08)) 0%, transparent 68%),
+    radial-gradient(ellipse 55% 45% at 10% 100%, var(--copilot-bg-glow-subtle, rgba(99, 102, 241, 0.035)) 0%, transparent 60%),
+    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--copilot-accent, #6366F1) 2.5%, transparent) 0%, transparent 70%);
+    radial-gradient(ellipse 75% 60% at 85% 0%, var(--copilot-bg-glow, rgba(99, 102, 241, 0.15)) 0%, color-mix(in srgb, var(--copilot-accent, #6366F1) 5%, transparent) 45%, transparent 72%),
+    radial-gradient(ellipse 60% 50% at 10% 100%, var(--copilot-bg-glow-subtle, rgba(99, 102, 241, 0.07)) 0%, transparent 65%),
+    radial-gradient(circle at 50% 25%, color-mix(in srgb, var(--copilot-accent, #6366F1) 4%, transparent) 0%, transparent 68%);
+  transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main-container > * {
+  position: relative;
+  z-index: 1;
 }
 
 .app-header {
   height: 64px;
   min-height: 64px;
-  background-color: var(--bg-surface);
+  background-color: rgba(18, 18, 21, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
@@ -606,7 +657,9 @@ body, html {
    Bottom Action Bar
    ========================================================================= */
 .action-bar {
-  background: var(--bg-surface);
+  background: rgba(18, 18, 21, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--border-color);
   padding: 10px 20px;
   display: flex;
@@ -689,7 +742,7 @@ body, html {
 .modal-overlay[style*="--brand-python"] .btn-primary,
 .modal-overlay[style*="#EAB308"] .btn-primary,
 .modal-overlay[style*="rgb(234, 179, 8)"] .btn-primary {
-  color: #0F172A !important;
+  color: #09090B !important;
   font-weight: 600;
 }
 
@@ -698,8 +751,8 @@ body, html {
 .modal-overlay[style*="--brand-python"] .btn-primary svg,
 .modal-overlay[style*="#EAB308"] .btn-primary svg,
 .modal-overlay[style*="rgb(234, 179, 8)"] .btn-primary svg {
-  color: #0F172A !important;
-  stroke: #0F172A !important;
+  color: #09090B !important;
+  stroke: #09090B !important;
 }
 
 .modal-overlay .btn-primary:hover {
@@ -713,7 +766,7 @@ body, html {
 .modal-overlay[style*="--brand-python"] .btn-primary:hover,
 .modal-overlay[style*="#EAB308"] .btn-primary:hover,
 .modal-overlay[style*="rgb(234, 179, 8)"] .btn-primary:hover {
-  color: #0F172A !important;
+  color: #09090B !important;
 }
 
 .modal-overlay[data-copilot="python"] .btn-primary:hover svg,
@@ -721,8 +774,8 @@ body, html {
 .modal-overlay[style*="--brand-python"] .btn-primary:hover svg,
 .modal-overlay[style*="#EAB308"] .btn-primary:hover svg,
 .modal-overlay[style*="rgb(234, 179, 8)"] .btn-primary:hover svg {
-  color: #0F172A !important;
-  stroke: #0F172A !important;
+  color: #09090B !important;
+  stroke: #09090B !important;
 }
 
 
@@ -985,7 +1038,7 @@ body, html {
 .btn-python-primary, .btn-python {
   background: linear-gradient(180deg, #EAB308 0%, #CA8A04 100%);
   border-color: #FDE047;
-  color: #0F172A;
+  color: #09090B;
   font-weight: 600;
   box-shadow: 0 2px 10px var(--brand-python-glow), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
@@ -999,14 +1052,14 @@ body, html {
 #python-btn-run .btn-icon,
 #python-btn-run svg,
 #python-btn-run i {
-  color: #0F172A !important;
-  stroke: #0F172A !important;
+  color: #09090B !important;
+  stroke: #09090B !important;
 }
 
 .btn-python-primary:hover, .btn-python:hover {
   background: linear-gradient(180deg, #FACC15 0%, #D97706 100%);
   border-color: #FEF08A;
-  color: #0F172A;
+  color: #09090B;
   box-shadow: 0 4px 16px rgba(234, 179, 8, 0.45);
   transform: translateY(-1px);
 }
@@ -1020,8 +1073,8 @@ body, html {
 #python-btn-run:hover .btn-icon,
 #python-btn-run:hover svg,
 #python-btn-run:hover i {
-  color: #0F172A !important;
-  stroke: #0F172A !important;
+  color: #09090B !important;
+  stroke: #09090B !important;
 }
 
 .btn-python-secondary {
@@ -1152,7 +1205,9 @@ body, html {
    Status Bar
    ========================================================================= */
 .status-bar {
-  background-color: var(--bg-surface);
+  background-color: rgba(18, 18, 21, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--border-subtle);
   padding: 7px 20px;
   display: flex;
@@ -1208,7 +1263,7 @@ body, html {
 }
 
 .metric-card {
-  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(21, 25, 38, 0.6) 100%);
+  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(24, 24, 27, 0.6) 100%);
   border: 1px solid var(--border-color);
   border-radius: 9px;
   padding: 10px 14px;
@@ -1775,6 +1830,18 @@ body, html {
 }
 
 .toggle-input:checked ~ .toggle-track {
+  background: var(--copilot-accent, var(--brand-excel));
+  border-color: var(--copilot-accent, var(--brand-excel));
+  box-shadow: 0 0 8px var(--copilot-accent-glow, var(--brand-excel-glow));
+}
+
+#view-excel .toggle-input:checked ~ .toggle-track {
+  background: var(--brand-excel);
+  border-color: var(--brand-excel);
+  box-shadow: 0 0 8px var(--brand-excel-glow);
+}
+
+#view-python .toggle-input:checked ~ .toggle-track {
   background: var(--brand-python);
   border-color: var(--brand-python);
   box-shadow: 0 0 8px var(--brand-python-glow);
@@ -1795,6 +1862,14 @@ body, html {
 }
 
 .toggle-input:checked ~ .toggle-text {
+  color: var(--copilot-accent, var(--brand-excel));
+}
+
+#view-excel .toggle-input:checked ~ .toggle-text {
+  color: var(--brand-excel);
+}
+
+#view-python .toggle-input:checked ~ .toggle-text {
   color: var(--brand-python);
 }
 

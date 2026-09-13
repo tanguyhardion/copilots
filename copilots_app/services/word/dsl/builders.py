@@ -1,6 +1,6 @@
 import re
 from copilots_app.services.word.colors import dsl_resolve_color
-from copilots_app.services.word.constants import MARGIN_PX, VALID_ICON_STYLES
+from copilots_app.services.word.constants import MARGIN_PX
 
 
 def parse_text_segment(seg):
@@ -202,34 +202,8 @@ def build_image_elem(fields, source_line=None):
 
 
 def build_icon_elem(fields, source_line=None):
-    name = fields.get("name", "").strip()
-    if not name:
-        print(f"[dsl] line {source_line}: icon missing 'name='")
-        return None
-    style = fields.get("style", "solid").lower()
-    elem = {
-        "type": "icon",
-        "icon_name": name,
-        "icon_style": style if style in VALID_ICON_STYLES else "solid",
-        "_source_line": source_line,
-    }
-    if "width" in fields:
-        try:
-            elem["width"] = float(fields["width"])
-        except ValueError:
-            pass
-    if "height" in fields:
-        try:
-            elem["height"] = float(fields["height"])
-        except ValueError:
-            pass
-    if "color" in fields:
-        resolved = dsl_resolve_color(fields["color"])
-        if resolved:
-            elem["icon_color"] = resolved
-    align = fields.get("align", "left").lower()
-    elem["align"] = align if align in ("left", "center", "right") else "left"
-    return elem
+    print(f"[dsl] line {source_line}: icon element is disabled in Word Copilot (skipped)")
+    return None
 
 
 def build_svg_elem(fields, svg_markup, source_line=None):

@@ -9,19 +9,19 @@ import os
 
 @dataclass(frozen=True)
 class AppPalette:
-    # Backgrounds
-    BG_DARK = "#12141C"
-    BG_SURFACE = "#181B26"
-    BG_CARD = "#1F2332"
-    BG_CARD_HOVER = "#272C3F"
-    BG_INPUT = "#161822"
-    BORDER_COLOR = "#2D3247"
-    BORDER_LIGHT = "#3B425D"
+    # Backgrounds (Clean Neutral Dark)
+    BG_DARK = "#09090B"
+    BG_SURFACE = "#121215"
+    BG_CARD = "#161619"
+    BG_CARD_HOVER = "#202024"
+    BG_INPUT = "#0D0D10"
+    BORDER_COLOR = "#27272A"
+    BORDER_LIGHT = "#3F3F46"
 
-    # Text
-    TEXT_PRIMARY = "#F3F4F6"
-    TEXT_SECONDARY = "#9CA3AF"
-    TEXT_MUTED = "#6B7280"
+    # Text (Clean Neutral)
+    TEXT_PRIMARY = "#F4F4F5"
+    TEXT_SECONDARY = "#A1A1AA"
+    TEXT_MUTED = "#71717A"
 
     # Brand Colors
     BRAND_PPT = "#D24726"      # PowerPoint Red-Orange

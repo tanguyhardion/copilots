@@ -7,7 +7,6 @@ from copilots_app.services.word.dsl.builders import (
     build_list_item,
     build_hr,
     build_image_elem,
-    build_icon_elem,
     build_svg_elem,
     build_table_elem,
     build_textbox_elem,
@@ -142,9 +141,7 @@ def parse_dsl(dsl_string):
             i += 1
 
         elif elem_type == "icon":
-            elem = build_icon_elem(fields, source_line)
-            if elem:
-                elements.append(elem)
+            print(f"[dsl] line {source_line}: icon element is disabled in Word Copilot (skipped)")
             i += 1
 
         elif elem_type == "svg":

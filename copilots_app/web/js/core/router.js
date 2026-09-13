@@ -46,10 +46,16 @@ export function navigateTo(routeId) {
   document.getElementById("header-subtitle").innerText = routeMeta.subtitle;
   document.getElementById("header-icon").src = routeMeta.icon;
 
-  // Apply per-copilot accent CSS variables
+  // Apply per-copilot accent & ambient background glow CSS variables
   document.documentElement.style.setProperty("--copilot-accent", routeMeta.badgeColor);
   document.documentElement.style.setProperty("--copilot-accent-subtle", routeMeta.badgeSubtleColor || "var(--primary-subtle)");
   document.documentElement.style.setProperty("--copilot-accent-glow", routeMeta.badgeGlowColor || "var(--primary-glow)");
+  document.documentElement.style.setProperty("--copilot-bg-glow", routeMeta.bgGlowColor || "rgba(99, 102, 241, 0.08)");
+  document.documentElement.style.setProperty("--copilot-bg-glow-subtle", routeMeta.bgGlowSubtleColor || "rgba(99, 102, 241, 0.03)");
+
+  document.body.setAttribute("data-active-copilot", routeId);
+  const mainContainer = document.querySelector(".main-container");
+  if (mainContainer) mainContainer.setAttribute("data-copilot", routeId);
 
   const badge = document.getElementById("header-badge");
   badge.innerText = routeMeta.badge;

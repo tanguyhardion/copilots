@@ -38,7 +38,7 @@ def parse_edit_dsl(dsl_string):
       {"op": "insert_after",  "target_id": N, "elements": [...]}
       {"op": "insert_at", "position": "end", "elements": [...]}
     Element sub-blocks are parsed with the existing parse_dsl(), so every
-    normal element type (h1-h6, p, ul/ol, table, image, icon, svg, textbox)
+    normal element type (h1-h6, p, ul/ol, table, image, svg, textbox)
     works unchanged inside replace/insert_* blocks.
     """
     raw_lines = dsl_string.strip().split("\n")

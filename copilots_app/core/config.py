@@ -4,6 +4,7 @@ Application configuration and persistent settings manager.
 
 import os
 import json
+import tempfile
 from pathlib import Path
 from dataclasses import dataclass, asdict
 from typing import Dict, Any
@@ -14,7 +15,7 @@ class AppSettings:
     dark_mode: bool = True
     default_copilot: str = "powerpoint"
     auto_backup: bool = True
-    svg_cache_dir: str = "icons"
+    svg_cache_dir: str = os.path.join(tempfile.gettempdir(), "powerpoint_icons")
     recent_files: list[str] = None
 
     def __post_init__(self):

@@ -12,7 +12,6 @@ from copilots_app.services.word.constants import (
     USABLE_W_PX,
 )
 from copilots_app.services.word.icons import (
-    download_icon,
     colorize_svg,
     get_svg_aspect_ratio,
     svg_to_png,
@@ -39,17 +38,8 @@ class WordConnector:
         return self.word_app
 
     def _prefetch_icons(self, elements, status_cb=None):
-        icon_elems = [e for e in elements if e.get("type") == "icon"]
-        cache = {}
-        for idx, e in enumerate(icon_elems):
-            name = e["icon_name"]
-            style = e.get("icon_style", "solid")
-            key = (name, style)
-            if key not in cache:
-                if status_cb:
-                    status_cb(f"Downloading icon {idx+1}/{len(icon_elems)}: {name}…")
-                cache[key] = download_icon(name, style)
-        return cache
+        # Icon generation is disabled in Word Copilot
+        return {}
 
     def build_and_open(self, pages_data, status_cb=None):
         import pythoncom
@@ -201,7 +191,8 @@ class WordConnector:
         elif t == "image":
             self._render_image(doc, elem, usable_w_px)
         elif t == "icon":
-            self._render_icon(doc, elem, icon_cache, usable_w_px)
+            # Icon generation is disabled in Word Copilot
+            pass
         elif t == "svg":
             self._render_svg(doc, elem, usable_w_px)
         elif t == "table":
@@ -391,44 +382,8 @@ class WordConnector:
             p.runs[0].italic = True
 
     def _render_icon(self, doc, elem, icon_cache, usable_w_px):
-        from docx.enum.text import WD_ALIGN_PARAGRAPH
-
-        name = elem.get("icon_name", "question")
-        style = elem.get("icon_style", "solid")
-        color = elem.get("icon_color")
-        width = elem.get("width", 32)
-        align = elem.get("align", "left")
-        svg_path = icon_cache.get((name, style))
-        if not svg_path or not os.path.exists(svg_path):
-            p = doc.add_paragraph(f"[Icon: {name}]")
-            p.runs[0].italic = True
-            return
-        working_path = colorize_svg(svg_path, color) if color else svg_path
-        aspect = get_svg_aspect_ratio(working_path)
-        if aspect <= 0:
-            aspect = 1.0
-        height = width / aspect
-        png_path = svg_to_png(
-            working_path,
-            width_px=max(1, int(width * 2)),
-            height_px=max(1, int(height * 2)),
-        )
-        insert_path = (
-            png_path if png_path and os.path.exists(png_path) else working_path
-        )
-        try:
-            para = doc.add_paragraph()
-            align_map = {
-                "left": WD_ALIGN_PARAGRAPH.LEFT,
-                "center": WD_ALIGN_PARAGRAPH.CENTER,
-                "right": WD_ALIGN_PARAGRAPH.RIGHT,
-            }
-            para.alignment = align_map.get(align, WD_ALIGN_PARAGRAPH.LEFT)
-            run = para.add_run()
-            run.add_picture(os.path.abspath(insert_path), width=px_to_emu(width))
-        except Exception as e:
-            print(f"[icon] Insert failed for '{name}': {e}")
-            doc.add_paragraph(f"[Icon: {name}]").runs[0].italic = True
+        # Icon generation is disabled in Word Copilot
+        pass
 
     def _render_svg(self, doc, elem, usable_w_px):
         from docx.enum.text import WD_ALIGN_PARAGRAPH

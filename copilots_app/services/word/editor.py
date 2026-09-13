@@ -19,7 +19,7 @@ class WordEditor:
     element through the *existing* WordConnector._render_elem into a
     disposable scratch Document(), then deep-copying the resulting
     <w:p>/<w:tbl> XML nodes into the target document. This reuses every
-    existing renderer (headings, tables, icons, svg, textboxes, lists...)
+    existing renderer (headings, tables, svg, textboxes, lists...)
     without duplicating any rendering logic.
     """
 

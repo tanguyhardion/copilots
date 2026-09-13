@@ -25,7 +25,7 @@ from copilots_app.services.powerpoint.constants import (
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ── ICON CACHE ────────────────────────────────────────────────────────────────
-ICON_CACHE_DIR = "icons"
+ICON_CACHE_DIR = os.path.join(tempfile.gettempdir(), "powerpoint_icons")
 FA_BASE_URL = (
     "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/"
     "6.x/svgs/{style}/{icon}.svg"
