@@ -272,11 +272,7 @@ const HELP_CONTENT = {
       <div class="help-section-title"><i data-lucide="mouse-pointer"></i> Functions &amp; Buttons Explained</div>
       <div class="help-feature-list">
         <div class="help-feature-item">
-          <span class="help-feature-btn-badge"><i data-lucide="settings"></i> System Prompt</span>
-          <p class="help-feature-desc">Opens the system prompt modal. View the default prompt instructions that teach LLMs how to construct valid DSL, or customize and save persistent overrides.</p>
-        </div>
-        <div class="help-feature-item">
-          <span class="help-feature-btn-badge"><i data-lucide="clipboard"></i> Copy to Clipboard</span>
+          <span class="help-feature-btn-badge"><i data-lucide="clipboard"></i> Copy Shapes to Clipboard</span>
           <p class="help-feature-desc">Compiles the DSL shapes into native PowerPoint drawing objects and places them onto the Windows Clipboard. You can then switch to any slide in PowerPoint and press <code>Ctrl+V</code>.</p>
         </div>
         <div class="help-feature-item">
@@ -347,12 +343,12 @@ const HELP_CONTENT = {
       <div class="help-section-title"><i data-lucide="compass"></i> End-to-End Workflow</div>
       <div class="help-steps-grid">
         <div class="help-step-card">
-          <div class="help-step-header"><span class="help-step-num">1</span> Connect &amp; Analyze</div>
-          <p>Click <strong>Connect Active</strong> to attach to an open Excel workbook, or <strong>Open Workbook</strong> to select a file. The analyzer inspects sheet schemas, tables, and formulas.</p>
-        </div>
-        <div class="help-step-card">
           <div class="help-step-header"><span class="help-step-num">2</span> Copy Context to LLM</div>
           <p>Switch to the <strong>LLM Prompt Context</strong> tab and click <em>Copy Context</em>. Paste this alongside your prompt into your LLM to request data manipulations.</p>
+        </div>
+        <div class="help-step-card">
+          <div class="help-step-header"><span class="help-step-num">1</span> Connect &amp; Analyze</div>
+          <p>Click <strong>Connect Active</strong> to attach to an open Excel workbook, or <strong>Open Workbook</strong> to select a file. The analyzer inspects sheet schemas, tables, and formulas.</p>
         </div>
         <div class="help-step-card">
           <div class="help-step-header"><span class="help-step-num">3</span> Validate &amp; Execute</div>
@@ -436,14 +432,6 @@ const HELP_CONTENT = {
       <div class="help-section-title"><i data-lucide="mouse-pointer"></i> Functions &amp; Buttons Explained</div>
       <div class="help-feature-list">
         <div class="help-feature-item">
-          <span class="help-feature-btn-badge">Format JSON</span>
-          <p class="help-feature-desc">Pretty-prints and validates the JSON document in the editor, updating the top candidate metrics.</p>
-        </div>
-        <div class="help-feature-item">
-          <span class="help-feature-btn-badge"><i data-lucide="shield-check"></i> Audit Data Quality</span>
-          <p class="help-feature-desc">Executes the Data Quality (DQ) rulebook, outputting a composite compliance score, pass/fail state, and actionable issues for missing fields or malformed data.</p>
-        </div>
-        <div class="help-feature-item">
           <span class="help-feature-btn-badge"><i data-lucide="presentation"></i> Generate 1-Slide PowerPoint (.pptx)</span>
           <p class="help-feature-desc">Populates <code>template.pptx</code> in-place with candidate data, preserving exact geometry, coordinates, and typography, while honoring the selected language, included sections, and output folder.</p>
         </div>
@@ -495,15 +483,15 @@ const HELP_CONTENT = {
           <p class="help-feature-desc">Quickly resets the Python script editor to write or paste a new script.</p>
         </div>
         <div class="help-feature-item">
-          <span class="help-feature-btn-badge"><i data-lucide="folder-open"></i> Open Folder / Explorer</span>
+          <span class="help-feature-btn-badge"><i data-lucide="folder-open"></i></span>
           <p class="help-feature-desc">Opens the active sandbox working directory in Windows File Explorer so you can view all outputs or add input files.</p>
         </div>
         <div class="help-feature-item">
-          <span class="help-feature-btn-badge"><i data-lucide="copy"></i> Copy Folder Context</span>
+          <span class="help-feature-btn-badge"><i data-lucide="copy"></i></span>
           <p class="help-feature-desc">Generates and copies a structured markdown directory listing to clipboard, making it effortless to prompt an LLM about files in your workspace.</p>
         </div>
         <div class="help-feature-item">
-          <span class="help-feature-btn-badge"><i data-lucide="trash-2"></i> Clear Sandbox</span>
+          <span class="help-feature-btn-badge"><i data-lucide="trash-2"></i></span>
           <p class="help-feature-desc">Purges all generated files and artifacts in the sandbox workspace to start fresh.</p>
         </div>
       </div>

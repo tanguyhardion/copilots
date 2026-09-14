@@ -94,7 +94,7 @@ def main():
     bridge.set_window(window)
 
     # Start pywebview event loop (set icon and maximize on load)
-    webview.start(debug=False, func=lambda: on_startup(window))
+    webview.start(debug=True, func=lambda: on_startup(window))
 
 
 if __name__ == "__main__":
