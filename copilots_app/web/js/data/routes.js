@@ -79,7 +79,7 @@ export const ROUTES = {
     ]
   },
   organizer: {
-    title: "Folder/File Organizer Copilot",
+    title: "Files Copilot",
     subtitle: "Analyze recursive folder context, prepare LLM-ready summaries, and execute safe copy-only reorganization plans",
     icon: "../../assets/icons/folder-organizer.png",
     badge: "Folder DSL + Safe Copy",
@@ -90,7 +90,7 @@ export const ROUTES = {
     bgGlowSubtleColor: "var(--brand-organizer-bg-glow-subtle)",
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
-      { id: "action-help", text: "", icon: "help-circle", title: "Folder Organizer Copilot Guide", isIconOnly: true },
+      { id: "action-help", text: "", icon: "help-circle", title: "Files Copilot Guide", isIconOnly: true },
     ]
   }
 };

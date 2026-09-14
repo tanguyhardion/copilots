@@ -1,5 +1,5 @@
 /**
- * Folder/File Organizer Copilot view controller.
+ * Files Copilot view controller.
  */
 
 import { setStatus } from "../core/utils.js";

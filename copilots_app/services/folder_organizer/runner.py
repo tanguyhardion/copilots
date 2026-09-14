@@ -1,5 +1,5 @@
 """
-Folder/File Organizer runner.
+Files Copilot runner.
 Builds recursive folder context for LLM prompting and executes copy-only
 reorganization plans described in a simple DSL.
 """
@@ -77,7 +77,7 @@ class FolderOrganizerRunner:
 
         context_markdown = "\n".join(
             [
-                "# Folder Organizer Context",
+                "# Files Copilot Context",
                 f"Source root: `{source_root}`",
                 "",
                 "## Recursive Tree",

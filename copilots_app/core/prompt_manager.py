@@ -31,7 +31,7 @@ class PromptManager:
         "excel": "Excel Copilot System Prompt",
         "cv": "CV Copilot System Prompt",
         "python": "Python Copilot System Prompt",
-        "organizer": "Folder/File Organizer Copilot System Prompt",
+        "organizer": "Files Copilot System Prompt",
     }
 
     _instance = None

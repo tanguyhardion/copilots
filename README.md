@@ -7,7 +7,7 @@ A unified, maintainable, and modern desktop application built with **pywebview**
 3. **Excel Copilot** — Air-gapped semantic analyzer, LLM context generator, and deterministic JSON Action Protocol executor.
 4. **CV Copilot** — Deterministic Data Quality (DQ) validation engine and standard Europass Word (.docx) generator.
 5. **Python Copilot** — Sandboxed script execution, artifact inspection, and folder context export for LLM loops.
-6. **Folder/File Organizer Copilot** — Recursive folder summarization and safe copy-only reorganization from DSL plans.
+6. **Files Copilot** — Recursive folder summarization and safe copy-only reorganization from DSL plans.
 
 ---
 

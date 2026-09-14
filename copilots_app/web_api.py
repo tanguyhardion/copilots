@@ -499,7 +499,7 @@ class CopilotBridge:
             return {"success": False, "error": str(err)}
 
     # -------------------------------------------------------------------------
-    # Folder/File Organizer Copilot API
+    # Files Copilot API
     # -------------------------------------------------------------------------
     def organizer_select_folder(self) -> Dict[str, Any]:
         if not self._window:
