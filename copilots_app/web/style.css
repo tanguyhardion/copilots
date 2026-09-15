@@ -548,17 +548,33 @@ body, html {
   flex: 1;
   display: flex;
   position: relative;
-  background-color: var(--bg-input);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
+  background: rgba(14, 14, 18, 0.62);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.32), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .code-area-wrapper:focus-within {
   border-color: var(--copilot-accent, var(--border-focus));
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 2px var(--copilot-accent-glow, var(--primary-glow));
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35), 0 0 0 2px var(--copilot-accent-glow, var(--primary-glow)), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+}
+
+.panel-box .code-area-wrapper {
+  background: rgba(8, 8, 12, 0.4);
+  border: none;
+  border-radius: 0;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.panel-box .code-area-wrapper:focus-within {
+  border-color: transparent;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.35), inset 0 0 0 1px var(--copilot-accent, var(--border-focus));
 }
 
 .code-textarea {
@@ -655,10 +671,11 @@ body, html {
    Bottom Action Bar
    ========================================================================= */
 .action-bar {
-  background: rgba(18, 18, 21, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid var(--border-color);
+  background: rgba(10, 10, 14, 0.72);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 -4px 24px 0 rgba(0, 0, 0, 0.28), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
   padding: 10px 20px;
   display: flex;
   align-items: center;
@@ -1260,10 +1277,11 @@ body, html {
    Status Bar
    ========================================================================= */
 .status-bar {
-  background-color: rgba(18, 18, 21, 0.88);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid var(--border-subtle);
+  background: rgba(8, 8, 12, 0.72);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 -2px 16px 0 rgba(0, 0, 0, 0.22), inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
   padding: 7px 20px;
   display: flex;
   align-items: center;
@@ -1371,20 +1389,23 @@ body, html {
 }
 
 .metric-card {
-  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(24, 24, 27, 0.6) 100%);
-  border: 1px solid var(--border-color);
-  border-radius: 9px;
+  background: rgba(18, 18, 23, 0.6);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
   padding: 10px 14px;
   display: flex;
   align-items: center;
   gap: 12px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
   transition: all var(--transition-fast);
 }
 
 .metric-card:hover {
-  background-color: var(--bg-card-hover);
-  border-color: var(--border-hover);
+  background: rgba(26, 26, 33, 0.72);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
   transform: translateY(-1px);
 }
 
@@ -1461,8 +1482,10 @@ body, html {
 }
 
 .python-file-item {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
   padding: 9px 12px;
   display: flex;
@@ -1473,8 +1496,8 @@ body, html {
 }
 
 .python-file-item:hover {
-  background: var(--bg-surface-elevated);
-  border-color: var(--border-hover);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.14);
   transform: translateX(2px);
 }
 
@@ -1569,13 +1592,20 @@ body, html {
 
 
 .panel-box {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
+  background: rgba(18, 18, 23, 0.62);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.32), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.panel-box:hover {
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .panel-header-simple {
@@ -1583,19 +1613,19 @@ body, html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 11.5px;
   font-weight: 600;
   color: var(--text-secondary);
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.025);
 }
 
 .panel-tabs {
   display: flex;
   gap: 4px;
   padding: 6px 10px;
-  border-bottom: 1px solid var(--border-subtle);
-  background: rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.025);
 }
 
 .tab-btn {
@@ -1653,16 +1683,18 @@ body, html {
 }
 
 .sheet-item {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
   padding: 10px 12px;
   transition: all var(--transition-fast);
 }
 
 .sheet-item:hover {
-  border-color: var(--border-hover);
-  background: var(--bg-surface-elevated);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 .sheet-item-header {
@@ -1710,10 +1742,12 @@ body, html {
    ========================================================================= */
 .log-console-wrapper {
   height: 100px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
-  background: var(--bg-input);
+  background: rgba(6, 6, 10, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .log-header {
@@ -2022,8 +2056,10 @@ body, html {
 }
 
 .audit-issue-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 12px;
