@@ -23,6 +23,7 @@ class PromptManager:
         "cv": "cv_prompt.md",
         "python": "python_prompt.md",
         "organizer": "folder_organizer_prompt.md",
+        "email": "email_prompt.md",
     }
 
     PROMPT_TITLES: Dict[str, str] = {
@@ -32,6 +33,7 @@ class PromptManager:
         "cv": "CV Copilot System Prompt",
         "python": "Python Copilot System Prompt",
         "organizer": "Files Copilot System Prompt",
+        "email": "Email Copilot System Prompt",
     }
 
     _instance = None

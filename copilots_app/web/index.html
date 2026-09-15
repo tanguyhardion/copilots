@@ -58,12 +58,19 @@
           <span class="nav-label">Files Copilot</span>
           <span class="nav-tag nav-tag-beta">BETA</span>
         </button>
+        <button class="nav-item" data-route="email">
+          <span class="indicator" style="background-color: var(--brand-email)"></span>
+          <img class="nav-icon" src="../../assets/icons/email.png" alt="Email">
+          <span class="nav-label">Email Copilot</span>
+          <span class="nav-tag nav-tag-beta">BETA</span>
+        </button>
       </nav>
 
       <div class="sidebar-footer">
         <div class="author-credits">
           <span class="author-label">Made &amp; maintained by</span>
           <span class="author-name">&copy; 2026 Tanguy Hardion</span>
+          <span class="author-rights">All rights reserved.</span>
         </div>
       </div>
 
@@ -560,6 +567,84 @@
         <footer class="status-bar" id="organizer-status">
           <span class="status-indicator"></span>
           <span class="status-text">Ready — select a folder, copy context to your LLM, then execute a copy-only DSL plan</span>
+        </footer>
+      </section>
+
+      <!-- VIEW 7: Email Copilot -->
+      <section class="view-panel" id="view-email">
+        <div class="organizer-split-body">
+          <!-- Left Panel: DSL & Query Controls -->
+          <div class="panel-box left-panel">
+            <div class="panel-header-simple">
+              <span>Query &amp; DSL Editor</span>
+            </div>
+            <div style="padding: 10px 14px; border-bottom: 1px solid var(--border-subtle); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <label for="email-folder-select" style="font-size:11px; color:var(--text-muted); font-weight:500;">Folder:</label>
+                <select id="email-folder-select" class="form-input" style="padding: 3px 8px; font-size:11.5px; border-radius:6px; background:var(--bg-input); color:var(--text-primary); border:1px solid var(--border-color);">
+                  <option value="inbox" selected>Inbox</option>
+                  <option value="sent">Sent Mail</option>
+                  <option value="junk">Junk</option>
+                  <option value="archive">Archive</option>
+                </select>
+              </div>
+
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="display:flex; align-items:center; gap:5px;">
+                  <label for="email-cap-limit" style="font-size:11px; color:var(--text-muted);" title="Max emails to return">Top-N:</label>
+                  <input type="number" id="email-cap-limit" value="20" min="1" max="100" style="width:48px; padding:3px 6px; font-size:11px; border-radius:5px; background:var(--bg-input); color:var(--text-primary); border:1px solid var(--border-color);" />
+                </div>
+                <div style="display:flex; align-items:center; gap:5px;">
+                  <label for="email-cap-chars" style="font-size:11px; color:var(--text-muted);" title="Max snippet characters per email">Chars:</label>
+                  <input type="number" id="email-cap-chars" value="300" min="50" max="2000" step="50" style="width:54px; padding:3px 6px; font-size:11px; border-radius:5px; background:var(--bg-input); color:var(--text-primary); border:1px solid var(--border-color);" />
+                </div>
+              </div>
+            </div>
+            <div class="code-area-wrapper flex-grow">
+              <textarea id="email-dsl-editor" class="code-textarea" spellcheck="false" placeholder="# Email DSL Examples:&#10;SEARCH query=&quot;Q3 roadmap&quot; limit=15&#10;SEARCH sender=&quot;Alice&quot; unread_only=true has_attachment=true&#10;SUMMARIZE_UNREAD folder=inbox limit=15"></textarea>
+            </div>
+            <div class="excel-actions-row" style="background: rgba(0, 0, 0, 0.25);">
+              <span style="font-size:11px; color:var(--text-muted);">
+                Outlook Desktop COM
+              </span>
+              <div class="right-buttons">
+                <button class="btn btn-email-subtle" id="email-btn-clear" title="Clear DSL editor">
+                  <i data-lucide="rotate-ccw" class="btn-icon"></i> Clear
+                </button>
+                <button class="btn btn-email-secondary" id="email-btn-unread" title="Quickly fetch and triage unread emails">
+                  <i data-lucide="inbox" class="btn-icon"></i> Summarize Unread
+                </button>
+                <button class="btn btn-email-primary" id="email-btn-execute" title="Run search query or DSL command against Outlook">
+                  <i data-lucide="search" class="btn-icon"></i> Run Search / DSL
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Panel: Markdown Results & LLM Context -->
+          <div class="panel-box right-panel">
+            <div class="panel-header-simple">
+              <span>Prepared Context for LLM</span>
+            </div>
+            <div style="padding: 10px 14px; border-bottom: 1px solid var(--border-subtle); font-size:11px; color:var(--text-secondary); display:flex; justify-content:space-between; align-items:center;">
+              <span>Structured Markdown with Top-N Capping &amp; Snippets</span>
+            </div>
+            <div class="code-area-wrapper flex-grow">
+              <textarea id="email-results-text" class="code-textarea" readonly placeholder="Prepared markdown email context will appear here and automatically copy to clipboard for prompting your LLM..."></textarea>
+            </div>
+            <div class="excel-actions-row">
+              <span style="font-size:11px; color:var(--text-muted);">Ready to paste into ChatGPT / Claude</span>
+              <div class="right-buttons">
+                <button class="btn btn-email-primary" id="email-btn-copy-results" title="Copy formatted context to clipboard">
+                  <i data-lucide="copy" class="btn-icon"></i> Copy Context
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <footer class="status-bar" id="email-status">
+          <span class="status-indicator"></span>
+          <span class="status-text">Ready — write DSL or click Summarize Unread to query Outlook</span>
         </footer>
       </section>
     </main>

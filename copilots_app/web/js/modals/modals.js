@@ -526,4 +526,42 @@ const HELP_CONTENT = {
       </div>
     </div>
   `,
+
+  email: `
+    <div class="help-guide-section">
+      <div class="help-section-title"><i data-lucide="compass"></i> End-to-End Workflow</div>
+      <div class="help-steps-grid">
+        <div class="help-step-card">
+          <div class="help-step-header"><span class="help-step-num">1</span> System Prompt Setup</div>
+          <p>Click <strong>System Prompt</strong> to copy the Email Copilot prompt into your LLM (ChatGPT, Claude, Gemini, etc.).</p>
+        </div>
+        <div class="help-step-card">
+          <div class="help-step-header"><span class="help-step-num">2</span> Ask in Natural Language</div>
+          <p>Ask your LLM to search for topics, summarize unread emails, or give you the "Latest on X". The LLM will generate clean Email DSL.</p>
+        </div>
+        <div class="help-step-card">
+          <div class="help-step-header"><span class="help-step-num">3</span> Execute &amp; Synthesize</div>
+          <p>Run the DSL in Email Copilot. Results are fetched via pywin32 Outlook COM and copied back to your LLM for instant triage or narrative answers.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="help-guide-section">
+      <div class="help-section-title"><i data-lucide="mail"></i> Features &amp; Capabilities</div>
+      <div class="help-feature-list">
+        <div class="help-feature-item">
+          <span class="help-feature-btn-badge"><i data-lucide="inbox"></i> Summarize Unread</span>
+          <p class="help-feature-desc">One-click unread triage: pulls top unread messages, extracts key fields, and formats them for immediate LLM classification (Reply Today / Review / FYI).</p>
+        </div>
+        <div class="help-feature-item">
+          <span class="help-feature-btn-badge"><i data-lucide="search"></i> Search Email</span>
+          <p class="help-feature-desc">Targeted searching across subjects, senders, dates, attachments, and snippets with configurable result caps.</p>
+        </div>
+        <div class="help-feature-item">
+          <span class="help-feature-btn-badge"><i data-lucide="sliders"></i> Per-Query Caps</span>
+          <p class="help-feature-desc">Adjust max emails (top-N) and max snippet characters per query directly from the UI toolbar or DSL parameters.</p>
+        </div>
+      </div>
+    </div>
+  `,
 };

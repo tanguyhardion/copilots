@@ -14,6 +14,7 @@ import { setupExcelView }           from "./js/views/excel.js";
 import { setupCVView }              from "./js/views/cv.js";
 import { setupPythonView }          from "./js/views/python.js";
 import { setupOrganizerView }       from "./js/views/organizer.js";
+import { setupEmailView }           from "./js/views/email.js";
 import { initWrapToggles }          from "./js/components/wrapToggle.js";
 
 // Wait for pywebview API to be ready
@@ -42,6 +43,7 @@ async function initApp() {
     setupCVView(),
     setupPythonView(),
     setupOrganizerView(),
+    setupEmailView(),
   ]);
 
   navigateTo("powerpoint");
@@ -57,6 +59,8 @@ async function initApp() {
     "python-context-text",
     "organizer-context-text",
     "organizer-plan-text",
+    "email-dsl-editor",
+    "email-results-text",
     "modal-prompt-editor",
   ]);
 

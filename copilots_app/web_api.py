@@ -42,6 +42,13 @@ from copilots_app.services.cv import run_dq_audit, generate_cv, generate_pptx_cv
 from copilots_app.services.python_copilot.runner import PythonSandboxRunner
 from copilots_app.services.folder_organizer.runner import FolderOrganizerRunner
 
+# Email Copilot services
+from copilots_app.services.email_copilot import (
+    OutlookConnector,
+    parse_email_dsl,
+    EmailCommand,
+)
+
 
 class CopilotBridge:
     """Python API bridge passed to pywebview."""
@@ -58,6 +65,7 @@ class CopilotBridge:
         self.excel_current_model = None
         self.python_runner = PythonSandboxRunner()
         self.organizer_runner = FolderOrganizerRunner()
+        self.email_connector = OutlookConnector()
 
     def set_window(self, window):
         self._window = window
@@ -539,3 +547,62 @@ class CopilotBridge:
             return self.organizer_runner.open_output_folder()
         except Exception as err:
             return {"success": False, "error": str(err)}
+
+    # -------------------------------------------------------------------------
+    # Email Copilot API
+    # -------------------------------------------------------------------------
+    def email_get_accounts(self) -> Dict[str, Any]:
+        """Query connected Outlook accounts and folders."""
+        try:
+            return self.email_connector.get_accounts_and_folders()
+        except Exception as err:
+            return {"success": False, "error": str(err)}
+
+    def email_execute_dsl(self, dsl_text: str, default_limit: int = 20, default_max_chars: int = 300) -> Dict[str, Any]:
+        """Parse and execute one or more Email DSL commands."""
+        dsl_text = dsl_text.strip()
+        if not dsl_text:
+            return {"success": False, "error": "DSL is empty — enter a query or command."}
+        try:
+            commands = parse_email_dsl(dsl_text, default_limit=default_limit, default_max_chars=default_max_chars)
+            if not commands:
+                return {"success": False, "error": "No valid Email DSL commands parsed."}
+
+            # Execute the first command (or combine if multiple)
+            cmd = commands[0]
+            # If user adjusted limit / max_chars parameters via UI, respect them if not explicitly in command
+            res = self.email_connector.execute_command(cmd)
+            return {
+                "success": res.success,
+                "message": res.message,
+                "total_matched": res.total_matched,
+                "returned_count": res.returned_count,
+                "items": [item.to_dict() for item in res.items],
+                "context_markdown": res.context_markdown,
+                "error": res.error,
+            }
+        except Exception as err:
+            return {"success": False, "error": f"Email execution failed: {err}"}
+
+    def email_fetch_unread(self, folder: str = "inbox", limit: int = 15, max_chars: int = 250) -> Dict[str, Any]:
+        """Fetch and prepare unread emails for triage."""
+        try:
+            cmd = EmailCommand(
+                action="SUMMARIZE_UNREAD",
+                folder=folder or "inbox",
+                unread_only=True,
+                limit=limit,
+                max_chars=max_chars,
+            )
+            res = self.email_connector.execute_command(cmd)
+            return {
+                "success": res.success,
+                "message": res.message,
+                "total_matched": res.total_matched,
+                "returned_count": res.returned_count,
+                "items": [item.to_dict() for item in res.items],
+                "context_markdown": res.context_markdown,
+                "error": res.error,
+            }
+        except Exception as err:
+            return {"success": False, "error": f"Failed to fetch unread emails: {err}"}

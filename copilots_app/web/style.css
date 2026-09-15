@@ -67,6 +67,12 @@
   --brand-organizer-bg-glow: rgba(217, 70, 239, 0.15);
   --brand-organizer-bg-glow-subtle: rgba(217, 70, 239, 0.07);
 
+  --brand-email: #379AFD;
+  --brand-email-glow: rgba(55, 154, 253, 0.28);
+  --brand-email-subtle: rgba(55, 154, 253, 0.12);
+  --brand-email-bg-glow: rgba(55, 154, 253, 0.15);
+  --brand-email-bg-glow-subtle: rgba(55, 154, 253, 0.07);
+
   --copilot-accent: var(--primary);
   --copilot-accent-subtle: var(--primary-subtle);
   --copilot-accent-glow: var(--primary-glow);
@@ -314,6 +320,14 @@ body, html {
   color: var(--text-secondary);
   letter-spacing: 0.2px;
   transition: color var(--transition-fast);
+}
+
+.author-rights {
+  font-size: 8px;
+  font-weight: 400;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+  opacity: 0.8;
 }
 
 .author-credits:hover .author-name {
@@ -1156,6 +1170,63 @@ body, html {
   background: rgba(217, 70, 239, 0.12);
   border-color: rgba(217, 70, 239, 0.35);
   color: #F0ABFC;
+  transform: translateY(-1px);
+}
+
+/* --- Email Copilot (Electric Outlook Blue: #379AFD) --- */
+.btn-email-primary, .btn-email {
+  background: linear-gradient(180deg, #379AFD 0%, #1D70EC 100%);
+  border-color: #60A5FA;
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 2px 10px var(--brand-email-glow), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.btn-email-primary:hover, .btn-email:hover {
+  background: linear-gradient(180deg, #60A5FA 0%, #2563EB 100%);
+  border-color: #93C5FD;
+  box-shadow: 0 4px 16px rgba(55, 154, 253, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-email-secondary {
+  background: rgba(55, 154, 253, 0.16);
+  border-color: rgba(55, 154, 253, 0.35);
+  color: #93C5FD;
+}
+
+.btn-email-secondary:hover {
+  background: rgba(55, 154, 253, 0.26);
+  border-color: #60A5FA;
+  color: #FFFFFF;
+  box-shadow: 0 2px 10px var(--brand-email-glow);
+  transform: translateY(-1px);
+}
+
+.btn-email-outline {
+  background: rgba(55, 154, 253, 0.08);
+  border-color: rgba(55, 154, 253, 0.45);
+  color: #93C5FD;
+}
+
+.btn-email-outline:hover {
+  background: rgba(55, 154, 253, 0.2);
+  border-color: #60A5FA;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px var(--brand-email-glow);
+  transform: translateY(-1px);
+}
+
+.btn-email-subtle {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.btn-email-subtle:hover {
+  background: rgba(55, 154, 253, 0.12);
+  border-color: rgba(55, 154, 253, 0.35);
+  color: #93C5FD;
   transform: translateY(-1px);
 }
 

@@ -92,5 +92,20 @@ export const ROUTES = {
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
       { id: "action-help", text: "", icon: "help-circle", title: "Files Copilot Guide", isIconOnly: true },
     ]
+  },
+  email: {
+    title: "Email Copilot",
+    subtitle: "Query Outlook desktop emails, triage unread inboxes, and summarize message history with clean DSL",
+    icon: "../../assets/icons/email.png",
+    badge: "Outlook Desktop COM",
+    badgeColor: "var(--brand-email)",
+    badgeSubtleColor: "var(--brand-email-subtle)",
+    badgeGlowColor: "var(--brand-email-glow)",
+    bgGlowColor: "var(--brand-email-bg-glow)",
+    bgGlowSubtleColor: "var(--brand-email-bg-glow-subtle)",
+    actions: [
+      { id: "action-prompt", text: "System Prompt", icon: "settings" },
+      { id: "action-help", text: "", icon: "help-circle", title: "Email Copilot Guide", isIconOnly: true },
+    ]
   }
 };
