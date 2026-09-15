@@ -323,15 +323,11 @@ body, html {
 }
 
 .author-rights {
-  font-size: 8px;
+  font-size: 6px;
   font-weight: 400;
   color: var(--text-muted);
   letter-spacing: 0.3px;
   opacity: 0.8;
-}
-
-.author-credits:hover .author-name {
-  color: var(--text-primary);
 }
 
 /* =========================================================================
