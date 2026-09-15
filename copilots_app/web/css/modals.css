@@ -1,0 +1,302 @@
+/* =========================================================================
+   Glassmorphic Modals: System Prompt, Cheatsheet & Help Guide
+   ========================================================================= */
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.modal-overlay.open {
+  display: flex;
+}
+
+.modal-box {
+  width: 780px;
+  max-width: 92vw;
+  min-height: 75vh;
+  max-height: 92vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-modal);
+  overflow: hidden;
+  animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-box.modal-lg {
+  width: 920px;
+}
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.modal-header h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.modal-badge {
+  font-size: 10.5px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  margin-top: 4px;
+  display: inline-block;
+}
+
+.modal-close-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 6px;
+  border-radius: 6px;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+.modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.modal-body {
+  flex: 1;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-body .code-textarea {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
+
+.modal-scrollable {
+  overflow-y: auto;
+  display: block;
+  font-size: 12.5px;
+  line-height: 1.6;
+  user-select: text;
+}
+
+.modal-scrollable h3 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.modal-scrollable pre {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  margin: 6px 0;
+  overflow-x: auto;
+  color: #CBD5E1;
+}
+
+.modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.modal-left-actions, .modal-right-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Modal primary buttons inherit the active copilot's brand color */
+.modal-overlay .btn-primary {
+  background: linear-gradient(180deg, var(--modal-accent, #6366F1) 0%, color-mix(in srgb, var(--modal-accent, #4F46E5) 80%, #000) 100%);
+  border-color: var(--modal-accent, #6366F1);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--modal-accent, #6366F1) 40%, transparent);
+}
+
+.modal-overlay .btn-primary:hover {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--modal-accent, #6366F1) 85%, #fff) 0%, var(--modal-accent, #4F46E5) 100%);
+  border-color: color-mix(in srgb, var(--modal-accent, #6366F1) 70%, #fff);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--modal-accent, #6366F1) 50%, transparent);
+  transform: translateY(-1px);
+}
+
+/* Python Copilot dark text contrast override inside modals */
+.modal-overlay[data-copilot="python"] .btn-primary {
+  color: #09090B !important;
+  font-weight: 600;
+}
+
+.modal-overlay[data-copilot="python"] .btn-primary svg,
+.modal-overlay[data-copilot="python"] .btn-primary .btn-icon {
+  color: #09090B !important;
+  stroke: #09090B !important;
+}
+
+.modal-overlay[data-copilot="python"] .btn-primary:hover {
+  color: #09090B !important;
+}
+
+.modal-overlay[data-copilot="python"] .btn-primary:hover svg,
+.modal-overlay[data-copilot="python"] .btn-primary:hover .btn-icon {
+  color: #09090B !important;
+  stroke: #09090B !important;
+}
+
+/* -------------------------------------------------------------------------
+   Help Modal Guide Components
+   ------------------------------------------------------------------------- */
+.help-guide-section {
+  margin-bottom: 20px;
+}
+
+.help-guide-section:last-child {
+  margin-bottom: 0;
+}
+
+.help-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.help-section-title i {
+  color: var(--copilot-accent, var(--primary));
+}
+
+.help-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.help-step-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.help-step-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.help-step-num {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--copilot-accent, var(--primary));
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.help-step-card p {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.help-feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.help-feature-item {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.help-feature-btn-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 9px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.help-feature-btn-badge i {
+  width: 13px;
+  height: 13px;
+  color: var(--copilot-accent, var(--primary));
+}
+
+.help-feature-desc {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+

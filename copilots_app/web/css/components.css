@@ -1,0 +1,932 @@
+/* =========================================================================
+   Shared UI Components: Editors, Buttons, Status Bars, Cards, Tabs & Toggles
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   Editor Section & Code Textareas
+   ------------------------------------------------------------------------- */
+.editor-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px 10px 20px;
+  overflow: hidden;
+}
+
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.toolbar-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.code-area-wrapper {
+  flex: 1;
+  display: flex;
+  position: relative;
+  background: rgba(14, 14, 18, 0.62);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.32), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.code-area-wrapper:focus-within {
+  border-color: var(--copilot-accent, var(--border-focus));
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35), 0 0 0 2px var(--copilot-accent-glow, var(--primary-glow)), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+}
+
+.panel-box .code-area-wrapper {
+  background: rgba(8, 8, 12, 0.4);
+  border: none;
+  border-radius: 0;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.panel-box .code-area-wrapper:focus-within {
+  border-color: transparent;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.35), inset 0 0 0 1px var(--copilot-accent, var(--border-focus));
+}
+
+.code-textarea {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: #E2E8F0;
+  resize: none;
+  outline: none;
+  overflow-y: auto;
+  user-select: text;
+  white-space: pre-wrap;
+  tab-size: 2;
+}
+
+.code-textarea::placeholder {
+  color: var(--text-disabled);
+}
+
+/* -------------------------------------------------------------------------
+   Wrap Toggle Button
+   ------------------------------------------------------------------------- */
+.wrap-toggle-btn {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  color: var(--text-disabled);
+  transition: color var(--transition-fast), background var(--transition-fast),
+              border-color var(--transition-fast);
+  outline: none;
+  flex-shrink: 0;
+}
+
+.wrap-toggle-btn:hover {
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border-subtle);
+}
+
+.wrap-toggle-btn:active {
+  transform: scale(0.9);
+}
+
+.wrap-toggle-btn[data-wrapped="true"] {
+  color: var(--copilot-accent, var(--primary));
+  opacity: 0.65;
+}
+
+.wrap-toggle-btn[data-wrapped="true"]:hover {
+  opacity: 1;
+  background: var(--copilot-accent-subtle, var(--primary-subtle));
+  border-color: var(--copilot-accent, var(--primary));
+}
+
+.wrap-toggle-icon {
+  width: 13px;
+  height: 13px;
+  pointer-events: none;
+  display: block;
+}
+
+.wrap-toggle-btn i[data-lucide] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wrap-toggle-btn svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 2;
+}
+
+/* -------------------------------------------------------------------------
+   Buttons & Micro-interactions
+   ------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 7px 15px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+  white-space: nowrap;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-icon svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+}
+
+.btn.btn-icon-only {
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn.btn-icon-only .btn-icon {
+  margin: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Secondary Button (Default outline/surface) */
+.btn-secondary {
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  color: #FFFFFF;
+}
+
+/* Primary Button (Indigo Gradient) */
+.btn-primary {
+  background: linear-gradient(180deg, #6366F1 0%, #4F46E5 100%);
+  border-color: #6366F1;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px var(--primary-glow);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(180deg, #6D70F7 0%, #5B54FA 100%);
+  border-color: #818CF8;
+  box-shadow: 0 4px 12px var(--primary-glow);
+  transform: translateY(-1px);
+}
+
+.btn-tiny {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-tiny:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.btn-tiny:active {
+  transform: scale(0.97);
+}
+
+/* --- PowerPoint Buttons --- */
+.btn-ppt-primary, .btn-ppt {
+  background: linear-gradient(180deg, #F97316 0%, #EA580C 100%);
+  border-color: #FB923C;
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 2px 10px var(--brand-ppt-glow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn-ppt-primary:hover, .btn-ppt:hover {
+  background: linear-gradient(180deg, #FB923C 0%, #F97316 100%);
+  border-color: #FDBA74;
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-ppt-outline {
+  background: rgba(249, 115, 22, 0.08);
+  border-color: rgba(249, 115, 22, 0.45);
+  color: #FB923C;
+}
+
+.btn-ppt-outline:hover {
+  background: rgba(249, 115, 22, 0.2);
+  border-color: #FB923C;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px var(--brand-ppt-glow);
+  transform: translateY(-1px);
+}
+
+.btn-ppt-subtle {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.btn-ppt-subtle:hover {
+  background: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.3);
+  color: #FB923C;
+  transform: translateY(-1px);
+}
+
+/* --- Word Buttons --- */
+.btn-word-primary, .btn-word {
+  background: linear-gradient(180deg, #3B82F6 0%, #2563EB 100%);
+  border-color: #60A5FA;
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 2px 10px var(--brand-word-glow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn-word-primary:hover, .btn-word:hover {
+  background: linear-gradient(180deg, #60A5FA 0%, #3B82F6 100%);
+  border-color: #93C5FD;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-word-secondary {
+  background: rgba(59, 130, 246, 0.16);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: #93C5FD;
+}
+
+.btn-word-secondary:hover {
+  background: rgba(59, 130, 246, 0.26);
+  border-color: #3B82F6;
+  color: #FFFFFF;
+  box-shadow: 0 2px 10px var(--brand-word-glow);
+  transform: translateY(-1px);
+}
+
+.btn-word-outline {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.45);
+  color: #60A5FA;
+}
+
+.btn-word-outline:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #60A5FA;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px var(--brand-word-glow);
+  transform: translateY(-1px);
+}
+
+.btn-word-subtle {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.btn-word-subtle:hover {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #93C5FD;
+  transform: translateY(-1px);
+}
+
+/* --- Excel Buttons --- */
+.btn-excel-primary, .btn-excel {
+  background: linear-gradient(180deg, #10B981 0%, #059669 100%);
+  border-color: #34D399;
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 2px 10px var(--brand-excel-glow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn-excel-primary:hover, .btn-excel:hover {
+  background: linear-gradient(180deg, #34D399 0%, #10B981 100%);
+  border-color: #6EE7B7;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-excel-secondary {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #6EE7B7;
+}
+
+.btn-excel-secondary:hover {
+  background: rgba(16, 185, 129, 0.26);
+  border-color: #10B981;
+  color: #FFFFFF;
+  box-shadow: 0 2px 10px var(--brand-excel-glow);
+  transform: translateY(-1px);
+}
+
+.btn-excel-outline {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #34D399;
+}
+
+.btn-excel-outline:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #34D399;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px var(--brand-excel-glow);
+  transform: translateY(-1px);
+}
+
+.btn-excel-subtle {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.btn-excel-subtle:hover {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #6EE7B7;
+  transform: translateY(-1px);
+}
+
+/* --- CV Buttons --- */
+.btn-cv-primary, .btn-cv {
+  background: linear-gradient(180deg, #8B5CF6 0%, #7C3AED 100%);
+  border-color: #A78BFA;
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 2px 10px var(--brand-cv-glow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn-cv-primary:hover, .btn-cv:hover {
+  background: linear-gradient(180deg, #A78BFA 0%, #8B5CF6 100%);
+  border-color: #C4B5FD;
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-cv-secondary {
+  background: rgba(139, 92, 246, 0.16);
+  border-color: rgba(139, 92, 246, 0.35);
+  color: #C4B5FD;
+}
+
+.btn-cv-secondary:hover {
+  background: rgba(139, 92, 246, 0.26);
+  border-color: #8B5CF6;
+  color: #FFFFFF;
+  box-shadow: 0 2px 10px var(--brand-cv-glow);
+  transform: translateY(-1px);
+}
+
+.btn-cv-outline {
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.45);
+  color: #A78BFA;
+}
+
+.btn-cv-outline:hover {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: #A78BFA;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px var(--brand-cv-glow);
+  transform: translateY(-1px);
+}
+
+/* --- Python Buttons --- */
+.btn-python-primary, .btn-python {
+  background: linear-gradient(180deg, #EAB308 0%, #CA8A04 100%);
+  border-color: #FDE047;
+  color: #09090B;
+  font-weight: 600;
+  box-shadow: 0 2px 10px var(--brand-python-glow), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.btn-python-primary .btn-icon,
+.btn-python-primary svg,
+.btn-python-primary i,
+.btn-python .btn-icon,
+.btn-python svg,
+.btn-python i,
+#python-btn-run .btn-icon,
+#python-btn-run svg,
+#python-btn-run i {
+  color: #09090B !important;
+  stroke: #09090B !important;
+}
+
+.btn-python-primary:hover, .btn-python:hover {
+  background: linear-gradient(180deg, #FACC15 0%, #D97706 100%);
+  border-color: #FEF08A;
+  color: #09090B;
+  box-shadow: 0 4px 16px rgba(234, 179, 8, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-python-primary:hover .btn-icon,
+.btn-python-primary:hover svg,
+.btn-python-primary:hover i,
+.btn-python:hover .btn-icon,
+.btn-python:hover svg,
+.btn-python:hover i,
+#python-btn-run:hover .btn-icon,
+#python-btn-run:hover svg,
+#python-btn-run:hover i {
+  color: #09090B !important;
+  stroke: #09090B !important;
+}
+
+.btn-python-outline {
+  background: rgba(234, 179, 8, 0.08);
+  border-color: rgba(234, 179, 8, 0.45);
+  color: #FACC15;
+}
+
+.btn-python-outline:hover {
+  background: rgba(234, 179, 8, 0.2);
+  border-color: #FDE047;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px var(--brand-python-glow);
+  transform: translateY(-1px);
+}
+
+/* --- Files / Organizer Buttons --- */
+.btn-organizer-primary {
+  background: linear-gradient(180deg, #D946EF 0%, #C026D3 100%);
+  border-color: #E879F9;
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 2px 10px var(--brand-organizer-glow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn-organizer-primary:hover {
+  background: linear-gradient(180deg, #C026D3 0%, #A21CAF 100%);
+  border-color: #F0ABFC;
+  box-shadow: 0 4px 16px rgba(217, 70, 239, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-organizer-outline {
+  background: rgba(217, 70, 239, 0.08);
+  border-color: rgba(217, 70, 239, 0.45);
+  color: #E879F9;
+}
+
+.btn-organizer-outline:hover {
+  background: rgba(217, 70, 239, 0.2);
+  border-color: #F0ABFC;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px var(--brand-organizer-glow);
+  transform: translateY(-1px);
+}
+
+/* --- Email Buttons --- */
+.btn-email-primary, .btn-email {
+  background: linear-gradient(180deg, #379AFD 0%, #1D70EC 100%);
+  border-color: #60A5FA;
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 2px 10px var(--brand-email-glow), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.btn-email-primary:hover, .btn-email:hover {
+  background: linear-gradient(180deg, #60A5FA 0%, #2563EB 100%);
+  border-color: #93C5FD;
+  box-shadow: 0 4px 16px rgba(55, 154, 253, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-email-secondary {
+  background: rgba(55, 154, 253, 0.16);
+  border-color: rgba(55, 154, 253, 0.35);
+  color: #93C5FD;
+}
+
+.btn-email-secondary:hover {
+  background: rgba(55, 154, 253, 0.26);
+  border-color: #60A5FA;
+  color: #FFFFFF;
+  box-shadow: 0 2px 10px var(--brand-email-glow);
+  transform: translateY(-1px);
+}
+
+.btn-email-subtle {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.btn-email-subtle:hover {
+  background: rgba(55, 154, 253, 0.12);
+  border-color: rgba(55, 154, 253, 0.35);
+  color: #93C5FD;
+  transform: translateY(-1px);
+}
+
+/* -------------------------------------------------------------------------
+   Status Bar
+   ------------------------------------------------------------------------- */
+.status-bar {
+  background: rgba(8, 8, 12, 0.72);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 -2px 16px 0 rgba(0, 0, 0, 0.22), inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  padding: 7px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.status-indicator {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  min-height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background-color: var(--copilot-accent, var(--primary));
+  box-shadow: 0 0 8px var(--copilot-accent-glow, var(--primary-glow));
+  transform-origin: center center;
+  transition: all var(--transition-fast);
+}
+
+.status-bar.info .status-indicator,
+.status-bar.success .status-indicator {
+  background-color: var(--copilot-accent, var(--primary));
+  box-shadow: 0 0 8px var(--copilot-accent-glow, var(--primary-glow));
+}
+
+.status-bar.warning .status-indicator {
+  background-color: var(--warning);
+  box-shadow: 0 0 6px var(--warning);
+}
+
+.status-bar.error .status-indicator {
+  background-color: var(--error);
+  box-shadow: 0 0 8px var(--error);
+}
+
+.status-bar.loading .status-indicator {
+  background-color: var(--copilot-accent, var(--primary));
+  box-shadow: 0 0 10px var(--copilot-accent-glow, var(--primary-glow));
+  animation: status-pulse 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.status-bar.loading .status-indicator::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 1.5px solid var(--copilot-accent, var(--primary));
+  transform-origin: center center;
+  animation: status-ripple 1.6s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+/* -------------------------------------------------------------------------
+   Metric Cards
+   ------------------------------------------------------------------------- */
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 14px 20px 6px 20px;
+}
+
+.metric-card {
+  background: rgba(18, 18, 23, 0.6);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  transition: all var(--transition-fast);
+}
+
+.metric-card:hover {
+  background: rgba(26, 26, 33, 0.72);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.metric-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  flex-shrink: 0;
+}
+
+.metric-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.85;
+  color: inherit;
+}
+
+.metric-details {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.metric-title {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.metric-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* -------------------------------------------------------------------------
+   Panel Box & Tab Components
+   ------------------------------------------------------------------------- */
+.panel-box {
+  background: rgba(18, 18, 23, 0.62);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.32), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.panel-box:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.panel-header-simple {
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.panel-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.tab-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tab-btn.active {
+  background: var(--bg-card-hover);
+  border-color: var(--border-subtle);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.tab-page {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 12px;
+}
+
+.tab-page.active {
+  display: flex;
+}
+
+.tab-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 36px 20px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.excel-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-subtle);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.right-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* -------------------------------------------------------------------------
+   Toggle Switch
+   ------------------------------------------------------------------------- */
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.toggle-track {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 34px;
+  height: 19px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.toggle-thumb {
+  position: absolute;
+  left: 2px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: transform var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.toggle-input:checked ~ .toggle-track {
+  background: var(--copilot-accent, var(--brand-excel));
+  border-color: var(--copilot-accent, var(--brand-excel));
+  box-shadow: 0 0 8px var(--copilot-accent-glow, var(--brand-excel-glow));
+}
+
+#view-excel .toggle-input:checked ~ .toggle-track {
+  background: var(--brand-excel);
+  border-color: var(--brand-excel);
+  box-shadow: 0 0 8px var(--brand-excel-glow);
+}
+
+#view-python .toggle-input:checked ~ .toggle-track {
+  background: var(--brand-python);
+  border-color: var(--brand-python);
+  box-shadow: 0 0 8px var(--brand-python-glow);
+}
+
+.toggle-input:checked ~ .toggle-track .toggle-thumb {
+  transform: translateX(15px);
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.toggle-label:hover .toggle-track {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.toggle-text {
+  transition: color var(--transition-fast);
+}
+
+.toggle-input:checked ~ .toggle-text {
+  color: var(--copilot-accent, var(--brand-excel));
+}
+
+#view-excel .toggle-input:checked ~ .toggle-text {
+  color: var(--brand-excel);
+}
+
+#view-python .toggle-input:checked ~ .toggle-text {
+  color: var(--brand-python);
+}

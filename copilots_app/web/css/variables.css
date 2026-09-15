@@ -1,0 +1,113 @@
+/* =========================================================================
+   Copilots Desktop Suite — Design Tokens & CSS Variables
+   ========================================================================= */
+
+:root {
+  /* Neutral Dark Canvas & Elevated Surfaces */
+  --bg-dark: #09090B;
+  --bg-surface: #121215;
+  --bg-surface-elevated: #18181B;
+  --bg-card: #161619;
+  --bg-card-hover: #202024;
+  --bg-input: #0D0D10;
+  --bg-glass: rgba(18, 18, 21, 0.75);
+
+  /* Borders & Dividers */
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-color: rgba(255, 255, 255, 0.09);
+  --border-hover: rgba(255, 255, 255, 0.16);
+  --border-focus: rgba(99, 102, 241, 0.5);
+
+  /* Typography Colors */
+  --text-primary: #F4F4F5;
+  --text-secondary: #A1A1AA;
+  --text-muted: #71717A;
+  --text-disabled: #52525B;
+
+  /* Accent & Core Brand Colors */
+  --primary: #6366F1;
+  --primary-hover: #4F46E5;
+  --primary-glow: rgba(99, 102, 241, 0.25);
+  --primary-subtle: rgba(99, 102, 241, 0.12);
+
+  /* PowerPoint Brand */
+  --brand-ppt: #F97316;
+  --brand-ppt-glow: rgba(249, 115, 22, 0.25);
+  --brand-ppt-subtle: rgba(249, 115, 22, 0.12);
+  --brand-ppt-bg-glow: rgba(249, 115, 22, 0.15);
+  --brand-ppt-bg-glow-subtle: rgba(249, 115, 22, 0.07);
+
+  /* Word Brand */
+  --brand-word: #3B82F6;
+  --brand-word-glow: rgba(59, 130, 246, 0.25);
+  --brand-word-subtle: rgba(59, 130, 246, 0.12);
+  --brand-word-bg-glow: rgba(59, 130, 246, 0.15);
+  --brand-word-bg-glow-subtle: rgba(59, 130, 246, 0.07);
+
+  /* Excel Brand */
+  --brand-excel: #10B981;
+  --brand-excel-glow: rgba(16, 185, 129, 0.25);
+  --brand-excel-subtle: rgba(16, 185, 129, 0.12);
+  --brand-excel-bg-glow: rgba(16, 185, 129, 0.15);
+  --brand-excel-bg-glow-subtle: rgba(16, 185, 129, 0.07);
+
+  /* CV Brand */
+  --brand-cv: #8B5CF6;
+  --brand-cv-glow: rgba(139, 92, 246, 0.25);
+  --brand-cv-subtle: rgba(139, 92, 246, 0.12);
+  --brand-cv-bg-glow: rgba(139, 92, 246, 0.15);
+  --brand-cv-bg-glow-subtle: rgba(139, 92, 246, 0.07);
+
+  /* Python Brand */
+  --brand-python: #EAB308;
+  --brand-python-glow: rgba(234, 179, 8, 0.28);
+  --brand-python-subtle: rgba(234, 179, 8, 0.12);
+  --brand-python-bg-glow: rgba(234, 179, 8, 0.15);
+  --brand-python-bg-glow-subtle: rgba(234, 179, 8, 0.07);
+
+  /* Files / Organizer Brand */
+  --brand-organizer: #D946EF;
+  --brand-organizer-glow: rgba(217, 70, 239, 0.25);
+  --brand-organizer-subtle: rgba(217, 70, 239, 0.12);
+  --brand-organizer-bg-glow: rgba(217, 70, 239, 0.15);
+  --brand-organizer-bg-glow-subtle: rgba(217, 70, 239, 0.07);
+
+  /* Email Brand */
+  --brand-email: #379AFD;
+  --brand-email-glow: rgba(55, 154, 253, 0.28);
+  --brand-email-subtle: rgba(55, 154, 253, 0.12);
+  --brand-email-bg-glow: rgba(55, 154, 253, 0.15);
+  --brand-email-bg-glow-subtle: rgba(55, 154, 253, 0.07);
+
+  /* Active Copilot Accent (dynamically overridden in JS) */
+  --copilot-accent: var(--primary);
+  --copilot-accent-subtle: var(--primary-subtle);
+  --copilot-accent-glow: var(--primary-glow);
+  --copilot-bg-glow: var(--brand-ppt-bg-glow);
+  --copilot-bg-glow-subtle: var(--brand-ppt-bg-glow-subtle);
+
+  /* Semantic Feedback */
+  --success: #10B981;
+  --success-bg: rgba(16, 185, 129, 0.12);
+  --warning: #F59E0B;
+  --warning-bg: rgba(245, 158, 11, 0.12);
+  --error: #F43F5E;
+  --error-bg: rgba(244, 63, 94, 0.12);
+  --info: #0EA5E9;
+  --info-bg: rgba(14, 165, 233, 0.12);
+
+  /* Typography Scale */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
+
+  /* Shadows & Elevation */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 14px 0 rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 10px 28px -4px rgba(0, 0, 0, 0.6);
+  --shadow-modal: 0 20px 45px -8px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(255, 255, 255, 0.08);
+
+  /* Transitions */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
