@@ -129,3 +129,20 @@ MSO_SHAPE_MAP = {
     "ribbon_banner": 53,
     "callout": 106,
 }
+
+REVERSE_MSO_SHAPE_MAP = {v: k for k, v in MSO_SHAPE_MAP.items()}
+
+REVERSE_PPT_THEME_MAP = {v: k for k, v in PPT_THEME_MAP.items()}
+
+REVERSE_DSL_COLOR_ALIASES = {v: k for k, v in DSL_COLOR_ALIASES.items()}
+
+VALID_EDIT_OPS = {
+    "modify",
+    "replace",
+    "delete",
+    "insert_before",
+    "insert_after",
+    "insert_at",
+    "insert",
+}
+

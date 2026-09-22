@@ -148,23 +148,46 @@ export function openCheatsheetModal(routeId) {
   if (routeId === "powerpoint") {
     title.innerText = "PowerPoint DSL Cheatsheet & Syntax";
     content.innerHTML = `
-      <h3>Slide Delimiter</h3>
-      <pre>--- slide [title="Optional Slide Title"]</pre>
+      <h3>EDIT MODE (Active Slide Surgery)</h3>
+      <pre>edit target=active
 
-      <h3>Core Shapes</h3>
-      <pre>rect x=1.0 y=1.5 w=4.0 h=2.0 fill=primary stroke=border_light text="Box Title"
-rounded_rect x=5.5 y=1.5 w=4.0 h=2.0 rx=0.2 fill=bg_card text="Rounded Box"
-chevron x=1.0 y=4.0 w=3.0 h=1.0 fill=brand_ppt text="Step 1" direction=right</pre>
+// Modify shape in-place without recreating it
+modify id=2 color=a1 | "New Title" size=24 bold=true
 
-      <h3>Rich Typography &amp; Paragraphs</h3>
-      <pre>text x=1.0 y=1.0 w=10.0 h=1.0 | "Main Heading" size=24 bold=true color=primary
-p size=14 color=text_secondary | "Multi-line descriptive body text goes here..."</pre>
+// Replace shape with new shape definition(s)
+replace id=3
+rounded_rect left=48 top=128 width=416 height=180 color=bg2 border_radius=12 | "Updated Card"
+endblock
+
+// Delete obsolete shape
+delete id=4
+
+// Insert new elements adjacent to an existing shape
+insert_after id=3
+rect left=496 top=128 width=416 height=180 color=bg2 | "New Card"
+endblock
+
+// Update slide background
+slide background=bg1</pre>
+
+      <h3>BUILD MODE (Core Shapes)</h3>
+      <pre>rect left=48 top=48 width=864 height=60 color=a4 | "Title" size=22 bold=true color=#FFFFFF
+rounded_rect left=48 top=128 width=277 height=180 color=bg2 border_radius=8 outline=a3,1 | "Card"
+chevron left=48 top=330 width=160 height=48 color=a1 | "Step 1"
+line x1=48 y1=400 x2=912 y2=400 color=a3 weight=1.5 dash=solid</pre>
+
+      <h3>Rich Typography &amp; Multi-Segment Text</h3>
+      <pre>text left=48 top=128 width=400 height=40 | "Normal" + " Bold" bold=true + " Colored" color=a1</pre>
 
       <h3>Tables</h3>
-      <pre>table x=1.0 y=2.0 w=11.0 h=3.0 cols=30%,40%,30%
+      <pre>table left=48 top=160 width=864 height=200 header_fill=a4 text_color=t1 border_color=a3
+cols=288,288,288
 header="Phase","Milestone","Status"
 row="1. Inception","Architecture Alignment","Complete"
-row="2. Implementation","pywebview Migration","In Progress"</pre>
+row="2. Implementation","Active Slide Editing","Done"</pre>
+
+      <h3>Icons &amp; SVG</h3>
+      <pre>icon name=circle-check style=solid left=48 top=128 width=36 height=36 color=a1</pre>
     `;
   }
 
@@ -248,16 +271,24 @@ const HELP_CONTENT = {
       <div class="help-section-title"><i data-lucide="mouse-pointer"></i> Functions &amp; Buttons Explained</div>
       <div class="help-feature-list">
         <div class="help-feature-item">
-          <span class="help-feature-btn-badge"><i data-lucide="clipboard"></i> Copy Shapes to Clipboard</span>
-          <p class="help-feature-desc">Compiles the DSL shapes into native PowerPoint drawing objects and places them onto the Windows Clipboard. You can then switch to any slide in PowerPoint and press <code>Ctrl+V</code>.</p>
+          <span class="help-feature-btn-badge"><i data-lucide="scan-line"></i> Read Active Slide</span>
+          <p class="help-feature-desc">Connects via COM to your open PowerPoint presentation, inspects every shape, text frame, color, table, and background on the currently active slide, and extracts it into clean DSL annotated with shape IDs (<code>// id=N</code>). You can copy this DSL to your LLM for surgical editing.</p>
         </div>
         <div class="help-feature-item">
-          <span class="help-feature-btn-badge"><i data-lucide="plus-circle"></i> Insert on Current Slide</span>
-          <p class="help-feature-desc">Directly injects the rendered shapes, text boxes, and tables onto whatever slide is currently active and visible in PowerPoint without replacing the slide background.</p>
+          <span class="help-feature-btn-badge"><i data-lucide="edit-3"></i> Apply Edits to Slide</span>
+          <p class="help-feature-desc">Executes surgical edit operations (<code>modify id=N</code>, <code>replace id=N</code>, <code>delete id=N</code>, <code>insert_after id=N</code>) directly on the active PowerPoint slide in place, preserving untouched shapes and slide styling.</p>
         </div>
         <div class="help-feature-item">
-          <span class="help-feature-btn-badge"><i data-lucide="presentation"></i> Create Full Slide(s)</span>
+          <span class="help-feature-btn-badge"><i data-lucide="plus-circle"></i> Insert on Slide</span>
+          <p class="help-feature-desc">Directly injects newly defined shapes, text boxes, and tables onto whatever slide is currently active in PowerPoint. If edit DSL is detected, it automatically executes edits in place.</p>
+        </div>
+        <div class="help-feature-item">
+          <span class="help-feature-btn-badge"><i data-lucide="presentation"></i> Create Slide(s)</span>
           <p class="help-feature-desc">Creates brand new blank 16:9 slides at the end of the active presentation and renders all shapes, cards, and headers across the new slides.</p>
+        </div>
+        <div class="help-feature-item">
+          <span class="help-feature-btn-badge"><i data-lucide="clipboard"></i> Copy to Clipboard</span>
+          <p class="help-feature-desc">Compiles the DSL shapes into native PowerPoint drawing objects and places them onto the Windows Clipboard. You can then switch to any slide in PowerPoint and press <code>Ctrl+V</code>.</p>
         </div>
       </div>
     </div>

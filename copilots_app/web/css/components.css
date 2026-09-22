@@ -304,6 +304,14 @@
   transform: translateY(-1px);
 }
 
+.action-bar-separator {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
 /* --- CV Buttons --- */
 .btn-cv-primary, .btn-cv {
   background: linear-gradient(180deg, #8B5CF6 0%, #7C3AED 100%);

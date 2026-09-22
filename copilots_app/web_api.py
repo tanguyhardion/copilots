@@ -16,7 +16,11 @@ from copilots_app.core.prompt_manager import PromptManager
 # PowerPoint services
 from copilots_app.services.powerpoint import (
     PowerPointConnector,
+    PowerPointExtractor,
+    PowerPointEditor,
     parse_dsl_slides,
+    parse_edit_dsl,
+    looks_like_edit_dsl,
     refresh_dsl_theme_colors,
 )
 
@@ -31,6 +35,8 @@ class CopilotBridge:
         self._window = None
         self.prompt_manager = PromptManager()
         self.ppt_connector = PowerPointConnector()
+        self.ppt_extractor = PowerPointExtractor()
+        self.ppt_editor = PowerPointEditor(self.ppt_connector)
 
     def set_window(self, window):
         self._window = window
@@ -92,6 +98,40 @@ class CopilotBridge:
         except Exception as err:
             return {"success": False, "error": f"Clipboard copy failed: {err}"}
 
+    def ppt_read_active_slide(self) -> Dict[str, Any]:
+        """Inspect the active slide in PowerPoint and return its DSL annotated with // id=N."""
+        try:
+            refresh_dsl_theme_colors()
+        except Exception:
+            pass
+
+        try:
+            dsl_text, meta = self.ppt_extractor.extract_active_slide()
+            return {
+                "success": True,
+                "dsl": dsl_text,
+                "metadata": meta,
+                "message": f"✓ Read {meta['shape_count']} shape(s) from active slide {meta['slide_index']}.",
+            }
+        except Exception as err:
+            return {"success": False, "error": f"Failed to read active slide: {err}"}
+
+    def ppt_apply_edits(self, dsl_text: str) -> Dict[str, Any]:
+        """Apply edit operations (modify, replace, delete, insert) to the active PowerPoint slide."""
+        dsl_text = dsl_text.strip()
+        if not dsl_text:
+            return {"success": False, "error": "DSL is empty — nothing to edit."}
+        try:
+            refresh_dsl_theme_colors()
+        except Exception:
+            pass
+
+        try:
+            res = self.ppt_editor.apply_edits_to_active_slide(dsl_text)
+            return res
+        except Exception as err:
+            return {"success": False, "error": f"Edit failed: {err}"}
+
     def ppt_insert_current_slide(self, dsl_text: str) -> Dict[str, Any]:
         dsl_text = dsl_text.strip()
         if not dsl_text:
@@ -100,6 +140,10 @@ class CopilotBridge:
             refresh_dsl_theme_colors()
         except Exception:
             pass
+
+        # If user pasted edit DSL and clicked insert, gracefully execute edits!
+        if looks_like_edit_dsl(dsl_text):
+            return self.ppt_apply_edits(dsl_text)
 
         try:
             slides = parse_dsl_slides(dsl_text)

@@ -10,6 +10,44 @@ import { setStatus, setButtonsDisabled } from "../core/utils.js";
 export async function setupPowerPointView() {
   const editor = document.getElementById("ppt-editor");
 
+  // Read / Inspect the active PowerPoint slide
+  document.getElementById("ppt-btn-read").addEventListener("click", async () => {
+    setStatus("ppt", "Reading shapes and background from active PowerPoint slide…", "info", true);
+    setButtonsDisabled("view-powerpoint", true);
+    try {
+      const res = await window.pywebview.api.ppt_read_active_slide();
+      if (res.success) {
+        editor.value = res.dsl;
+        setStatus("ppt", res.message, "success");
+      } else {
+        setStatus("ppt", res.error, "error");
+      }
+    } catch (err) {
+      setStatus("ppt", `Read error: ${err}`, "error");
+    } finally {
+      setButtonsDisabled("view-powerpoint", false);
+    }
+  });
+
+  // Apply surgical edits to the active PowerPoint slide
+  document.getElementById("ppt-btn-edit").addEventListener("click", async () => {
+    const dsl = editor.value;
+    if (!dsl.trim()) {
+      setStatus("ppt", "Editor is empty — nothing to edit", "warning");
+      return;
+    }
+    setStatus("ppt", "Applying edits to active slide…", "info", true);
+    setButtonsDisabled("view-powerpoint", true);
+    try {
+      const res = await window.pywebview.api.ppt_apply_edits(dsl);
+      setStatus("ppt", res.success ? res.message : res.error, res.success ? "success" : "error");
+    } catch (err) {
+      setStatus("ppt", `Edit error: ${err}`, "error");
+    } finally {
+      setButtonsDisabled("view-powerpoint", false);
+    }
+  });
+
   // Copy DSL shapes to Windows clipboard
   document.getElementById("ppt-btn-copy").addEventListener("click", async () => {
     const dsl = editor.value;
