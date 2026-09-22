@@ -1,20 +1,13 @@
 /**
  * Copilots Suite — Application Entry Point
  *
- * This file is intentionally minimal. Its only job is to import each module
- * and wire them together in initApp(). All business logic lives in the
- * dedicated modules under js/.
+ * Imports view controllers and wires them together in initApp().
  */
 
 import { setupSidebar, navigateTo } from "./js/core/router.js";
 import { setupModals }              from "./js/modals/modals.js";
 import { setupPowerPointView }      from "./js/views/powerpoint.js";
-import { setupWordView }            from "./js/views/word.js";
-import { setupExcelView }           from "./js/views/excel.js";
 import { setupCVView }              from "./js/views/cv.js";
-import { setupPythonView }          from "./js/views/python.js";
-import { setupOrganizerView }       from "./js/views/organizer.js";
-import { setupEmailView }           from "./js/views/email.js";
 import { initWrapToggles }          from "./js/components/wrapToggle.js";
 
 // Wait for pywebview API to be ready
@@ -38,29 +31,15 @@ async function initApp() {
 
   await Promise.all([
     setupPowerPointView(),
-    setupWordView(),
-    setupExcelView(),
     setupCVView(),
-    setupPythonView(),
-    setupOrganizerView(),
-    setupEmailView(),
   ]);
 
   navigateTo("powerpoint");
 
-  // Initialise wrap-toggle buttons on all main textarea editors
+  // Initialise wrap-toggle buttons on main textarea editors
   initWrapToggles([
     "ppt-editor",
-    "word-editor",
-    "excel-protocol-editor",
-    "excel-context-text",
     "cv-editor",
-    "python-editor",
-    "python-context-text",
-    "organizer-context-text",
-    "organizer-plan-text",
-    "email-dsl-editor",
-    "email-results-text",
     "modal-prompt-editor",
   ]);
 

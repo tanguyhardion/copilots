@@ -18,22 +18,12 @@ class PromptManager:
     # Map copilot keys to default filenames
     PROMPT_FILES: Dict[str, str] = {
         "powerpoint": "powerpoint_prompt.md",
-        "word": "word_prompt.md",
-        "excel": "excel_prompt.md",
         "cv": "cv_prompt.md",
-        "python": "python_prompt.md",
-        "organizer": "folder_organizer_prompt.md",
-        "email": "email_prompt.md",
     }
 
     PROMPT_TITLES: Dict[str, str] = {
         "powerpoint": "PowerPoint Copilot System Prompt",
-        "word": "Word Copilot System Prompt",
-        "excel": "Excel Copilot System Prompt",
         "cv": "CV Copilot System Prompt",
-        "python": "Python Copilot System Prompt",
-        "organizer": "Files Copilot System Prompt",
-        "email": "Email Copilot System Prompt",
     }
 
     _instance = None

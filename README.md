@@ -1,13 +1,9 @@
-# Office & Document Copilots — Unified Desktop Suite
+# Office & Document Copilots — PowerPoint & CV Suite
 
-A unified, maintainable, and modern desktop application built with **pywebview** (HTML5 / CSS3 / JavaScript frontend backed by native WebView2 and Python automation engines) that brings together six essential Office & Document AI Copilots:
+A clean, maintainable, and modern desktop application built with **pywebview** (HTML5 / CSS3 / JavaScript frontend backed by native WebView2 and Python automation engines) featuring two essential Office & Document AI Copilots:
 
 1. **PowerPoint Copilot** — Design Consultant & Shape Architect (DSL to PowerPoint shapes, slides, tables, gradients, and icons via COM).
-2. **Word Copilot** — Document generator, live cursor injector, and active document editor with DSL extraction.
-3. **Excel Copilot** — Air-gapped semantic analyzer, LLM context generator, and deterministic JSON Action Protocol executor.
-4. **CV Copilot** — Deterministic Data Quality (DQ) validation engine and standard Europass Word (.docx) generator.
-5. **Python Copilot** — Sandboxed script execution, artifact inspection, and folder context export for LLM loops.
-6. **Files Copilot** — Recursive folder summarization and safe copy-only reorganization from DSL plans.
+2. **CV Copilot** — Deterministic Data Quality (DQ) validation engine, 1-Slide Executive PowerPoint (.pptx) proposal generator, and standard Europass Word (.docx) generator.
 
 ---
 
@@ -16,27 +12,27 @@ A unified, maintainable, and modern desktop application built with **pywebview**
 ```
 copilots/
 ├── app.py                      # Main pywebview application launcher
-├── requirements.txt            # Unified dependencies
+├── requirements.txt            # Dependencies
 ├── assets/
-│   └── icons/                  # App branding icons (word.png, excel.png, powerpoint.png, cv.png)
+│   ├── icons/                  # App branding icons (copilots.png, powerpoint.png, cv.png)
+│   └── templates/              # Document templates (cv_template.pptx, photo_placeholder.jpg)
 └── copilots_app/
-    ├── core/                   # Design system tokens, config, events
+    ├── core/                   # Design system tokens, config, events, prompt manager
     │   ├── theme.py
     │   ├── config.py
-    │   └── events.py
-    ├── ui/                     # Reusable UI components and unified Views
-    │   ├── components.py       # AppHeader, StatusBar, CodeEditor, MetricCard, ActionButton
-    │   ├── sidebar.py          # Navigation rail with active indicators & branding
-    │   └── views/              # Dedicated views for each Copilot
-    │       ├── powerpoint_view.py
-    │       ├── word_view.py
-    │       ├── excel_view.py
-    │       └── cv_view.py
-    └── services/               # Modularized business logic & engines
+    │   ├── events.py
+    │   └── prompt_manager.py
+    ├── prompts/                # Bundled system prompts
+    │   ├── powerpoint_prompt.md
+    │   └── cv_prompt.md
+    ├── web/                    # pywebview HTML5/CSS/JS frontend
+    │   ├── index.html
+    │   ├── app.js
+    │   ├── css/
+    │   └── js/
+    └── services/               # Automation engines & business logic
         ├── powerpoint/         # PowerPoint DSL parser, shape engine, COM connector
-        ├── word/               # Word DSL parser, editor, extractor, COM connector
-        ├── excel/              # Excel analyzer, protocol models, action executor, backups
-        └── cv/                 # CV JSON parser, DQ validation engine, docx generator
+        └── cv/                 # CV JSON parser, DQ validation engine, docx & pptx generators
 ```
 
 ---

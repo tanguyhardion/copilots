@@ -25,10 +25,7 @@ class AppPalette:
 
     # Brand Colors
     BRAND_PPT = "#D24726"      # PowerPoint Red-Orange
-    BRAND_WORD = "#2B579A"     # Word Classic Blue
-    BRAND_EXCEL = "#217346"    # Excel Emerald Green
     BRAND_CV = "#7C3AED"       # CV Builder Royal Violet
-    BRAND_FILES = "#D946EF"  # Files Copilot Magenta
 
     # Accent and Semantic
     PRIMARY = "#6366F1"        # Indigo

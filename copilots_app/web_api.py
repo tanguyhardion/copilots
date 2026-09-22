@@ -1,13 +1,12 @@
 """
 Bridge API exposed to pywebview JavaScript frontend (window.pywebview.api).
-Provides full access to all Copilots engines: PowerPoint, Word, Excel, CV, and System Prompts.
+Provides full access to PowerPoint and CV Copilot engines and System Prompts.
 """
 
 import os
 import json
 import tempfile
-import traceback
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 import webview
 
 from copilots_app import __version__
@@ -21,33 +20,8 @@ from copilots_app.services.powerpoint import (
     refresh_dsl_theme_colors,
 )
 
-# Word services
-from copilots_app.services.word.connector import WordConnector
-from copilots_app.services.word.editor import WordEditor
-from copilots_app.services.word.extractor import WordExtractor
-from copilots_app.services.word.colors import refresh_word_theme_colors
-from copilots_app.services.word.dsl.parser import parse_dsl_pages
-from copilots_app.services.word.dsl.edit_parser import parse_edit_dsl
-
-# Excel services
-from copilots_app.services.excel.analyzer.workbook_analyzer import WorkbookAnalyzer
-from copilots_app.services.excel.executor.executor_main import ActionExecutor
-from copilots_app.services.excel.protocol.action_parser import ActionParser
-from copilots_app.services.excel.models.protocol import ActionProtocol
-
 # CV services
 from copilots_app.services.cv import run_dq_audit, generate_cv, generate_pptx_cv
-
-# Python Copilot services
-from copilots_app.services.python_copilot.runner import PythonSandboxRunner
-from copilots_app.services.folder_organizer.runner import FolderOrganizerRunner
-
-# Email Copilot services
-from copilots_app.services.email_copilot import (
-    OutlookConnector,
-    parse_email_dsl,
-    EmailCommand,
-)
 
 
 class CopilotBridge:
@@ -57,15 +31,6 @@ class CopilotBridge:
         self._window = None
         self.prompt_manager = PromptManager()
         self.ppt_connector = PowerPointConnector()
-        self.word_connector = WordConnector()
-        self.word_extractor = WordExtractor()
-        self.word_editor = WordEditor()
-        self.excel_executor = ActionExecutor()
-        self.excel_current_path: Optional[str] = None
-        self.excel_current_model = None
-        self.python_runner = PythonSandboxRunner()
-        self.organizer_runner = FolderOrganizerRunner()
-        self.email_connector = OutlookConnector()
 
     def set_window(self, window):
         self._window = window
@@ -172,162 +137,6 @@ class CopilotBridge:
             return {"success": True, "message": f"✓ Created {len(slides)} slide(s) with background directives successfully!"}
         except Exception as err:
             return {"success": False, "error": f"Slide creation failed: {err}"}
-
-    # -------------------------------------------------------------------------
-    # Word Copilot API
-    # -------------------------------------------------------------------------
-    def word_build_and_open(self, dsl_text: str) -> Dict[str, Any]:
-        dsl_text = dsl_text.strip()
-        if not dsl_text:
-            return {"success": False, "error": "DSL content is empty."}
-        try:
-            refresh_word_theme_colors()
-        except Exception:
-            pass
-
-        try:
-            pages = parse_dsl_pages(dsl_text)
-            if not any(pages):
-                return {"success": False, "error": "Nothing to build."}
-            self.word_connector.build_and_open(pages)
-            return {"success": True, "message": "✓ Document built and opened in Word!"}
-        except Exception as err:
-            return {"success": False, "error": f"Build document failed: {err}"}
-
-    def word_insert_at_cursor(self, dsl_text: str) -> Dict[str, Any]:
-        dsl_text = dsl_text.strip()
-        if not dsl_text:
-            return {"success": False, "error": "DSL content is empty."}
-        try:
-            refresh_word_theme_colors()
-        except Exception:
-            pass
-
-        try:
-            pages = parse_dsl_pages(dsl_text)
-            total_elements = sum(len(p) for p in pages)
-            if total_elements == 0:
-                return {"success": False, "error": "No elements parsed from DSL."}
-
-            self.word_connector.insert_at_cursor(pages)
-            return {"success": True, "message": f"✓ Content inserted ({total_elements} elements) at cursor in Word!"}
-        except Exception as err:
-            return {"success": False, "error": f"Word cursor insertion failed: {err}"}
-
-    def word_apply_edits(self, dsl_text: str) -> Dict[str, Any]:
-        dsl_text = dsl_text.strip()
-        if not dsl_text:
-            return {"success": False, "error": "Edit instructions are empty."}
-        try:
-            refresh_word_theme_colors()
-        except Exception:
-            pass
-
-        try:
-            ops = parse_edit_dsl(dsl_text)
-            if not ops:
-                return {"success": False, "error": "No valid edit instructions parsed (use replace, insert_before, etc.)"}
-
-            self.word_editor.apply(ops)
-            return {"success": True, "message": f"✓ Applied {len(ops)} edit(s) to the document!"}
-        except Exception as err:
-            return {"success": False, "error": f"Apply edits failed: {err}"}
-
-    def word_extract_dsl(self) -> Dict[str, Any]:
-        try:
-            dsl = self.word_extractor.extract()
-            return {"success": True, "dsl": dsl, "message": "✓ Successfully extracted document structure as DSL!"}
-        except Exception as err:
-            return {"success": False, "error": f"Extraction failed: {err}"}
-
-    # -------------------------------------------------------------------------
-    # Excel Copilot API
-    # -------------------------------------------------------------------------
-    def excel_connect_active(self) -> Dict[str, Any]:
-        """Connect directly to the currently active workbook in Microsoft Excel."""
-        return self._analyze_excel_path(None)
-
-    def excel_open_file(self) -> Dict[str, Any]:
-        """Prompt file picker, open workbook in Microsoft Excel via COM, and analyze."""
-        if not self._window:
-            return {"success": False, "error": "Window not initialized."}
-        file_types = ("Excel Workbooks (*.xlsx;*.xlsm)", "All files (*.*)")
-        res = self._window.create_file_dialog(webview.OPEN_DIALOG, allow_multiple=False, file_types=file_types)
-        if not res or len(res) == 0:
-            return {"success": False, "cancelled": True}
-        file_path = res[0]
-        return self._analyze_excel_path(file_path)
-
-    def _analyze_excel_path(self, file_path: Optional[str] = None) -> Dict[str, Any]:
-        try:
-            model = WorkbookAnalyzer.analyze(file_path)
-            self.excel_current_path = model.file_path or model.filename
-            self.excel_current_model = model
-
-            # Extract metrics & sheets
-            sheets_data = []
-            formula_count = 0
-            table_count = 0
-
-            for sheet in model.worksheets:
-                formula_count += sheet.formulas_count
-                table_count += len(sheet.tables)
-                sheets_data.append({
-                    "name": sheet.name,
-                    "row_count": sheet.max_row,
-                    "col_count": sheet.max_column,
-                    "has_headers": True if sheet.tables else False,
-                    "headers": [c.name for t in sheet.tables for c in t.columns][:12],
-                    "formulas_count": sheet.formulas_count,
-                    "tables_count": len(sheet.tables),
-                })
-
-            # LLM Prompt Context
-            context_text = WorkbookAnalyzer.generate_system_prompt(model)
-
-            return {
-                "success": True,
-                "file_path": self.excel_current_path,
-                "file_name": model.filename,
-                "sheet_count": len(model.worksheets),
-                "table_count": table_count,
-                "formula_count": formula_count,
-                "sheets": sheets_data,
-                "context_text": context_text,
-                "message": f"✓ Connected to active workbook: {model.filename}",
-            }
-        except Exception as err:
-            traceback.print_exc()
-            return {"success": False, "error": f"Failed to analyze active Excel workbook: {err}"}
-
-    def excel_execute_protocol(self, protocol_json_str: str, create_backup: bool = True) -> Dict[str, Any]:
-        try:
-            protocol = ActionParser.parse_response(protocol_json_str)
-            result, updated_model = self.excel_executor.execute(
-                protocol=protocol,
-                file_path_or_wb=self.excel_current_path,
-                model=self.excel_current_model,
-                create_backup=create_backup,
-            )
-            if updated_model:
-                self.excel_current_model = updated_model
-
-            log_messages = [f"[{d.get('status', 'info').upper()}] {d.get('message')}" for d in result.details]
-            if result.errors:
-                log_messages.extend([f"[ERROR] {e}" for e in result.errors])
-            if result.warnings:
-                log_messages.extend([f"[WARNING] {w}" for w in result.warnings])
-
-            is_ok = result.status.value in ("success", "partial_success")
-            return {
-                "success": is_ok,
-                "executed_actions": result.actions_executed,
-                "total_actions": len(protocol.actions),
-                "logs": log_messages,
-                "message": f"{'✓' if is_ok else '⚠'} Execution finished: {result.actions_executed}/{len(protocol.actions)} action(s) succeeded.",
-            }
-        except Exception as err:
-            return {"success": False, "error": f"Execution error: {err}"}
 
     # -------------------------------------------------------------------------
     # CV Copilot API
@@ -439,170 +248,3 @@ class CopilotBridge:
             return {"success": True, "path": out_path, "message": f"✓ 1-Slide Executive PowerPoint CV generated and opened: {filename}"}
         except Exception as err:
             return {"success": False, "error": f"PowerPoint CV generation failed: {err}"}
-
-    # -------------------------------------------------------------------------
-    # Python Copilot API
-    # -------------------------------------------------------------------------
-    def python_run_code(self, code: str, persist: Optional[bool] = None) -> Dict[str, Any]:
-        """Execute pasted Python code inside the sandbox workspace."""
-        try:
-            return self.python_runner.run_code(code=code, persist=persist)
-        except Exception as err:
-            return {
-                "success": False,
-                "error": f"Run failed: {err}",
-                "stdout": "",
-                "stderr": str(err),
-                "exit_code": -1,
-                "duration_ms": 0,
-                "produced_files": [],
-                "all_files": [],
-            }
-
-    def python_get_folder_context(self) -> Dict[str, Any]:
-        """Retrieve structured markdown list of files in the current folder for LLM prompts."""
-        try:
-            return self.python_runner.get_folder_context_for_llm()
-        except Exception as err:
-            return {"success": False, "error": str(err)}
-
-    def python_open_folder(self) -> Dict[str, Any]:
-        """Open the active sandbox folder in Windows Explorer."""
-        try:
-            return self.python_runner.open_in_explorer()
-        except Exception as err:
-            return {"success": False, "error": str(err)}
-
-    def python_open_file(self, filename: str) -> Dict[str, Any]:
-        """Open a specific generated document or file in default application."""
-        try:
-            return self.python_runner.open_specific_file(filename)
-        except Exception as err:
-            return {"success": False, "error": str(err)}
-
-    def python_clear_sandbox(self) -> Dict[str, Any]:
-        """Clear the current sandbox files."""
-        try:
-            return self.python_runner.clear_sandbox()
-        except Exception as err:
-            return {"success": False, "error": str(err)}
-
-    def python_set_persistence(self, persist: bool) -> Dict[str, Any]:
-        """Toggle persistence mode on/off."""
-        try:
-            return self.python_runner.set_persistence(persist)
-        except Exception as err:
-            return {"success": False, "error": str(err)}
-
-    def python_get_status(self) -> Dict[str, Any]:
-        """Return current status: working folder, persistence flag, and file list."""
-        try:
-            return {
-                "success": True,
-                "folder_path": str(self.python_runner.current_dir),
-                "persist": self.python_runner.persist_mode,
-                "files": self.python_runner.list_files(),
-            }
-        except Exception as err:
-            return {"success": False, "error": str(err)}
-
-    # -------------------------------------------------------------------------
-    # Files Copilot API
-    # -------------------------------------------------------------------------
-    def organizer_select_folder(self) -> Dict[str, Any]:
-        if not self._window:
-            return {"success": False, "error": "Window not initialized."}
-        res = self._window.create_file_dialog(webview.FOLDER_DIALOG, allow_multiple=False)
-        if not res or len(res) == 0:
-            return {"success": False, "cancelled": True}
-        return self.organizer_runner.set_source_root(res[0])
-
-    def organizer_get_status(self) -> Dict[str, Any]:
-        try:
-            return self.organizer_runner.get_status()
-        except Exception as err:
-            return {"success": False, "error": str(err)}
-
-    def organizer_build_context(self) -> Dict[str, Any]:
-        try:
-            return self.organizer_runner.generate_context_for_llm()
-        except Exception as err:
-            return {"success": False, "error": str(err)}
-
-    def organizer_parse_plan(self, dsl_text: str) -> Dict[str, Any]:
-        try:
-            return self.organizer_runner.parse_plan(dsl_text)
-        except Exception as err:
-            return {"success": False, "error": str(err)}
-
-    def organizer_execute_plan(self, dsl_text: str) -> Dict[str, Any]:
-        try:
-            return self.organizer_runner.execute_plan(dsl_text)
-        except Exception as err:
-            return {"success": False, "error": str(err)}
-
-    def organizer_open_output_folder(self) -> Dict[str, Any]:
-        """Open the last generated output folder in the system file explorer."""
-        try:
-            return self.organizer_runner.open_output_folder()
-        except Exception as err:
-            return {"success": False, "error": str(err)}
-
-    # -------------------------------------------------------------------------
-    # Email Copilot API
-    # -------------------------------------------------------------------------
-    def email_get_accounts(self) -> Dict[str, Any]:
-        """Query connected Outlook accounts and folders."""
-        try:
-            return self.email_connector.get_accounts_and_folders()
-        except Exception as err:
-            return {"success": False, "error": str(err)}
-
-    def email_execute_dsl(self, dsl_text: str, default_limit: int = 20, default_max_chars: int = 300) -> Dict[str, Any]:
-        """Parse and execute one or more Email DSL commands."""
-        dsl_text = dsl_text.strip()
-        if not dsl_text:
-            return {"success": False, "error": "DSL is empty — enter a query or command."}
-        try:
-            commands = parse_email_dsl(dsl_text, default_limit=default_limit, default_max_chars=default_max_chars)
-            if not commands:
-                return {"success": False, "error": "No valid Email DSL commands parsed."}
-
-            # Execute the first command (or combine if multiple)
-            cmd = commands[0]
-            # If user adjusted limit / max_chars parameters via UI, respect them if not explicitly in command
-            res = self.email_connector.execute_command(cmd)
-            return {
-                "success": res.success,
-                "message": res.message,
-                "total_matched": res.total_matched,
-                "returned_count": res.returned_count,
-                "items": [item.to_dict() for item in res.items],
-                "context_markdown": res.context_markdown,
-                "error": res.error,
-            }
-        except Exception as err:
-            return {"success": False, "error": f"Email execution failed: {err}"}
-
-    def email_fetch_unread(self, folder: str = "inbox", limit: int = 15, max_chars: int = 250) -> Dict[str, Any]:
-        """Fetch and prepare unread emails for triage."""
-        try:
-            cmd = EmailCommand(
-                action="SUMMARIZE_UNREAD",
-                folder=folder or "inbox",
-                unread_only=True,
-                limit=limit,
-                max_chars=max_chars,
-            )
-            res = self.email_connector.execute_command(cmd)
-            return {
-                "success": res.success,
-                "message": res.message,
-                "total_matched": res.total_matched,
-                "returned_count": res.returned_count,
-                "items": [item.to_dict() for item in res.items],
-                "context_markdown": res.context_markdown,
-                "error": res.error,
-            }
-        except Exception as err:
-            return {"success": False, "error": f"Failed to fetch unread emails: {err}"}

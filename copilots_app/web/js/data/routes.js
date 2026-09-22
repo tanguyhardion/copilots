@@ -18,36 +18,6 @@ export const ROUTES = {
       { id: "action-help", text: "", icon: "help-circle", title: "PowerPoint Copilot Guide", isIconOnly: true },
     ]
   },
-  word: {
-    title: "Word Copilot",
-    subtitle: "Document generator, live cursor injector, and active document editor with DSL extraction",
-    icon: "../../assets/icons/word.png",
-    badge: "Word COM",
-    badgeColor: "var(--brand-word)",
-    badgeSubtleColor: "var(--brand-word-subtle)",
-    badgeGlowColor: "var(--brand-word-glow)",
-    bgGlowColor: "var(--brand-word-bg-glow)",
-    bgGlowSubtleColor: "var(--brand-word-bg-glow-subtle)",
-    actions: [
-      { id: "action-prompt", text: "System Prompt", icon: "settings" },
-      { id: "action-help", text: "", icon: "help-circle", title: "Word Copilot Guide", isIconOnly: true },
-    ]
-  },
-  excel: {
-    title: "Excel Copilot",
-    subtitle: "Active workbook COM automation, real-time spreadsheet analysis, and deterministic JSON action execution",
-    icon: "../../assets/icons/excel.png",
-    badge: "Excel COM",
-    badgeColor: "var(--brand-excel)",
-    badgeSubtleColor: "var(--brand-excel-subtle)",
-    badgeGlowColor: "var(--brand-excel-glow)",
-    bgGlowColor: "var(--brand-excel-bg-glow)",
-    bgGlowSubtleColor: "var(--brand-excel-bg-glow-subtle)",
-    actions: [
-      { id: "action-prompt", text: "System Prompt", icon: "settings" },
-      { id: "action-help", text: "", icon: "help-circle", title: "Excel Copilot Guide", isIconOnly: true },
-    ]
-  },
   cv: {
     title: "CV Copilot",
     subtitle: "Deterministic Data Quality engine, Europass profile validation, and formatted Word .docx generator",
@@ -61,51 +31,6 @@ export const ROUTES = {
     actions: [
       { id: "action-prompt", text: "System Prompt", icon: "settings" },
       { id: "action-help", text: "", icon: "help-circle", title: "CV Copilot Guide", isIconOnly: true },
-    ]
-  },
-  python: {
-    title: "Python Copilot",
-    subtitle: "Interactive execution sandbox, script runner, live stdout/stderr console, and directory context inspector",
-    icon: "../../assets/icons/python.png",
-    badge: "Python Runner Sandbox",
-    badgeColor: "var(--brand-python)",
-    badgeSubtleColor: "var(--brand-python-subtle)",
-    badgeGlowColor: "var(--brand-python-glow)",
-    bgGlowColor: "var(--brand-python-bg-glow)",
-    bgGlowSubtleColor: "var(--brand-python-bg-glow-subtle)",
-    actions: [
-      { id: "action-prompt", text: "System Prompt", icon: "settings" },
-      { id: "action-help", text: "", icon: "help-circle", title: "Python Copilot Guide", isIconOnly: true },
-    ]
-  },
-  organizer: {
-    title: "Files Copilot",
-    subtitle: "Analyze recursive folder context, prepare LLM-ready summaries, and execute safe copy-only reorganization plans",
-    icon: "../../assets/icons/folder-organizer.png",
-    badge: "Folder DSL + Safe Copy",
-    badgeColor: "var(--brand-organizer)",
-    badgeSubtleColor: "var(--brand-organizer-subtle)",
-    badgeGlowColor: "var(--brand-organizer-glow)",
-    bgGlowColor: "var(--brand-organizer-bg-glow)",
-    bgGlowSubtleColor: "var(--brand-organizer-bg-glow-subtle)",
-    actions: [
-      { id: "action-prompt", text: "System Prompt", icon: "settings" },
-      { id: "action-help", text: "", icon: "help-circle", title: "Files Copilot Guide", isIconOnly: true },
-    ]
-  },
-  email: {
-    title: "Email Copilot",
-    subtitle: "Query Outlook desktop emails, triage unread inboxes, and summarize message history with clean DSL",
-    icon: "../../assets/icons/email.png",
-    badge: "Outlook Desktop COM",
-    badgeColor: "var(--brand-email)",
-    badgeSubtleColor: "var(--brand-email-subtle)",
-    badgeGlowColor: "var(--brand-email-glow)",
-    bgGlowColor: "var(--brand-email-bg-glow)",
-    bgGlowSubtleColor: "var(--brand-email-bg-glow-subtle)",
-    actions: [
-      { id: "action-prompt", text: "System Prompt", icon: "settings" },
-      { id: "action-help", text: "", icon: "help-circle", title: "Email Copilot Guide", isIconOnly: true },
     ]
   }
 };

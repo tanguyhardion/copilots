@@ -4,8 +4,6 @@
 
 import { ROUTES } from "../data/routes.js";
 import { openPromptModal, openCheatsheetModal, openHelpModal } from "../modals/modals.js";
-import { excelConnectActive, excelOpenFile } from "../views/excel.js";
-import { pythonOpenExplorer, pythonCopyFolderContext, pythonClearWorkspace } from "../views/python.js";
 
 /** Currently active route key. */
 export let currentRoute = "powerpoint";
@@ -91,14 +89,9 @@ export function navigateTo(routeId) {
  */
 export function handleHeaderAction(actionId, routeId) {
   const handlers = {
-    "action-prompt":              () => openPromptModal(routeId),
-    "action-cheatsheet":          () => openCheatsheetModal(routeId),
-    "action-help":                () => openHelpModal(routeId),
-    "action-excel-active":        () => excelConnectActive(),
-    "action-excel-open":          () => excelOpenFile(),
-    "action-python-open-folder":  () => pythonOpenExplorer(),
-    "action-python-copy-context": () => pythonCopyFolderContext(),
-    "action-python-clear":        () => pythonClearWorkspace(),
+    "action-prompt":      () => openPromptModal(routeId),
+    "action-cheatsheet":  () => openCheatsheetModal(routeId),
+    "action-help":        () => openHelpModal(routeId),
   };
   handlers[actionId]?.();
 }
