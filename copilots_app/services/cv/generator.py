@@ -1314,6 +1314,7 @@ def generate_cv(
 
     doc.save(output_path)
     print(f"✓ CV saved → {output_path}")
+    print(f"[OK] CV saved -> {output_path}")
 
 
 # ─────────────────────────────────────────────
