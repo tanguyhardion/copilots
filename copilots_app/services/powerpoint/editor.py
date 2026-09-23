@@ -19,6 +19,7 @@ from copilots_app.services.powerpoint.parser import (
 )
 from copilots_app.services.powerpoint.connector import PowerPointConnector
 from copilots_app.services.powerpoint.edit_parser import parse_edit_dsl
+from copilots_app.services.powerpoint.animations import parse_animation_fields, apply_shape_animation
 
 
 class PowerPointEditor:
@@ -94,7 +95,7 @@ class PowerPointEditor:
                     target_id = op.get("target_id")
                     shape = self._find_shape(slide, target_id)
                     if shape:
-                        self._modify_shape(shape, op.get("fields", {}), op.get("text_part"))
+                        self._modify_shape(slide, shape, op.get("fields", {}), op.get("text_part"))
                         counts["modify"] += 1
                     else:
                         print(f"[editor] Could not find shape with id={target_id} to modify")
@@ -144,8 +145,8 @@ class PowerPointEditor:
             print(f"[editor] Error finding shape {target_id}: {e}")
         return None
 
-    def _modify_shape(self, shape, fields: Dict[str, str], text_part: Optional[str]):
-        """Modify shape properties and text in-place."""
+    def _modify_shape(self, slide, shape, fields: Dict[str, str], text_part: Optional[str]):
+        """Modify shape properties, animations, and text in-place."""
         # 1. Geometry
         if "left" in fields:
             try:
@@ -238,4 +239,35 @@ class PowerPointEditor:
                 self.connector._apply_rich_text(shape, shape_def)
             except Exception as e:
                 print(f"[editor] Error modifying text: {e}")
+
+        # 5. Animation
+        if "anim" in fields or "animation" in fields:
+            anim_val = (fields.get("anim") or fields.get("animation") or "").strip().lower()
+            if anim_val in ("none", "false", "0", "remove"):
+                # Remove existing animation for this shape from slide timeline
+                try:
+                    timeline = getattr(slide, "TimeLine", None)
+                    if timeline:
+                        main_seq = timeline.MainSequence
+                        for i in range(main_seq.Count, 0, -1):
+                            eff = main_seq(i)
+                            if getattr(eff, "Shape", None) and eff.Shape.Id == shape.Id:
+                                eff.Delete()
+                except Exception as e:
+                    print(f"[editor] Error removing animation: {e}")
+            else:
+                anim_cfg = parse_animation_fields(fields)
+                if anim_cfg:
+                    try:
+                        # Remove prior effect on this shape first to replace it cleanly
+                        timeline = getattr(slide, "TimeLine", None)
+                        if timeline:
+                            main_seq = timeline.MainSequence
+                            for i in range(main_seq.Count, 0, -1):
+                                eff = main_seq(i)
+                                if getattr(eff, "Shape", None) and eff.Shape.Id == shape.Id:
+                                    eff.Delete()
+                        apply_shape_animation(slide, shape, anim_cfg)
+                    except Exception as e:
+                        print(f"[editor] Error updating animation: {e}")
 

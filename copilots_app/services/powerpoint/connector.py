@@ -27,6 +27,7 @@ from copilots_app.services.powerpoint.parser import (
     is_theme_color,
     sort_shapes_for_render,
 )
+from copilots_app.services.powerpoint.animations import apply_shape_animation
 
 
 def _svg_to_png(svg_path: str, width_px: int = 64, height_px: int = 64) -> Optional[str]:
@@ -142,10 +143,15 @@ class PowerPointConnector:
 
             ordered_shapes = sort_shapes_for_render(render_shapes)
             total = len(ordered_shapes)
+            created_shapes = []
             for i, sd in enumerate(ordered_shapes):
                 if status_cb:
                     status_cb(f"Creating shape {i+1}/{total}…")
-                self._create_single_shape(slide, sd, icon_cache)
+                ps = self._create_single_shape(slide, sd, icon_cache)
+                if ps:
+                    created_shapes.append((ps, sd))
+
+            self._apply_animations_for_slide(slide, created_shapes)
 
             if status_cb:
                 status_cb("Copying to clipboard…")
@@ -201,10 +207,15 @@ class PowerPointConnector:
 
                 ordered = sort_shapes_for_render(render_shapes)
                 total_shapes = len(ordered)
+                created_shapes = []
                 for i, sd in enumerate(ordered):
                     if status_cb:
                         status_cb(f"Slide {slide_num + 1}/{total_slides} — shape {i + 1}/{total_shapes}…")
-                    self._create_single_shape(slide, sd, icon_cache)
+                    ps = self._create_single_shape(slide, sd, icon_cache)
+                    if ps:
+                        created_shapes.append((ps, sd))
+
+                self._apply_animations_for_slide(slide, created_shapes)
 
             if status_cb:
                 total_render_shapes = sum(len(self._extract_slide_commands(s)[1]) for s in slides_data)
@@ -234,15 +245,39 @@ class PowerPointConnector:
             self._apply_slide_background(slide, background_color)
             ordered_shapes = sort_shapes_for_render(render_shapes)
             total = len(ordered_shapes)
+            created_shapes = []
             for i, sd in enumerate(ordered_shapes):
                 if status_cb:
                     status_cb(f"Inserting shape {i+1}/{total} on current slide…")
-                self._create_single_shape(slide, sd, icon_cache)
+                ps = self._create_single_shape(slide, sd, icon_cache)
+                if ps:
+                    created_shapes.append((ps, sd))
+
+            self._apply_animations_for_slide(slide, created_shapes)
 
             if status_cb:
                 status_cb(f"✓ {total} shapes inserted on slide {slide_index}!")
         finally:
             pythoncom.CoUninitialize()
+
+    def _apply_animations_for_slide(self, slide, created_shapes: List[tuple]):
+        """
+        Applies animations to created shapes on the slide timeline in render/sequence order.
+        created_shapes is a list of (ppt_shape, shape_def).
+        """
+        animated_items = []
+        for ps, sd in created_shapes:
+            anim = sd.get("animation")
+            if anim and ps:
+                order = anim.get("order")
+                source_line = sd.get("_source_line", 0) or 0
+                animated_items.append((order if order is not None else float("inf"), source_line, ps, anim))
+
+        # Sort by explicit anim_order first, then by source_line/natural order
+        animated_items.sort(key=lambda item: (item[0], item[1]))
+
+        for _, _, ps, anim in animated_items:
+            apply_shape_animation(slide, ps, anim)
 
     def _create_single_shape(self, slide, shape_def: Dict[str, Any], icon_cache: Optional[Dict[tuple, str]] = None):
         shape_type = shape_def.get("type", "rect")

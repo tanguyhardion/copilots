@@ -2,4 +2,4 @@
 Copilot Suite - Unified Application Package
 """
 
-__version__ = "1.5"
+__version__ = "1.5 Lite"

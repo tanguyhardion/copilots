@@ -15,6 +15,10 @@ from copilots_app.services.powerpoint.constants import (
     THEME_COLORS,
 )
 from copilots_app.services.powerpoint.parser import bgr_int_to_hex
+from copilots_app.services.powerpoint.animations import (
+    extract_slide_animations,
+    format_animation_dsl,
+)
 
 
 def color_int_to_dsl(fore_color) -> Optional[str]:
@@ -95,20 +99,23 @@ class PowerPointExtractor:
                 lines.append(bg_dsl)
                 lines.append("")
 
-            # 2. Extract Shapes
+            # 2. Extract Shapes and Animations
             shapes_count = slide.Shapes.Count
+            slide_animations = extract_slide_animations(slide)
             extracted_items = []
 
             for i in range(1, shapes_count + 1):
                 try:
                     shape = slide.Shapes(i)
-                    shape_dsl = self._extract_shape(shape)
+                    anim_cfg = slide_animations.get(shape.Id)
+                    shape_dsl = self._extract_shape(shape, anim_cfg)
                     if shape_dsl:
                         lines.append(shape_dsl)
                         extracted_items.append({
                             "id": shape.Id,
                             "name": shape.Name,
                             "type": getattr(shape, "Type", 0),
+                            "animation": anim_cfg,
                         })
                 except Exception as e:
                     print(f"[extractor] Error extracting shape index {i}: {e}")
@@ -136,7 +143,7 @@ class PowerPointExtractor:
             print(f"[extractor] Error extracting slide background: {e}")
         return None
 
-    def _extract_shape(self, shape) -> Optional[str]:
+    def _extract_shape(self, shape, anim_cfg: Optional[Dict[str, Any]] = None) -> Optional[str]:
         shape_id = shape.Id
         shape_type_int = getattr(shape, "Type", 1)
 
@@ -147,20 +154,20 @@ class PowerPointExtractor:
         except Exception:
             pass
         if has_table:
-            return self._extract_table(shape, shape_id)
+            return self._extract_table(shape, shape_id, anim_cfg)
 
         # Lines (type 9)
         if shape_type_int == 9:
-            return self._extract_line(shape, shape_id)
+            return self._extract_line(shape, shape_id, anim_cfg)
 
         # Images (type 11 or 13)
         if shape_type_int in (11, 13):
-            return self._extract_image(shape, shape_id)
+            return self._extract_image(shape, shape_id, anim_cfg)
 
         # Standard shapes / textboxes / placeholders
-        return self._extract_standard_shape(shape, shape_id, shape_type_int)
+        return self._extract_standard_shape(shape, shape_id, shape_type_int, anim_cfg)
 
-    def _extract_standard_shape(self, shape, shape_id: int, shape_type_int: int) -> str:
+    def _extract_standard_shape(self, shape, shape_id: int, shape_type_int: int, anim_cfg: Optional[Dict[str, Any]] = None) -> str:
         # Determine shape type keyword
         shape_type = "rect"
         if shape_type_int == 17:  # msoTextBox
@@ -191,6 +198,12 @@ class PowerPointExtractor:
                 tokens.append(f"rotation={rot}")
         except Exception:
             pass
+
+        # Animation
+        if anim_cfg:
+            anim_str = format_animation_dsl(anim_cfg)
+            if anim_str:
+                tokens.append(anim_str)
 
         # Fill color (if not plain text box or if fill is visible)
         try:
@@ -370,7 +383,7 @@ class PowerPointExtractor:
         t = text_range.Text.replace('"', '\\"').replace("\n", "\\n")
         return f'"{t}"'
 
-    def _extract_line(self, shape, shape_id: int) -> str:
+    def _extract_line(self, shape, shape_id: int, anim_cfg: Optional[Dict[str, Any]] = None) -> str:
         left = round(float(shape.Left), 1)
         top = round(float(shape.Top), 1)
         width = round(float(shape.Width), 1)
@@ -379,6 +392,10 @@ class PowerPointExtractor:
         y2 = round(top + height, 1)
 
         tokens = ["line", f"x1={left}", f"y1={top}", f"x2={x2}", f"y2={y2}"]
+        if anim_cfg:
+            anim_str = format_animation_dsl(anim_cfg)
+            if anim_str:
+                tokens.append(anim_str)
         try:
             lc = color_int_to_dsl(shape.Line.ForeColor)
             if lc:
@@ -391,17 +408,22 @@ class PowerPointExtractor:
 
         return " ".join(tokens) + f"  // id={shape_id}"
 
-    def _extract_image(self, shape, shape_id: int) -> str:
+    def _extract_image(self, shape, shape_id: int, anim_cfg: Optional[Dict[str, Any]] = None) -> str:
         left = round(float(shape.Left), 1)
         top = round(float(shape.Top), 1)
         width = round(float(shape.Width), 1)
         height = round(float(shape.Height), 1)
+        anim_token = ""
+        if anim_cfg:
+            anim_str = format_animation_dsl(anim_cfg)
+            if anim_str:
+                anim_token = f" {anim_str}"
         return (
             f"// [EMBEDDED IMAGE — id={shape_id}]\n"
-            f"image url=https://... left={left} top={top} width={width} height={height}  // id={shape_id}"
+            f"image url=https://... left={left} top={top} width={width} height={height}{anim_token}  // id={shape_id}"
         )
 
-    def _extract_table(self, shape, shape_id: int) -> str:
+    def _extract_table(self, shape, shape_id: int, anim_cfg: Optional[Dict[str, Any]] = None) -> str:
         table = shape.Table
         rows_cnt = table.Rows.Count
         cols_cnt = table.Columns.Count
@@ -411,7 +433,12 @@ class PowerPointExtractor:
         width = round(float(shape.Width), 1)
         height = round(float(shape.Height), 1)
 
-        out = [f"table left={left} top={top} width={width} height={height}  // id={shape_id}"]
+        tokens = [f"table", f"left={left}", f"top={top}", f"width={width}", f"height={height}"]
+        if anim_cfg:
+            anim_str = format_animation_dsl(anim_cfg)
+            if anim_str:
+                tokens.append(anim_str)
+        out = [" ".join(tokens) + f"  // id={shape_id}"]
 
         # Column widths
         col_widths = []

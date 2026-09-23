@@ -21,6 +21,7 @@ from copilots_app.services.powerpoint.constants import (
     PPT_THEME_MAP,
     MSO_SHAPE_MAP,
 )
+from copilots_app.services.powerpoint.animations import parse_animation_fields
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -355,7 +356,7 @@ def parse_text_segment(seg: str) -> Optional[Dict[str, Any]]:
         k, v = k.strip().lower(), v.strip()
         if k == "size":
             try:
-                result["size"] = int(v)
+                result["size"] = float(v)
             except ValueError:
                 pass
         elif k == "bold":
@@ -370,6 +371,9 @@ def parse_text_segment(seg: str) -> Optional[Dict[str, Any]]:
                 result["color"] = resolved
         elif k == "font":
             result["font"] = v
+        elif k in ("anim", "animation", "anim_trigger", "anim_delay",
+                   "anim_duration", "anim_order"):
+            result.setdefault("_anim_fields", {})[k] = v
 
     return result
 
@@ -498,10 +502,24 @@ def build_shape_from_fields(shape_type: str, fields: Dict[str, str], text_part: 
     if "id" in fields:
         shape["_id"] = fields["id"]
 
+    anim = parse_animation_fields(fields)
+    if anim:
+        shape["animation"] = anim
+
     if text_part:
         rich = parse_rich_text(text_part)
         if rich:
             shape["rich_text"] = rich
+            # If any text-zone token contained anim-related keys (e.g. placed
+            # after the | by the DSL author), promote them to shape-level so
+            # that parse_animation_fields can pick them up.
+            merged_anim_fields = dict(fields)
+            for seg in rich:
+                merged_anim_fields.update(seg.pop("_anim_fields", {}))
+            if merged_anim_fields != fields:
+                extra_anim = parse_animation_fields(merged_anim_fields)
+                if extra_anim and not shape.get("animation"):
+                    shape["animation"] = extra_anim
 
     return shape
 
@@ -665,6 +683,13 @@ def build_table_shape(fields: Dict[str, str], subsequent_lines: List[str], sourc
     return shape
 
 
+def apply_animation_field(shape: Dict[str, Any], fields: Dict[str, str]) -> Dict[str, Any]:
+    anim = parse_animation_fields(fields)
+    if anim:
+        shape["animation"] = anim
+    return shape
+
+
 def apply_z_order_field(shape: Dict[str, Any], fields: Dict[str, str], source_line: Optional[int] = None) -> Dict[str, Any]:
     if "z_order" in fields:
         try:
@@ -711,6 +736,7 @@ def parse_dsl(dsl_string: str) -> List[Dict[str, Any]]:
 
         if shape_type == "line":
             shape = build_line_shape(fields, source_line)
+            shape = apply_animation_field(shape, fields)
             shapes.append(apply_z_order_field(shape, fields, source_line))
             i += 1
         elif shape_type == "svg":
@@ -726,10 +752,12 @@ def parse_dsl(dsl_string: str) -> List[Dict[str, Any]]:
             svg_markup = "\n".join(svg_lines).strip()
             if svg_markup:
                 shape = build_svg_shape(fields, svg_markup, source_line)
+                shape = apply_animation_field(shape, fields)
                 shapes.append(apply_z_order_field(shape, fields, source_line))
         elif shape_type == "icon":
             parsed = build_icon_shape(fields, source_line)
             if parsed:
+                parsed = apply_animation_field(parsed, fields)
                 shapes.append(apply_z_order_field(parsed, fields, source_line))
             i += 1
         elif shape_type == "table":
@@ -744,6 +772,7 @@ def parse_dsl(dsl_string: str) -> List[Dict[str, Any]]:
                 i += 1
             shape = build_table_shape(fields, subsequent, source_line)
             if shape:
+                shape = apply_animation_field(shape, fields)
                 shapes.append(apply_z_order_field(shape, fields, source_line))
         elif shape_type == "image":
             image_url = fields.get("url", "").strip()
@@ -757,6 +786,7 @@ def parse_dsl(dsl_string: str) -> List[Dict[str, Any]]:
                     "height": float(fields.get("height", 100)),
                     "_source_line": source_line,
                 }
+                shape = apply_animation_field(shape, fields)
                 shapes.append(shape)
             i += 1
         elif shape_type == "slide":
@@ -766,6 +796,7 @@ def parse_dsl(dsl_string: str) -> List[Dict[str, Any]]:
             i += 1
         else:
             shape = build_shape_from_fields(shape_type, fields, text_part, source_line)
+            shape = apply_animation_field(shape, fields)
             shapes.append(apply_z_order_field(shape, fields, source_line))
             i += 1
 

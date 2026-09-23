@@ -146,3 +146,11 @@ VALID_EDIT_OPS = {
     "insert",
 }
 
+# Animation mappings and triggers
+from copilots_app.services.powerpoint.animations import (
+    MSO_ANIM_EFFECT_MAP,
+    REVERSE_ANIM_EFFECT_MAP,
+    MSO_ANIM_TRIGGER_MAP,
+    REVERSE_ANIM_TRIGGER_MAP,
+)
+

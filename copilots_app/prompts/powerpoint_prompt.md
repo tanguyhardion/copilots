@@ -48,6 +48,7 @@ shapetype left=N top=N width=N height=N [field=value ...] [| "text" size=N bold=
 - Everything after `|` is text content.
 - `//` starts a comment line.
 - `---` on a line by itself is a **slide separator**. Everything before it goes on slide 1, everything after on slide 2, and so on. Use it whenever the design spans multiple slides.
+- **Animations rule**: Never add animations (`anim=...`) unless the user explicitly requests animations.
 
 Text-in-shape rule: If a shape supports text, the text must be attached to that same shape using |. Do not create a separate text shape positioned on top of rect, rounded_rect, oval, diamond, chevron, arrow, callout, etc.
 
@@ -204,6 +205,22 @@ Rules:
 - Omit `z_order` to keep the natural DSL order.
 - Use smaller numbers for background layers and larger numbers for foreground layers.
 - Leave gaps between values so future elements can fit between layers.
+
+### Animations
+```
+anim=appear                                   appear on click (default)
+anim=appear anim_trigger=after_previous       appear automatically after previous animation/slide
+anim=appear anim_trigger=with_previous        appear simultaneously with previous animation
+anim=appear anim_delay=0.5                    delay in seconds before appearing
+anim=appear,after_previous,0.5                compact shorthand (effect,trigger,delay)
+anim=none                                     remove animation (in edit mode: modify id=N anim=none)
+```
+
+Rules:
+- **CRITICAL**: **NEVER use animations by default**. ONLY include animations when the user explicitly asks for them.
+- `anim=appear` sets the shape to appear upon presentation click (or with/after previous).
+- Valid triggers: `on_click` (default), `after_previous`, `with_previous`.
+- When explicitly requested, use animations to reveal steps, bullet points, cards, or key takeaways sequentially.
 
 ### Debug
 ```
@@ -557,22 +574,23 @@ Use `z_order` to override that ordering when you need specific layering.
 ---
 
 # ANTI-PATTERNS
-| ❌ Never | ✅ Instead |
+
+| ❌ Do not | ✅ Instead |
 |----------|-----------|
-| Never use `grad_stops` and `color` on same shape | `grad_stops` replaces fill — omit `color` |
-| Never use `shadow=true` on background rects or lines | Shadow only on elevated cards/panels |
-| Never set `line_height` below 1.0 | Minimum is 1.0 |
-| Never set `bullet=true` on a single-line shape | Only use when 2+ lines exist |
-| Never use `icon` with `|` text syntax | Icons take no text — use a separate `text` shape |
-| Never manually force short text into tall fixed boxes | Use `text` shapes and let them auto-resize vertically |
-| Never stack multiple `text` shapes at same coordinates | Use `\n` inside one shape |
-| Never assume `a1` is a fixed hue like green or blue | Treat `a1` as Theme Accent 1 from the active PowerPoint theme |
-| Prefer not using raw hex for every lightened/darkened theme color | Prefer theme variants like `a1_l1`, `a1_d1`, `t1_l1`, `bg2_d1` unless specified by the user |
-| Never set a separate `text` shape overlaid on top of another shape | Use the built-in text system with `|` syntax. Instead of `rect ... ` then `text left=X top=Y ...`, combine them: `rect left=48 top=128 width=180 height=60 color=a1 | "Label" size=12 bold=true color=#FFFFFF` |
-| Never create a full-slide background rectangle: `rect left=0 top=0 width=960 height=540 color=...` | Use `slide background=...` for full-slide backgrounds. Keep rectangles for local panels/content regions only. |
-| Never assume text has automatic internal padding |Text defaults to padding=0 unless padding is explicitly set. Add padding=left,right,top,bottom when breathing room is needed, e.g. padding=8,8,4,4. |
-| Never expect image to fill both width and height exactly when proportions differ | `width` and `height` define a bounding box; the image will fit inside it while preserving aspect ratio |
-| Never rely on image distortion for layout | Choose a box that matches the image’s intended visual proportions |
+| Do not use `grad_stops` and `color` on same shape | `grad_stops` replaces fill — omit `color` |
+| Do not use `shadow=true` on background rects or lines | Shadow only on elevated cards/panels |
+| Do not set `line_height` below 1.0 | Minimum is 1.0 |
+| Do not set `bullet=true` on a single-line shape | Only use when 2+ lines exist |
+| Do not use `icon` with `|` text syntax | Icons take no text — use a separate `text` shape |
+| Do not manually force short text into tall fixed boxes | Use `text` shapes and let them auto-resize vertically |
+| Do not stack multiple `text` shapes at same coordinates | Use `\n` inside one shape |
+| Do not assume `a1` is a fixed hue like green or blue | Treat `a1` as Theme Accent 1 from the active PowerPoint theme |
+| Prefer using theme color variants like `a1_l1`, `a1_d1`, `t1_l1`, `bg2_d1` for every color | Prefer raw hex values (e.g. `#3A7FD5`) by default — only use theme color variants when the user specifically asks for them |
+| Do not set a separate `text` shape overlaid on top of another shape | Use the built-in text system with `|` syntax. Instead of `rect ... ` then `text left=X top=Y ...`, combine them: `rect left=48 top=128 width=180 height=60 color=a1 | "Label" size=12 bold=true color=#FFFFFF` |
+| Do not create a full-slide background rectangle: `rect left=0 top=0 width=960 height=540 color=...` | Use `slide background=...` for full-slide backgrounds. Keep rectangles for local panels/content regions only. |
+| Do not assume text has automatic internal padding |Text defaults to padding=0 unless padding is explicitly set. Add padding=left,right,top,bottom when breathing room is needed, e.g. padding=8,8,4,4. |
+| Do not expect image to fill both width and height exactly when proportions differ | `width` and `height` define a bounding box; the image will fit inside it while preserving aspect ratio |
+| Do not rely on image distortion for layout | Choose a box that matches the image’s intended visual proportions |
 
 ---
 
