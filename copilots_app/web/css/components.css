@@ -232,7 +232,6 @@
   background: linear-gradient(180deg, #6D70F7 0%, #5B54FA 100%);
   border-color: #818CF8;
   box-shadow: 0 4px 12px var(--primary-glow);
-  transform: translateY(-1px);
 }
 
 .btn-tiny {
@@ -254,7 +253,6 @@
   background: var(--bg-card-hover);
   border-color: var(--border-hover);
   color: #FFFFFF;
-  transform: translateY(-1px);
 }
 
 .btn-tiny:active {
@@ -274,7 +272,6 @@
   background: linear-gradient(180deg, #FB923C 0%, #F97316 100%);
   border-color: #FDBA74;
   box-shadow: 0 4px 16px rgba(249, 115, 22, 0.45);
-  transform: translateY(-1px);
 }
 
 .btn-ppt-outline {
@@ -288,7 +285,6 @@
   border-color: #FB923C;
   color: #FFFFFF;
   box-shadow: 0 2px 8px var(--brand-ppt-glow);
-  transform: translateY(-1px);
 }
 
 .btn-ppt-subtle {
@@ -301,7 +297,6 @@
   background: rgba(249, 115, 22, 0.12);
   border-color: rgba(249, 115, 22, 0.3);
   color: #FB923C;
-  transform: translateY(-1px);
 }
 
 .action-bar-separator {
@@ -325,7 +320,6 @@
   background: linear-gradient(180deg, #A78BFA 0%, #8B5CF6 100%);
   border-color: #C4B5FD;
   box-shadow: 0 4px 16px rgba(139, 92, 246, 0.45);
-  transform: translateY(-1px);
 }
 
 .btn-cv-secondary {
@@ -339,7 +333,6 @@
   border-color: #8B5CF6;
   color: #FFFFFF;
   box-shadow: 0 2px 10px var(--brand-cv-glow);
-  transform: translateY(-1px);
 }
 
 .btn-cv-outline {
@@ -353,7 +346,6 @@
   border-color: #A78BFA;
   color: #FFFFFF;
   box-shadow: 0 2px 8px var(--brand-cv-glow);
-  transform: translateY(-1px);
 }
 
 /* -------------------------------------------------------------------------
@@ -453,7 +445,6 @@
   background: rgba(26, 26, 33, 0.72);
   border-color: rgba(255, 255, 255, 0.16);
   box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
-  transform: translateY(-1px);
 }
 
 .metric-icon {

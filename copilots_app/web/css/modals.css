@@ -156,7 +156,6 @@
   background: linear-gradient(180deg, color-mix(in srgb, var(--modal-accent, #6366F1) 85%, #fff) 0%, var(--modal-accent, #4F46E5) 100%);
   border-color: color-mix(in srgb, var(--modal-accent, #6366F1) 70%, #fff);
   box-shadow: 0 4px 12px color-mix(in srgb, var(--modal-accent, #6366F1) 50%, transparent);
-  transform: translateY(-1px);
 }
 
 /* Python Copilot dark text contrast override inside modals */

@@ -26,6 +26,23 @@ FONT_NAME = "Calibri"
 COLOR_DARK_RGB = 0x242424  # RGB(36, 36, 36) in BGR/RGB integer
 
 
+def _safe_hide_line(shape) -> None:
+    """Suppress COM errors when setting Line.Visible = False (not all table cell shapes expose it)."""
+    try:
+        shape.Line.Visible = False
+    except Exception:
+        pass
+
+
+def _safe_hide_fill(shape) -> None:
+    """Suppress COM errors when setting Fill.Visible = False."""
+    try:
+        shape.Fill.Visible = False
+    except Exception:
+        pass
+
+
+
 def _rgb_to_int(r: int, g: int, b: int) -> int:
     """Convert RGB (0-255) to Windows BGR COLORREF integer used by PowerPoint COM."""
     return r | (g << 8) | (b << 16)
@@ -122,12 +139,15 @@ def generate_pptx_cv(
     strings = get_cv_strings(language)
     selected_sections = normalize_sections(sections, PPTX_SECTION_DEFAULTS)
     resolved_template = _resolve_template_path(template_path)
+    print(f"[pptx_gen] Template: {resolved_template}")
+    print(f"[pptx_gen] Output:   {output_path}")
 
     abs_output_path = os.path.abspath(output_path)
     os.makedirs(os.path.dirname(abs_output_path), exist_ok=True)
 
     # Make a copy of template to target output path
     shutil.copy2(resolved_template, abs_output_path)
+    print(f"[pptx_gen] Template copied to: {abs_output_path}")
 
     pythoncom.CoInitialize()
     ppt_app = None
@@ -135,19 +155,24 @@ def generate_pptx_cv(
     created_app = False
 
     try:
+        print("[pptx_gen] Connecting to PowerPoint COM...")
         try:
             ppt_app = win32com.client.GetActiveObject("PowerPoint.Application")
+            print("[pptx_gen] Attached to existing PowerPoint instance.")
         except Exception:
             ppt_app = win32com.client.Dispatch("PowerPoint.Application")
             created_app = True
+            print("[pptx_gen] Launched new PowerPoint instance.")
 
         # Open presentation
+        print(f"[pptx_gen] Opening presentation: {abs_output_path}")
         pres = ppt_app.Presentations.Open(
             FileName=abs_output_path,
             ReadOnly=False,
             Untitled=False,
             WithWindow=False,
         )
+        print(f"[pptx_gen] Presentation opened. Slide count: {pres.Slides.Count}")
         slide = pres.Slides(1)
 
         # Index shapes by name
@@ -155,6 +180,7 @@ def generate_pptx_cv(
         for i in range(1, slide.Shapes.Count + 1):
             s = slide.Shapes(i)
             shapes_by_name[s.Name] = s
+        print(f"[pptx_gen] Shapes found: {list(shapes_by_name.keys())}")
 
         # -------------------------------------------------------------------------
         # Style fixes applied to shapes
@@ -248,6 +274,7 @@ def generate_pptx_cv(
         # -------------------------------------------------------------------------
         # 1. Candidate Header & Contact Info (Text Placeholder 2)
         # -------------------------------------------------------------------------
+        print("[pptx_gen] Section 1: Header & Contact Info...")
         if "Text Placeholder 2" in shapes_by_name:
             tp_shape = shapes_by_name["Text Placeholder 2"]
             if not selected_sections["header_contact"]:
@@ -271,6 +298,7 @@ def generate_pptx_cv(
         # -------------------------------------------------------------------------
         # 2. Profile Summary (TextBox 7)
         # -------------------------------------------------------------------------
+        print("[pptx_gen] Section 2: Profile Summary...")
         if "TextBox 7" in shapes_by_name:
             tb_shape = shapes_by_name["TextBox 7"]
             if not selected_sections["profile"]:
@@ -287,6 +315,7 @@ def generate_pptx_cv(
         # -------------------------------------------------------------------------
         # 3. Subject Matter Expertise (Table 72 - 2 rows x 3 columns = 6 skills)
         # -------------------------------------------------------------------------
+        print("[pptx_gen] Section 3: Subject Matter Expertise...")
         if "Table 72" in shapes_by_name and shapes_by_name["Table 72"].HasTable:
             table_skills = shapes_by_name["Table 72"].Table
             skills_list: List[str] = []
@@ -307,6 +336,7 @@ def generate_pptx_cv(
                         elif isinstance(s, dict) and s.get("name"):
                             skills_list.append(s["name"].strip())
 
+            print(f"[pptx_gen] Skills to fill: {skills_list}")
             skill_idx = 0
             gray_bgr = _rgb_to_int(232, 232, 232)  # #E8E8E8
 
@@ -325,9 +355,15 @@ def generate_pptx_cv(
                         cell_shape.TextFrame.TextRange.Paragraphs(pi).ParagraphFormat.Alignment = 2  # ppAlignCenter
 
                     # Shading
-                    cell_shape.Fill.Solid()
-                    cell_shape.Fill.ForeColor.RGB = gray_bgr
-                    cell_shape.Line.Visible = False
+                    try:
+                        cell_shape.Fill.Solid()
+                        cell_shape.Fill.ForeColor.RGB = gray_bgr
+                    except Exception:
+                        pass
+                    try:
+                        cell_shape.Line.Visible = False
+                    except Exception:
+                        pass
 
                     # Margins
                     cell_shape.TextFrame.MarginLeft = 1
@@ -340,6 +376,7 @@ def generate_pptx_cv(
         # -------------------------------------------------------------------------
         # 4. Relevant Experience (Table 71 - 5 rows x 2 columns)
         # -------------------------------------------------------------------------
+        print("[pptx_gen] Section 4: Relevant Experience...")
         if "Table 71" in shapes_by_name and shapes_by_name["Table 71"].HasTable:
             table_exp = shapes_by_name["Table 71"].Table
             projects = []
@@ -348,19 +385,21 @@ def generate_pptx_cv(
                 if not projects:
                     projects = cv_json.get("work_experience") or []
 
+            print(f"[pptx_gen] Projects count: {len(projects)}")
             max_rows = table_exp.Rows.Count
 
             dark_bgr = _rgb_to_int(36, 36, 36)
 
             for row_idx in range(max_rows):
+                print(f"[pptx_gen]   Experience row {row_idx + 1}/{max_rows}...")
                 cell_date = table_exp.Cell(row_idx + 1, 1).Shape
                 cell_desc = table_exp.Cell(row_idx + 1, 2).Shape
 
                 # Clear borders & fill
-                cell_date.Fill.Visible = False
-                cell_date.Line.Visible = False
-                cell_desc.Fill.Visible = False
-                cell_desc.Line.Visible = False
+                _safe_hide_fill(cell_date)
+                _safe_hide_line(cell_date)
+                _safe_hide_fill(cell_desc)
+                _safe_hide_line(cell_desc)
 
                 if row_idx < len(projects):
                     proj = projects[row_idx]
@@ -413,6 +452,7 @@ def generate_pptx_cv(
                     cell_desc.TextFrame.TextRange.Text = ""
 
         # Save and close presentation
+        print("[pptx_gen] Saving presentation...")
         pres.Save()
         pres.Close()
         pres = None
@@ -425,6 +465,8 @@ def generate_pptx_cv(
             ppt_app = None
 
     except Exception as e:
+        print(f"[pptx_gen] EXCEPTION: {e}")
+        import traceback; traceback.print_exc()
         if pres is not None:
             try:
                 pres.Close()
@@ -439,4 +481,5 @@ def generate_pptx_cv(
     finally:
         pythoncom.CoUninitialize()
 
+    print("[pptx_gen] Complete.")
     return abs_output_path

@@ -5,6 +5,7 @@ Provides full access to PowerPoint and CV Copilot engines and System Prompts.
 
 import os
 import json
+import traceback
 import tempfile
 from typing import Dict, Any, Optional
 import webview
@@ -277,18 +278,25 @@ class CopilotBridge:
         output_dir: Optional[str] = None,
     ) -> Dict[str, Any]:
         try:
+            print("[pptx] Parsing CV JSON...")
             data = json.loads(cv_json_str)
             pi = data.get("personal_info") or data.get("personal_information") or {}
             first_name = pi.get("first_name", "Candidate")
             last_name = pi.get("last_name", "CV")
             filename = f"CV_{first_name}_{last_name}_1Slide.pptx".replace(" ", "_")
             out_path = self._resolve_cv_output_path(filename, output_dir)
+            print(f"[pptx] Output path: {out_path}")
+            print(f"[pptx] Language: {language}, sections: {sections}")
 
+            print("[pptx] Calling generate_pptx_cv...")
             generate_pptx_cv(data, out_path, language=language, sections=sections)
+            print(f"[pptx] Done. Opening file: {out_path}")
             try:
                 os.startfile(out_path)
             except Exception:
                 pass
             return {"success": True, "path": out_path, "message": f"✓ 1-Slide Executive PowerPoint CV generated and opened: {filename}"}
         except Exception as err:
+            print(f"[pptx] ERROR: {err}")
+            traceback.print_exc()
             return {"success": False, "error": f"PowerPoint CV generation failed: {err}"}
