@@ -10,12 +10,20 @@ import { setStatus, setButtonsDisabled } from "../core/utils.js";
 export async function setupPowerPointView() {
   const editor = document.getElementById("ppt-editor");
 
-  // Read / Inspect the active PowerPoint slide
-  document.getElementById("ppt-btn-read").addEventListener("click", async () => {
-    setStatus("ppt", "Reading shapes and background from active PowerPoint slide…", "info", true);
+  // Read / Inspect the active slide, or every slide of the presentation
+  async function readSlides(readAll) {
+    setStatus(
+      "ppt",
+      readAll
+        ? "Reading shapes and backgrounds from all PowerPoint slides…"
+        : "Reading shapes and background from active PowerPoint slide…",
+      "info",
+      true,
+    );
     setButtonsDisabled("view-powerpoint", true);
     try {
-      const res = await window.pywebview.api.ppt_read_active_slide();
+      const api = window.pywebview.api;
+      const res = readAll ? await api.ppt_read_all_slides() : await api.ppt_read_active_slide();
       if (res.success) {
         editor.value = res.dsl;
         setStatus("ppt", res.message, "success");
@@ -27,7 +35,10 @@ export async function setupPowerPointView() {
     } finally {
       setButtonsDisabled("view-powerpoint", false);
     }
-  });
+  }
+
+  document.getElementById("ppt-btn-read").addEventListener("click", () => readSlides(false));
+  document.getElementById("ppt-btn-read-all").addEventListener("click", () => readSlides(true));
 
   // Apply surgical edits to the active PowerPoint slide
   document.getElementById("ppt-btn-edit").addEventListener("click", async () => {

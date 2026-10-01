@@ -117,6 +117,24 @@ class CopilotBridge:
         except Exception as err:
             return {"success": False, "error": f"Failed to read active slide: {err}"}
 
+    def ppt_read_all_slides(self) -> Dict[str, Any]:
+        """Inspect every slide of the active presentation and return their DSL separated by ---."""
+        try:
+            refresh_dsl_theme_colors()
+        except Exception:
+            pass
+
+        try:
+            dsl_text, meta = self.ppt_extractor.extract_all_slides()
+            return {
+                "success": True,
+                "dsl": dsl_text,
+                "metadata": meta,
+                "message": f"✓ Read {meta['shape_count']} shape(s) from {meta['slide_count']} slide(s).",
+            }
+        except Exception as err:
+            return {"success": False, "error": f"Failed to read slides: {err}"}
+
     def ppt_apply_edits(self, dsl_text: str) -> Dict[str, Any]:
         """Apply edit operations (modify, replace, delete, insert) to the active PowerPoint slide."""
         dsl_text = dsl_text.strip()
