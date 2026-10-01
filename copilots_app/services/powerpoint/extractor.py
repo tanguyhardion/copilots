@@ -87,49 +87,91 @@ class PowerPointExtractor:
                 raise Exception("Could not access active slide. Please select a slide in PowerPoint first.")
 
             slide_count = pres.Slides.Count
-            lines = [
-                f"// === Extracted from Active Slide ({slide_index}/{slide_count}) ===",
-                "// Edit mode: modify or replace shapes using id=N",
-                "",
-            ]
-
-            # 1. Slide Background
-            bg_dsl = self._extract_slide_background(slide)
-            if bg_dsl:
-                lines.append(bg_dsl)
-                lines.append("")
-
-            # 2. Extract Shapes and Animations
-            shapes_count = slide.Shapes.Count
-            slide_animations = extract_slide_animations(slide)
-            extracted_items = []
-
-            for i in range(1, shapes_count + 1):
-                try:
-                    shape = slide.Shapes(i)
-                    anim_cfg = slide_animations.get(shape.Id)
-                    shape_dsl = self._extract_shape(shape, anim_cfg)
-                    if shape_dsl:
-                        lines.append(shape_dsl)
-                        extracted_items.append({
-                            "id": shape.Id,
-                            "name": shape.Name,
-                            "type": getattr(shape, "Type", 0),
-                            "animation": anim_cfg,
-                        })
-                except Exception as e:
-                    print(f"[extractor] Error extracting shape index {i}: {e}")
-
-            dsl_text = "\n".join(lines).strip()
+            dsl_text, items = self._extract_slide_dsl(
+                slide, f"// === Extracted from Active Slide ({slide_index}/{slide_count}) ==="
+            )
             meta = {
                 "slide_index": slide_index,
                 "slide_count": slide_count,
-                "shape_count": len(extracted_items),
-                "shapes": extracted_items,
+                "shape_count": len(items),
+                "shapes": items,
             }
             return dsl_text, meta
         finally:
             pythoncom.CoUninitialize()
+
+    def extract_all_slides(self) -> Tuple[str, Dict[str, Any]]:
+        """
+        Inspects every slide of the active presentation and produces DSL blocks separated
+        by `---` (the multi-slide separator understood by the parser).
+        Returns (dsl_text, metadata_dict).
+        """
+        import pythoncom
+
+        pythoncom.CoInitialize()
+        try:
+            self.connect()
+            ppt = self.ppt_app
+            if ppt.Presentations.Count == 0:
+                raise Exception("No presentations are currently open in PowerPoint.")
+
+            pres = ppt.ActivePresentation
+            slide_count = pres.Slides.Count
+            blocks = []
+            slides_meta = []
+            for idx in range(1, slide_count + 1):
+                slide = pres.Slides(idx)
+                dsl_text, items = self._extract_slide_dsl(
+                    slide, f"// === Slide {idx}/{slide_count} ==="
+                )
+                blocks.append(dsl_text)
+                slides_meta.append({"slide_index": idx, "shape_count": len(items), "shapes": items})
+
+            meta = {
+                "slide_count": slide_count,
+                "shape_count": sum(m["shape_count"] for m in slides_meta),
+                "slides": slides_meta,
+            }
+            return "\n\n---\n\n".join(blocks), meta
+        finally:
+            pythoncom.CoUninitialize()
+
+    def _extract_slide_dsl(self, slide, header: str) -> Tuple[str, List[Dict[str, Any]]]:
+        """Produce the DSL text for a single slide object, plus the extracted shape metadata."""
+        lines = [
+            header,
+            "// Edit mode: modify or replace shapes using id=N",
+            "",
+        ]
+
+        # 1. Slide Background
+        bg_dsl = self._extract_slide_background(slide)
+        if bg_dsl:
+            lines.append(bg_dsl)
+            lines.append("")
+
+        # 2. Extract Shapes and Animations
+        shapes_count = slide.Shapes.Count
+        slide_animations = extract_slide_animations(slide)
+        extracted_items = []
+
+        for i in range(1, shapes_count + 1):
+            try:
+                shape = slide.Shapes(i)
+                anim_cfg = slide_animations.get(shape.Id)
+                shape_dsl = self._extract_shape(shape, anim_cfg)
+                if shape_dsl:
+                    lines.append(shape_dsl)
+                    extracted_items.append({
+                        "id": shape.Id,
+                        "name": shape.Name,
+                        "type": getattr(shape, "Type", 0),
+                        "animation": anim_cfg,
+                    })
+            except Exception as e:
+                print(f"[extractor] Error extracting shape index {i}: {e}")
+
+        return "\n".join(lines).strip(), extracted_items
 
     def _extract_slide_background(self, slide) -> Optional[str]:
         try:
