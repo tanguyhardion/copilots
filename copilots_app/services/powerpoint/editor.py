@@ -1,5 +1,5 @@
 """
-PowerPoint Editor: Executes edit operations directly on the active PowerPoint presentation/slide.
+PowerPoint Editor: Executes edit operations directly on the active PowerPoint presentation (active slide or specific slides).
 Applies surgical in-place modifications, shape replacements, deletions, and additions via COM.
 """
 
@@ -23,7 +23,7 @@ from copilots_app.services.powerpoint.animations import parse_animation_fields, 
 
 
 class PowerPointEditor:
-    """Executes edit operations on the currently active PowerPoint slide."""
+    """Executes edit operations on the active PowerPoint slide or on specific slides."""
 
     def __init__(self, connector: Optional[PowerPointConnector] = None):
         self.connector = connector or PowerPointConnector()
@@ -34,7 +34,8 @@ class PowerPointEditor:
         status_cb: Optional[Callable[[str], None]] = None,
     ) -> Dict[str, Any]:
         """
-        Parses edit DSL and applies the operations directly to the active slide.
+        Parses edit DSL and applies the operations in place. Operations target the active slide
+        by default, or specific slides when grouped under `edit slide=N` headers.
         Returns a dict with success status, counts of ops performed, and a message.
         """
         pythoncom.CoInitialize()
@@ -51,11 +52,12 @@ class PowerPointEditor:
             if ppt.Presentations.Count == 0:
                 raise Exception("No presentations are open. Please open one in PowerPoint first.")
 
-            try:
-                slide = ppt.ActiveWindow.View.Slide
-                slide_index = slide.SlideIndex
-            except Exception:
-                raise Exception("Could not get active slide. Please select a slide in PowerPoint first.")
+            # Resolve every targeted slide up front so an invalid index aborts before any change
+            slides = {}
+            for op in edit_ops:
+                target = op.get("slide")
+                if target not in slides:
+                    slides[target] = self._resolve_slide(ppt, target)
 
             # Prefetch icons for all newly inserted/replaced shapes
             all_new_elements = []
@@ -66,53 +68,17 @@ class PowerPointEditor:
 
             counts = {"modify": 0, "replace": 0, "delete": 0, "insert": 0, "background": 0}
             total = len(edit_ops)
+            touched_indices = []
 
             for idx, op in enumerate(edit_ops):
                 op_type = op["op"]
+                slide = slides[op.get("slide")]
+                slide_index = slide.SlideIndex
+                if slide_index not in touched_indices:
+                    touched_indices.append(slide_index)
                 if status_cb:
-                    status_cb(f"Applying edit {idx+1}/{total}: {op_type}…")
-
-                if op_type == "clear_slide":
-                    # Delete all shapes on current slide
-                    while slide.Shapes.Count > 0:
-                        slide.Shapes(1).Delete()
-
-                elif op_type == "slide_background":
-                    bg_color = op.get("background_color")
-                    self.connector._apply_slide_background(slide, bg_color)
-                    counts["background"] += 1
-
-                elif op_type == "delete":
-                    target_id = op.get("target_id")
-                    shape = self._find_shape(slide, target_id)
-                    if shape:
-                        shape.Delete()
-                        counts["delete"] += 1
-                    else:
-                        print(f"[editor] Could not find shape with id={target_id} to delete")
-
-                elif op_type == "modify":
-                    target_id = op.get("target_id")
-                    shape = self._find_shape(slide, target_id)
-                    if shape:
-                        self._modify_shape(slide, shape, op.get("fields", {}), op.get("text_part"))
-                        counts["modify"] += 1
-                    else:
-                        print(f"[editor] Could not find shape with id={target_id} to modify")
-
-                elif op_type == "replace":
-                    target_id = op.get("target_id")
-                    shape = self._find_shape(slide, target_id)
-                    if shape:
-                        shape.Delete()
-                    for elem in op.get("elements", []):
-                        self.connector._create_single_shape(slide, elem, icon_cache)
-                    counts["replace"] += 1
-
-                elif op_type in ("insert_after", "insert_before", "insert_at"):
-                    for elem in op.get("elements", []):
-                        self.connector._create_single_shape(slide, elem, icon_cache)
-                    counts["insert"] += len(op.get("elements", []))
+                    status_cb(f"Applying edit {idx+1}/{total} on slide {slide_index}: {op_type}…")
+                self._apply_op(slide, op, icon_cache, counts)
 
             summary_parts = []
             if counts["modify"]:
@@ -124,15 +90,83 @@ class PowerPointEditor:
             if counts["insert"]:
                 summary_parts.append(f"{counts['insert']} inserted")
             if counts["background"]:
-                summary_parts.append("background updated")
+                summary_parts.append(f"{counts['background']} background(s) updated")
 
-            msg = f"✓ Edits applied to slide {slide_index}: " + (", ".join(summary_parts) if summary_parts else "completed")
+            if len(touched_indices) == 1:
+                target_label = f"slide {touched_indices[0]}"
+            else:
+                target_label = f"{len(touched_indices)} slides ({', '.join(str(n) for n in sorted(touched_indices))})"
+            msg = f"✓ Edits applied to {target_label}: " + (", ".join(summary_parts) if summary_parts else "completed")
             if status_cb:
                 status_cb(msg)
 
-            return {"success": True, "message": msg, "counts": counts, "slide_index": slide_index}
+            return {
+                "success": True,
+                "message": msg,
+                "counts": counts,
+                "slide_index": touched_indices[0],
+                "slide_indices": touched_indices,
+            }
         finally:
             pythoncom.CoUninitialize()
+
+    def _resolve_slide(self, ppt, target: Optional[int]):
+        """Return the slide object for a 1-based index, or the active slide when target is None."""
+        if target is None:
+            try:
+                return ppt.ActiveWindow.View.Slide
+            except Exception:
+                raise Exception("Could not get active slide. Please select a slide in PowerPoint first.")
+        slide_count = ppt.ActivePresentation.Slides.Count
+        if not 1 <= target <= slide_count:
+            raise Exception(f"Slide {target} does not exist (presentation has {slide_count} slide(s)).")
+        return ppt.ActivePresentation.Slides(target)
+
+    def _apply_op(self, slide, op: Dict[str, Any], icon_cache, counts: Dict[str, int]):
+        """Apply a single parsed edit operation to the given slide, updating counts."""
+        op_type = op["op"]
+
+        if op_type == "clear_slide":
+            # Delete all shapes on the slide
+            while slide.Shapes.Count > 0:
+                slide.Shapes(1).Delete()
+
+        elif op_type == "slide_background":
+            bg_color = op.get("background_color")
+            self.connector._apply_slide_background(slide, bg_color)
+            counts["background"] += 1
+
+        elif op_type == "delete":
+            target_id = op.get("target_id")
+            shape = self._find_shape(slide, target_id)
+            if shape:
+                shape.Delete()
+                counts["delete"] += 1
+            else:
+                print(f"[editor] Could not find shape with id={target_id} on slide {slide.SlideIndex} to delete")
+
+        elif op_type == "modify":
+            target_id = op.get("target_id")
+            shape = self._find_shape(slide, target_id)
+            if shape:
+                self._modify_shape(slide, shape, op.get("fields", {}), op.get("text_part"))
+                counts["modify"] += 1
+            else:
+                print(f"[editor] Could not find shape with id={target_id} on slide {slide.SlideIndex} to modify")
+
+        elif op_type == "replace":
+            target_id = op.get("target_id")
+            shape = self._find_shape(slide, target_id)
+            if shape:
+                shape.Delete()
+            for elem in op.get("elements", []):
+                self.connector._create_single_shape(slide, elem, icon_cache)
+            counts["replace"] += 1
+
+        elif op_type in ("insert_after", "insert_before", "insert_at"):
+            for elem in op.get("elements", []):
+                self.connector._create_single_shape(slide, elem, icon_cache)
+            counts["insert"] += len(op.get("elements", []))
 
     def _find_shape(self, slide, target_id: Optional[int]):
         if target_id is None:

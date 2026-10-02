@@ -271,12 +271,12 @@ const HELP_CONTENT = {
       <div class="help-section-title"><i data-lucide="mouse-pointer"></i> Functions &amp; Buttons Explained</div>
       <div class="help-feature-list">
         <div class="help-feature-item">
-          <span class="help-feature-btn-badge"><i data-lucide="scan-line"></i> Read Active Slide</span>
-          <p class="help-feature-desc">Connects via COM to your open PowerPoint presentation, inspects every shape, text frame, color, table, and background on the currently active slide, and extracts it into clean DSL annotated with shape IDs (<code>// id=N</code>). You can copy this DSL to your LLM for surgical editing.</p>
+          <span class="help-feature-btn-badge"><i data-lucide="scan-line"></i> Read Active Slide / All Slides</span>
+          <p class="help-feature-desc">Connects via COM to your open PowerPoint presentation, inspects every shape, text frame, color, table, and background on the currently active slide (or, via the arrow menu, on every slide), and extracts it into clean DSL annotated with shape IDs (<code>// id=N</code>) and slide headers. You can copy this DSL to your LLM for surgical editing.</p>
         </div>
         <div class="help-feature-item">
-          <span class="help-feature-btn-badge"><i data-lucide="edit-3"></i> Apply Edits to Slide</span>
-          <p class="help-feature-desc">Executes surgical edit operations (<code>modify id=N</code>, <code>replace id=N</code>, <code>delete id=N</code>, <code>insert_after id=N</code>) directly on the active PowerPoint slide in place, preserving untouched shapes and slide styling.</p>
+          <span class="help-feature-btn-badge"><i data-lucide="edit-3"></i> Apply Edits</span>
+          <p class="help-feature-desc">Executes surgical edit operations (<code>modify id=N</code>, <code>replace id=N</code>, <code>delete id=N</code>, <code>insert_after id=N</code>) in place, preserving untouched shapes and slide styling. Edits target the active slide by default; group them under <code>edit slide=N</code> headers to edit several slides at once.</p>
         </div>
         <div class="help-feature-item">
           <span class="help-feature-btn-badge"><i data-lucide="plus-circle"></i> Insert on Slide</span>

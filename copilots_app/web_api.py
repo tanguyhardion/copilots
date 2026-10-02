@@ -136,7 +136,7 @@ class CopilotBridge:
             return {"success": False, "error": f"Failed to read slides: {err}"}
 
     def ppt_apply_edits(self, dsl_text: str) -> Dict[str, Any]:
-        """Apply edit operations (modify, replace, delete, insert) to the active PowerPoint slide."""
+        """Apply edit operations (modify, replace, delete, insert) to the active slide or to `edit slide=N` targets."""
         dsl_text = dsl_text.strip()
         if not dsl_text:
             return {"success": False, "error": "DSL is empty — nothing to edit."}
