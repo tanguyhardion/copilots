@@ -57,14 +57,53 @@ export async function setupPowerPointView() {
     if (e.key === "Escape") setReadMenuOpen(false);
   });
 
-  document.getElementById("ppt-btn-read").addEventListener("click", () => readSlides(false));
-  document.getElementById("ppt-btn-read-active").addEventListener("click", () => {
-    setReadMenuOpen(false);
-    readSlides(false);
-  });
-  document.getElementById("ppt-btn-read-all").addEventListener("click", () => {
-    setReadMenuOpen(false);
-    readSlides(true);
+  // The main button remembers the last-used read mode; the menu only offers the other one
+  const READ_MODE_KEY = "ppt-read-mode";
+  const readMainBtn = document.getElementById("ppt-btn-read");
+  const readActiveItem = document.getElementById("ppt-btn-read-active");
+  const readAllItem = document.getElementById("ppt-btn-read-all");
+  const readModes = {
+    active: { readAll: false, icon: "scan-line", label: "Read Active Slide", item: readActiveItem },
+    all: { readAll: true, icon: "layers", label: "Read All Slides", item: readAllItem },
+  };
+
+  let readMode = "active";
+  try {
+    const saved = localStorage.getItem(READ_MODE_KEY);
+    if (saved in readModes) readMode = saved;
+  } catch (_) {
+    // localStorage unavailable — fall back to the default mode
+  }
+
+  function applyReadMode() {
+    const { icon, label, item } = readModes[readMode];
+    readMainBtn.title = item.title;
+    readMainBtn.innerHTML = `<i data-lucide="${icon}" class="btn-icon"></i> ${label}`;
+    if (window.lucide) lucide.createIcons({ nodes: [readMainBtn] });
+    Object.values(readModes).forEach((m) => {
+      m.item.hidden = m.item === item;
+    });
+  }
+
+  function setReadMode(mode) {
+    readMode = mode;
+    try {
+      localStorage.setItem(READ_MODE_KEY, mode);
+    } catch (_) {
+      // ignore — the choice just won't persist
+    }
+    applyReadMode();
+  }
+
+  applyReadMode();
+
+  readMainBtn.addEventListener("click", () => readSlides(readModes[readMode].readAll));
+  Object.entries(readModes).forEach(([mode, { readAll, item }]) => {
+    item.addEventListener("click", () => {
+      setReadMenuOpen(false);
+      setReadMode(mode);
+      readSlides(readAll);
+    });
   });
 
   // Apply surgical edits to the active slide, or to the slides targeted by `edit slide=N`

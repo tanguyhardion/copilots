@@ -363,6 +363,10 @@
   transition: all var(--transition-fast);
 }
 
+.split-button-item[hidden] {
+  display: none;
+}
+
 .split-button-item:hover {
   background: rgba(249, 115, 22, 0.15);
   color: #FB923C;
