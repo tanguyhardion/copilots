@@ -37,17 +37,44 @@ export async function setupPowerPointView() {
     }
   }
 
-  document.getElementById("ppt-btn-read").addEventListener("click", () => readSlides(false));
-  document.getElementById("ppt-btn-read-all").addEventListener("click", () => readSlides(true));
+  // Split button: main part reads the active slide, the menu offers active / all slides
+  const readMenu = document.getElementById("ppt-read-menu");
+  const readMenuToggle = document.getElementById("ppt-btn-read-menu");
 
-  // Apply surgical edits to the active PowerPoint slide
+  function setReadMenuOpen(open) {
+    readMenu.classList.toggle("open", open);
+    readMenuToggle.setAttribute("aria-expanded", String(open));
+  }
+
+  readMenuToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setReadMenuOpen(!readMenu.classList.contains("open"));
+  });
+  document.addEventListener("click", (e) => {
+    if (!readMenu.contains(e.target)) setReadMenuOpen(false);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") setReadMenuOpen(false);
+  });
+
+  document.getElementById("ppt-btn-read").addEventListener("click", () => readSlides(false));
+  document.getElementById("ppt-btn-read-active").addEventListener("click", () => {
+    setReadMenuOpen(false);
+    readSlides(false);
+  });
+  document.getElementById("ppt-btn-read-all").addEventListener("click", () => {
+    setReadMenuOpen(false);
+    readSlides(true);
+  });
+
+  // Apply surgical edits to the active slide, or to the slides targeted by `edit slide=N`
   document.getElementById("ppt-btn-edit").addEventListener("click", async () => {
     const dsl = editor.value;
     if (!dsl.trim()) {
       setStatus("ppt", "Editor is empty — nothing to edit", "warning");
       return;
     }
-    setStatus("ppt", "Applying edits to active slide…", "info", true);
+    setStatus("ppt", "Applying edits…", "info", true);
     setButtonsDisabled("view-powerpoint", true);
     try {
       const res = await window.pywebview.api.ppt_apply_edits(dsl);

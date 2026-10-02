@@ -193,14 +193,6 @@
   transition: color var(--transition-fast);
 }
 
-.author-rights {
-  font-size: 6px;
-  font-weight: 400;
-  color: var(--text-muted);
-  letter-spacing: 0.3px;
-  opacity: 0.8;
-}
-
 /* -------------------------------------------------------------------------
    Main Content Area & Dynamic Background Glow
    ------------------------------------------------------------------------- */

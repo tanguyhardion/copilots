@@ -307,6 +307,67 @@
   flex-shrink: 0;
 }
 
+/* --- Split Button (main action + dropdown menu) --- */
+.split-button {
+  position: relative;
+  display: inline-flex;
+}
+
+.split-button-main {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.split-button-toggle {
+  padding-left: 8px;
+  padding-right: 8px;
+  margin-left: -1px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.split-button-menu {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  min-width: 100%;
+  padding: 4px;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+}
+
+.split-button-menu.open {
+  display: flex;
+}
+
+.split-button-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: left;
+  transition: all var(--transition-fast);
+}
+
+.split-button-item:hover {
+  background: rgba(249, 115, 22, 0.15);
+  color: #FB923C;
+}
+
 /* --- CV Buttons --- */
 .btn-cv-primary, .btn-cv {
   background: linear-gradient(180deg, #8B5CF6 0%, #7C3AED 100%);

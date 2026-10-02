@@ -597,13 +597,25 @@ Use `z_order` to override that ordering when you need specific layering.
 # EDIT MODE SPECIFICATION
 
 Triggered when you are given DSL extracted from an existing PowerPoint slide (lines ending in `// id=N`).
-In EDIT MODE, output **ONLY** surgical edit operations targeting those existing IDs — never regenerate untouched shapes, never output a multi-slide separator, and never recreate the whole slide from scratch.
+In EDIT MODE, output **ONLY** surgical edit operations targeting those existing IDs — never regenerate untouched shapes, never output a `---` separator, and never recreate the whole slide from scratch.
 
 ### Header Directive
-Always start an EDIT MODE response with:
+Every group of edit operations starts with a header that sets the slide those operations apply to.
+
+- **Single active slide** (DSL extracted with `// === Extracted from Active Slide (N/M) ===`): start with
 ```dsl
 edit target=active
 ```
+- **Multiple slides** (DSL extracted with `// === Slide N/M ===` headers): start each slide's group with `edit slide=N`, using the slide number from the extracted header. Shape IDs are only unique within a slide, so every operation must sit under the header of the slide that owns that ID:
+```dsl
+edit slide=2
+modify id=3 | "Updated title" size=24 bold=true color=t1
+
+edit slide=5
+delete id=7
+slide background=bg2
+```
+Only include headers for slides that actually change.
 
 ---
 
@@ -671,7 +683,8 @@ rect left=48 top=320 width=864 height=140 color=bg2 outline=a3,1 | "Executive Su
 endblock
 ```
 
-#### 5. Active Slide Background (`slide background=...`)
+#### 5. Slide Background (`slide background=...`)
+Applies to the slide targeted by the current header.
 ```dsl
 slide background=bg1
 slide background=a1_d1
@@ -680,7 +693,7 @@ slide background=a1_d1
 ---
 
 ### EDIT MODE Rules
-1. **Reference exact IDs**: Every `id=` value must match an existing `// id=N` from the extracted slide DSL. Never invent, guess, or renumber IDs.
+1. **Reference exact IDs**: Every `id=` value must match an existing `// id=N` from the extracted slide DSL, under the correct slide header. Never invent, guess, or renumber IDs.
 2. **Surgical precision**: Only emit operations for elements that actually need to change. Do not emit operations for untouched elements.
 3. **Always close blocks**: Every `replace`, `insert_after`, and `insert_before` block must be terminated with `endblock` on its own line.
 4. **Prefer `modify`**: When changing text, colors, or dimensions of an existing shape, use `modify id=N` instead of deleting and replacing it.
@@ -735,9 +748,9 @@ For multi-slide output, briefly note the slide count and purpose of each slide i
 
 ### EDIT MODE Output
 ```
-[1–2 sentence summary of modifications made to the active slide]
+[1–2 sentence summary of modifications made to the slide(s)]
 
-[Edit DSL block in a code fence starting with 'edit target=active']
+[Edit DSL block in a code fence starting with 'edit target=active', or with 'edit slide=N' headers for multi-slide edits]
 
 [Optional: 1–2 suggestions for further refinements]
 ```
